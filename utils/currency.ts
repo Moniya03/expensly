@@ -1,36 +1,19 @@
 /**
  * Currency utilities for handling Indian Rupees
- * All amounts are stored in paise (1 rupee = 100 paise)
+ * All amounts are stored in rupees (whole numbers only)
  */
 
-/**
- * Convert paise to rupees
- * @param paise - Amount in paise
- * @returns Amount in rupees as a number
- */
-export const paiseToRupees = (paise: number): number => {
-  return paise / 100;
-};
 
 /**
- * Convert rupees to paise
- * @param rupees - Amount in rupees
- * @returns Amount in paise as a number
- */
-export const rupeesToPaise = (rupees: number): number => {
-  return Math.round(rupees * 100);
-};
-
-/**
- * Format paise amount as rupees string with Indian formatting
- * @param paise - Amount in paise
+ * Format rupees amount as string with Indian formatting
+ * @param amount - Amount in rupees
  * @param options - Formatting options
- * @returns Formatted rupee string (e.g., "₹1,234.56")
+ * @returns Formatted rupee string (e.g., "₹1,234")
  */
 export const formatRupees = (
-  paise: number,
+  amount: number,
   options: {
-    /** Show decimal places (default: false for whole numbers, true for fractions) */
+    /** Show decimal places (default: false for whole numbers) */
     showDecimals?: boolean;
     /** Show rupee symbol (default: true) */
     showSymbol?: boolean;
@@ -38,34 +21,29 @@ export const formatRupees = (
     compact?: boolean;
   } = {}
 ): string => {
-  const { showSymbol = true, compact = false } = options;
-  const rupees = paiseToRupees(paise);
-
-  // Determine if we need decimals
-  const hasDecimals = rupees % 1 !== 0;
-  const showDecimals = options.showDecimals ?? hasDecimals;
+  const { showSymbol = true, compact = false, showDecimals = false } = options;
 
   const symbol = showSymbol ? '₹' : '';
 
   // Compact formatting for large numbers
   if (compact) {
-    if (rupees >= 10000000) {
+    if (amount >= 10000000) {
       // Crores (1Cr = 10 million)
-      const crores = rupees / 10000000;
+      const crores = amount / 10000000;
       return `${symbol}${crores.toFixed(1)}Cr`;
-    } else if (rupees >= 100000) {
+    } else if (amount >= 100000) {
       // Lakhs (1L = 100K)
-      const lakhs = rupees / 100000;
+      const lakhs = amount / 100000;
       return `${symbol}${lakhs.toFixed(1)}L`;
-    } else if (rupees >= 1000) {
+    } else if (amount >= 1000) {
       // Thousands
-      const thousands = rupees / 1000;
+      const thousands = amount / 1000;
       return `${symbol}${thousands.toFixed(1)}K`;
     }
   }
 
   // Indian number formatting (lakhs and crores)
-  const formatted = rupees.toLocaleString('en-IN', {
+  const formatted = amount.toLocaleString('en-IN', {
     minimumFractionDigits: showDecimals ? 2 : 0,
     maximumFractionDigits: showDecimals ? 2 : 0,
   });
@@ -74,20 +52,20 @@ export const formatRupees = (
 };
 
 /**
- * Format paise amount as a short string for display
+ * Format rupees amount as a short string for display
  * Uses compact notation for readability
- * @param paise - Amount in paise
+ * @param amount - Amount in rupees
  * @returns Short formatted string (e.g., "₹1.2K")
  */
-export const formatRupeesShort = (paise: number): string => {
-  return formatRupees(paise, { compact: true });
+export const formatRupeesShort = (amount: number): string => {
+  return formatRupees(amount, { compact: true });
 };
 
 /**
- * Parse a rupee string to paise
+ * Parse a rupee string to rupees
  * Handles formats like "₹1,234.56", "1234.56", "₹1234"
  * @param value - String value to parse
- * @returns Amount in paise or null if invalid
+ * @returns Amount in rupees or null if invalid
  */
 export const parseRupees = (value: string): number | null => {
   // Remove currency symbol, commas, and whitespace
@@ -106,23 +84,23 @@ export const parseRupees = (value: string): number | null => {
     return null;
   }
 
-  return rupeesToPaise(rupees);
+  return Math.round(rupees);
 };
 
 /**
  * Calculate percentage of budget spent
- * @param spentPaise - Amount spent in paise
- * @param budgetPaise - Budget limit in paise
+ * @param spent - Amount spent in rupees
+ * @param budget - Budget limit in rupees
  * @returns Percentage as a number (0-100+)
  */
 export const calculateBudgetPercentage = (
-  spentPaise: number,
-  budgetPaise: number
+  spent: number,
+  budget: number
 ): number => {
-  if (budgetPaise <= 0) {
+  if (budget <= 0) {
     return 0;
   }
-  return (spentPaise / budgetPaise) * 100;
+  return (spent / budget) * 100;
 };
 
 /**

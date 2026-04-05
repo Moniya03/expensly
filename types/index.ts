@@ -25,8 +25,8 @@ export interface Profile {
   display_name: string | null;
   /** URL to user's avatar image (optional) */
   avatar_url: string | null;
-  /** Monthly budget amount in paise (1 rupee = 100 paise) */
-  monthly_budget_paise: number;
+  /** Monthly budget amount in rupees (whole numbers only) */
+  monthly_budget: number;
   /** Current streak count for daily expense tracking */
   streak_count: number;
   /** Last date the streak was updated (ISO 8601 format) */
@@ -46,8 +46,8 @@ export interface Transaction {
   id: string;
   /** User who created this transaction */
   user_id: string;
-  /** Transaction amount in paise (1 rupee = 100 paise) */
-  amount_paise: number;
+  /** Transaction amount in rupees (whole numbers only) */
+  amount: number;
   /** Expense category */
   category: Category;
   /** Description of the expense */
@@ -75,8 +75,8 @@ export interface Budget {
   user_id: string;
   /** Category this budget applies to */
   category: Category;
-  /** Budget limit amount in paise (1 rupee = 100 paise) */
-  limit_paise: number;
+  /** Budget limit amount in rupees (whole numbers only) */
+  limit: number;
   /** Time period for the budget (weekly or monthly) */
   period: 'weekly' | 'monthly';
   /** Timestamp when the budget was created */
@@ -94,10 +94,10 @@ export interface Goal {
   user_id: string;
   /** Name/description of the savings goal */
   name: string;
-  /** Target amount to save in paise (1 rupee = 100 paise) */
-  target_paise: number;
-  /** Amount saved so far in paise */
-  saved_paise: number;
+  /** Target amount to save in rupees (whole numbers only) */
+  target: number;
+  /** Amount saved so far in rupees (whole numbers only) */
+  saved: number;
   /** Target date to achieve the goal (ISO 8601 format, optional) */
   target_date: string | null;
   /** Timestamp when the goal was created */
@@ -115,8 +115,8 @@ export interface Split {
   user_id: string;
   /** Name of the friend involved in the split */
   friend_name: string;
-  /** Amount in paise - positive if they owe you, negative if you owe them */
-  amount_paise: number;
+  /** Amount in rupees (whole numbers only) - positive if they owe you, negative if you owe them */
+  amount: number;
   /** Description of what the split is for */
   description: string;
   /** Whether the split has been settled/paid */
@@ -148,8 +148,8 @@ export interface AuthSession {
  * Result from the AI parsing an expense description
  */
 export interface ParsedExpense {
-  /** Extracted amount in paise (1 rupee = 100 paise) */
-  amount_paise: number;
+  /** Extracted amount in rupees (whole numbers only) */
+  amount: number;
   /** Detected expense category */
   category: Category;
   /** Cleaned/normalized description */
@@ -167,8 +167,8 @@ export interface ParsedExpense {
 export interface ParsedSplit {
   /** Name of the friend in the split */
   friend_name: string;
-  /** Amount involved in the split in paise */
-  amount_paise: number;
+  /** Amount involved in the split in rupees (whole numbers only) */
+  amount: number;
   /** Description of the split */
   description: string;
   /** Direction of the debt - who owes whom */

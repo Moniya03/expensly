@@ -4,23 +4,23 @@ import { colors, typography, spacing, borderRadius } from '../../constants/theme
 import { formatRupees } from '../../utils/currency';
 
 interface QuickStatsProps {
-  todayPaise: number;
-  weekPaise: number;
+  today: number;
+  week: number;
 }
 
-export default function QuickStats({ todayPaise, weekPaise }: QuickStatsProps) {
+export default function QuickStats({ today, week }: QuickStatsProps) {
   return (
     <View style={styles.container}>
       {/* Today Card */}
       <View style={styles.card}>
         <Text style={styles.label}>Today</Text>
-        <Text style={styles.amount}>{formatRupees(todayPaise)}</Text>
+        <Text style={styles.amount}>{formatRupees(today)}</Text>
       </View>
 
       {/* This Week Card */}
       <View style={styles.card}>
         <Text style={styles.label}>This Week</Text>
-        <Text style={styles.amount}>{formatRupees(weekPaise)}</Text>
+        <Text style={styles.amount}>{formatRupees(week)}</Text>
       </View>
     </View>
   );

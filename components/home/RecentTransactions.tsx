@@ -52,7 +52,7 @@ export default function RecentTransactions({ transactions, onSeeAll }: RecentTra
                 </View>
 
                 {/* Amount */}
-                <Text style={styles.amount}>{formatRupees(transaction.amount_paise)}</Text>
+                <Text style={styles.amount}>{formatRupees(transaction.amount)}</Text>
               </View>
             );
           })}

@@ -127,10 +127,10 @@ export function useCreateTransaction() {
 export function useMonthlySpent() {
   const { data: transactions, isLoading, error } = useMonthlyTransactions();
 
-  const totalPaise = transactions?.reduce((sum, t) => sum + t.amount_paise, 0) ?? 0;
+  const total = transactions?.reduce((sum, t) => sum + t.amount, 0) ?? 0;
 
   return {
-    totalPaise,
+    total,
     isLoading,
     error,
   };
@@ -144,7 +144,7 @@ export function useCategorySpending() {
 
   const byCategory = transactions?.reduce(
     (acc, t) => {
-      acc[t.category] = (acc[t.category] || 0) + t.amount_paise;
+      acc[t.category] = (acc[t.category] || 0) + t.amount;
       return acc;
     },
     {} as Record<string, number>

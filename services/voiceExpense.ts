@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { File } from 'expo-file-system';
+import { readAsStringAsync, EncodingType } from 'expo-file-system/legacy';
 
 export interface VoiceExpenseRequest {
   audioBase64: string;
@@ -55,19 +55,10 @@ export async function audioUriToBase64(uri: string): Promise<string> {
   try {
     console.log('Converting audio URI to base64:', uri);
 
-    // Create a File instance from the URI
-    const file = new File(uri);
-    
-    // Read the file as an ArrayBuffer
-    const arrayBuffer = await file.arrayBuffer();
-    
-    // Convert ArrayBuffer to base64
-    const bytes = new Uint8Array(arrayBuffer);
-    let binary = '';
-    for (let i = 0; i < bytes.byteLength; i++) {
-      binary += String.fromCharCode(bytes[i]);
-    }
-    const base64 = btoa(binary);
+    // Use the legacy API for reading files as base64
+    const base64 = await readAsStringAsync(uri, {
+      encoding: EncodingType.Base64,
+    });
 
     console.log('Audio converted to base64, length:', base64.length);
     return base64;

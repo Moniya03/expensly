@@ -40,18 +40,18 @@ export function useBudgets() {
  */
 export function useMonthlyBudget() {
   const { profile } = useAuthStore();
-  const { totalPaise: spentPaise, isLoading: spentLoading } = useMonthlySpent();
+  const { total: spent, isLoading: spentLoading } = useMonthlySpent();
 
-  const budgetPaise = profile?.monthly_budget_paise ?? 0;
-  const remainingPaise = budgetPaise - spentPaise;
-  const percentUsed = budgetPaise > 0 ? (spentPaise / budgetPaise) * 100 : 0;
+  const budget = profile?.monthly_budget ?? 0;
+  const remaining = budget - spent;
+  const percentUsed = budget > 0 ? (spent / budget) * 100 : 0;
 
   return {
-    budgetPaise,
-    spentPaise,
-    remainingPaise,
+    budget,
+    spent,
+    remaining,
     percentUsed: Math.min(percentUsed, 100),
-    isOverBudget: spentPaise > budgetPaise,
+    isOverBudget: spent > budget,
     isLoading: spentLoading,
   };
 }

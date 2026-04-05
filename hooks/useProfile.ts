@@ -36,7 +36,7 @@ const fetchProfile = async (userId: string): Promise<Profile | null> => {
  */
 const updateProfile = async (
   userId: string,
-  updates: Partial<Pick<Profile, 'display_name' | 'monthly_budget_paise'>>
+  updates: Partial<Pick<Profile, 'display_name' | 'monthly_budget'>>
 ): Promise<Profile> => {
   const { data, error } = await supabase
     .from('profiles')
@@ -85,7 +85,7 @@ export const useUpdateProfile = () => {
   const userId = session?.user?.id;
 
   return useMutation({
-    mutationFn: (updates: Partial<Pick<Profile, 'display_name' | 'monthly_budget_paise'>>) => {
+    mutationFn: (updates: Partial<Pick<Profile, 'display_name' | 'monthly_budget'>>) => {
       if (!userId) {
         throw new Error('No user session');
       }

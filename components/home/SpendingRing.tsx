@@ -6,9 +6,9 @@ import { getCategoryColor } from '../../constants/categories';
 import { colors, typography } from '../../constants/theme';
 
 interface SpendingRingProps {
-  budgetPaise: number;
-  spentPaise: number;
-  categoryBreakdown: Record<string, number>; // category -> amount in paise
+  budget: number;
+  spent: number;
+  categoryBreakdown: Record<string, number>; // category -> amount in rupees
 }
 
 const RING_SIZE = 200;
@@ -18,15 +18,15 @@ const RADIUS = CENTER - STROKE_WIDTH / 2;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
 export const SpendingRing: React.FC<SpendingRingProps> = ({
-  budgetPaise,
-  spentPaise,
+  budget,
+  spent,
   categoryBreakdown,
 }) => {
-  const isOverBudget = spentPaise > budgetPaise;
-  const remainingPaise = isOverBudget ? spentPaise - budgetPaise : budgetPaise - spentPaise;
+  const isOverBudget = spent > budget;
+  const remaining = isOverBudget ? spent - budget : budget - spent;
   
   // Use the larger of the two to scale the ring, ensuring over-budget doesn't break the circle
-  const totalScalePaise = Math.max(budgetPaise, spentPaise) || 1; 
+  const totalScale = Math.max(budget, spent) || 1; 
 
   const segments = useMemo(() => {
     // Sort categories from largest spending to smallest for visual appeal
@@ -38,7 +38,7 @@ export const SpendingRing: React.FC<SpendingRingProps> = ({
 
     return sortedCategories.map(([category, amount]) => {
       // Calculate the segment's length based on its percentage of the total scale
-      const percentage = amount / totalScalePaise;
+      const percentage = amount / totalScale;
       const strokeLength = percentage * CIRCUMFERENCE;
       const strokeDashoffset = -cumulativeOffset;
       
@@ -51,7 +51,7 @@ export const SpendingRing: React.FC<SpendingRingProps> = ({
         strokeDashoffset,
       };
     });
-  }, [categoryBreakdown, totalScalePaise]);
+  }, [categoryBreakdown, totalScale]);
 
   return (
     <View style={styles.container}>
@@ -86,7 +86,7 @@ export const SpendingRing: React.FC<SpendingRingProps> = ({
       
       <View style={styles.centerContent}>
         <Text style={[styles.amountText, isOverBudget && styles.overBudgetText]}>
-          {formatRupees(remainingPaise)}
+          {formatRupees(remaining)}
         </Text>
         <Text style={[styles.labelText, isOverBudget && styles.overBudgetLabel]}>
           {isOverBudget ? 'over budget' : 'left'}

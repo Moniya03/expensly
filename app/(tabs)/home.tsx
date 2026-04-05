@@ -17,7 +17,7 @@ import { GlassmorphicCard } from '../../components/ui/GlassmorphicCard';
 
 export default function HomeScreen() {
   const { profile } = useAuthStore();
-  const { budgetPaise, spentPaise, isLoading: budgetLoading } = useMonthlyBudget();
+  const { budget, spent, isLoading: budgetLoading } = useMonthlyBudget();
   const { data: recentTransactions, isLoading: transactionsLoading } = useRecentTransactions(5);
   const { byCategory, isLoading: categoryLoading } = useCategorySpending();
 
@@ -33,23 +33,23 @@ export default function HomeScreen() {
   });
 
   // Calculate today and week spending from recent transactions
-  const todayPaise = React.useMemo(() => {
+  const todaySpent = React.useMemo(() => {
     if (!recentTransactions) return 0;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     return recentTransactions
       .filter((t) => new Date(t.transaction_date) >= today)
-      .reduce((sum, t) => sum + t.amount_paise, 0);
+      .reduce((sum, t) => sum + t.amount, 0);
   }, [recentTransactions]);
 
-  const weekPaise = React.useMemo(() => {
+  const weekSpent = React.useMemo(() => {
     if (!recentTransactions) return 0;
     const weekAgo = new Date();
     weekAgo.setDate(weekAgo.getDate() - 7);
     weekAgo.setHours(0, 0, 0, 0);
     return recentTransactions
       .filter((t) => new Date(t.transaction_date) >= weekAgo)
-      .reduce((sum, t) => sum + t.amount_paise, 0);
+      .reduce((sum, t) => sum + t.amount, 0);
   }, [recentTransactions]);
 
   if (isLoading) {
@@ -80,15 +80,15 @@ export default function HomeScreen() {
             {/* Spending Ring */}
             <View style={styles.ringContainer}>
               <SpendingRing
-                budgetPaise={budgetPaise}
-                spentPaise={spentPaise}
+                budget={budget}
+                spent={spent}
                 categoryBreakdown={byCategory}
               />
             </View>
 
             {/* Quick Stats */}
             <GlassmorphicCard intensity={8} style={{ marginBottom: spacing.lg }}>
-              <QuickStats todayPaise={todayPaise} weekPaise={weekPaise} />
+              <QuickStats today={todaySpent} week={weekSpent} />
             </GlassmorphicCard>
 
             {/* Monday Roast - only on Mondays */}
