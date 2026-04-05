@@ -4,7 +4,6 @@
  */
 
 import { Category } from '../types';
-import { colors } from './theme';
 
 export interface CategoryConfig {
   /** Category identifier */
@@ -28,57 +27,57 @@ export const categories: Record<Category, CategoryConfig> = {
     id: 'food',
     label: 'Food',
     emoji: '🍕',
-    color: '#FF6B6B',
-    backgroundColor: 'rgba(255, 107, 107, 0.15)',
+    color: '#FF9500',
+    backgroundColor: 'rgba(255, 149, 0, 0.15)',
   },
   transport: {
     id: 'transport',
     label: 'Transport',
     emoji: '🚗',
-    color: '#4ECDC4',
-    backgroundColor: 'rgba(78, 205, 196, 0.15)',
+    color: '#007AFF',
+    backgroundColor: 'rgba(0, 122, 255, 0.15)',
   },
   shopping: {
     id: 'shopping',
     label: 'Shopping',
     emoji: '🛍️',
-    color: '#FFE66D',
-    backgroundColor: 'rgba(255, 230, 109, 0.15)',
+    color: '#FF2D55',
+    backgroundColor: 'rgba(255, 45, 85, 0.15)',
   },
   entertainment: {
     id: 'entertainment',
     label: 'Entertainment',
     emoji: '🎬',
-    color: '#A855F7',
-    backgroundColor: 'rgba(168, 85, 247, 0.15)',
+    color: '#FFCC00',
+    backgroundColor: 'rgba(255, 204, 0, 0.15)',
   },
   bills: {
     id: 'bills',
     label: 'Bills',
     emoji: '📄',
-    color: '#3B82F6',
-    backgroundColor: 'rgba(59, 130, 246, 0.15)',
+    color: '#5856D6',
+    backgroundColor: 'rgba(88, 86, 214, 0.15)',
   },
   health: {
     id: 'health',
     label: 'Health',
     emoji: '💊',
-    color: '#10B981',
-    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    color: '#34C759',
+    backgroundColor: 'rgba(52, 199, 89, 0.15)',
   },
   education: {
     id: 'education',
     label: 'Education',
     emoji: '📚',
-    color: '#F59E0B',
-    backgroundColor: 'rgba(245, 158, 11, 0.15)',
+    color: '#00C7BE',
+    backgroundColor: 'rgba(0, 199, 190, 0.15)',
   },
   other: {
     id: 'other',
     label: 'Other',
     emoji: '📦',
-    color: colors.onSurfaceVariant,
-    backgroundColor: 'rgba(169, 171, 179, 0.15)',
+    color: '#8E8E93',
+    backgroundColor: 'rgba(142, 142, 147, 0.15)',
   },
 };
 
@@ -93,3 +92,10 @@ export const getCategoryConfig = (category: Category): CategoryConfig => {
  * Get all categories as an array
  */
 export const categoryList: CategoryConfig[] = Object.values(categories);
+
+/**
+ * Get the color for a specific category
+ */
+export const getCategoryColor = (category: Category): string => {
+  return categories[category]?.color || categories.other.color;
+};

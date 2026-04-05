@@ -27,20 +27,33 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="goals"
+        options={{
+          title: 'Goals',
+          tabBarIcon: ({ focused, color }) => (
+            <Ionicons name={focused ? 'flag' : 'flag-outline'} size={24} color={color} />
+          ),
+        }}
+      />
+      {/* Placeholder for raised mic button - handled by VoiceFAB component */}
+      <Tabs.Screen
+        name="voice"
+        options={{
+          title: '',
+          tabBarButton: () => null,
+        }}
+        listeners={{
+          tabPress: (e) => {
+            e.preventDefault();
+          },
+        }}
+      />
+      <Tabs.Screen
         name="history"
         options={{
           title: 'History',
           tabBarIcon: ({ focused, color }) => (
             <Ionicons name={focused ? 'time' : 'time-outline'} size={24} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="goals"
-        options={{
-          title: 'Goals',
-          tabBarIcon: ({ focused, color }) => (
-            <Ionicons name={focused ? 'trophy' : 'trophy-outline'} size={24} color={color} />
           ),
         }}
       />
