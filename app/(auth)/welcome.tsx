@@ -1,26 +1,66 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withTiming, Easing } from 'react-native-reanimated';
 import { colors, typography, spacing, borderRadius } from '../../constants/theme';
 import { useGoogleAuth } from '../../hooks/useGoogleAuth';
+import { FloatingParticles } from '../../components/ui/FloatingParticles';
+import { GlassmorphicCard } from '../../components/ui/GlassmorphicCard';
+import { GradientText } from '../../components/ui/GradientText';
 
 const { width } = Dimensions.get('window');
 
 export default function WelcomeScreen() {
   const { signInWithGoogle, isLoading, error } = useGoogleAuth();
 
+  // Pulsing animation for rings
+  const outerScale = useSharedValue(1);
+  const middleScale = useSharedValue(1);
+  const innerScale = useSharedValue(1);
+
+  useEffect(() => {
+    outerScale.value = withRepeat(
+      withTiming(1.1, { duration: 3000, easing: Easing.inOut(Easing.ease) }),
+      -1,
+      true
+    );
+    middleScale.value = withRepeat(
+      withTiming(1.15, { duration: 2500, easing: Easing.inOut(Easing.ease) }),
+      -1,
+      true
+    );
+    innerScale.value = withRepeat(
+      withTiming(1.2, { duration: 2000, easing: Easing.inOut(Easing.ease) }),
+      -1,
+      true
+    );
+  }, []);
+
+  const outerRingStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: outerScale.value }],
+  }));
+
+  const middleRingStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: middleScale.value }],
+  }));
+
+  const innerRingStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: innerScale.value }],
+  }));
+
   return (
     <SafeAreaView style={styles.container}>
+      <FloatingParticles count={15} />
       {/* Background Ambient Glow */}
       <View style={styles.ambientGlow} />
 
       {/* Hero Section: Voice Ripple */}
       <View style={styles.heroSection}>
-        <View style={[styles.ring, styles.ringOuter]} />
-        <View style={[styles.ring, styles.ringMiddle]} />
-        <View style={[styles.ring, styles.ringInner]} />
+        <Animated.View style={[styles.ring, styles.ringOuter, outerRingStyle]} />
+        <Animated.View style={[styles.ring, styles.ringMiddle, middleRingStyle]} />
+        <Animated.View style={[styles.ring, styles.ringInner, innerRingStyle]} />
         
         <LinearGradient
           colors={[colors.primary, colors.secondary]}
@@ -35,9 +75,9 @@ export default function WelcomeScreen() {
       {/* Brand & Content Section */}
       <View style={styles.contentSection}>
         {/* Badge */}
-        <View style={styles.badgeContainer}>
+        <GlassmorphicCard intensity={15} style={styles.badgeContainer}>
           <Text style={styles.badgeText}>voice-first</Text>
-        </View>
+        </GlassmorphicCard>
 
         {/* Title */}
         <Text style={styles.title}>Expensly</Text>
@@ -45,7 +85,7 @@ export default function WelcomeScreen() {
         {/* Tagline */}
         <View style={styles.taglineContainer}>
           <Text style={styles.taglineWhite}>Track your spend,</Text>
-          <Text style={styles.taglineHighlight}>just say it.</Text>
+          <GradientText style={styles.taglineHighlight}>just say it.</GradientText>
         </View>
       </View>
 
@@ -163,10 +203,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: 6,
     borderRadius: 20,
-    borderWidth: 1,
-    borderColor: `${colors.primary}80`,
-    backgroundColor: `${colors.primary}1A`,
-    marginBottom: spacing.md,
   },
   badgeText: {
     color: colors.primary,

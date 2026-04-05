@@ -13,6 +13,7 @@ import {
   EmptyState,
 } from '../../components/home';
 import VoiceFAB from '../../components/VoiceFAB';
+import { GlassmorphicCard } from '../../components/ui/GlassmorphicCard';
 
 export default function HomeScreen() {
   const { profile } = useAuthStore();
@@ -86,7 +87,9 @@ export default function HomeScreen() {
             </View>
 
             {/* Quick Stats */}
-            <QuickStats todayPaise={todayPaise} weekPaise={weekPaise} />
+            <GlassmorphicCard intensity={8} style={{ marginBottom: spacing.lg }}>
+              <QuickStats todayPaise={todayPaise} weekPaise={weekPaise} />
+            </GlassmorphicCard>
 
             {/* Monday Roast - only on Mondays */}
             {isMonday && (
