@@ -259,6 +259,31 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     elevation: 2,
   },
+  signOutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    borderColor: `${colors.error}80`,
+    marginBottom: spacing.md,
+  },
+  signOutButtonDisabled: {
+    opacity: 0.6,
+  },
+  signOutButtonText: {
+    color: colors.error,
+    fontSize: typography.fontSize.md,
+    fontWeight: typography.fontWeight.semiBold,
+    marginLeft: spacing.xs,
+  },
+  helperText: {
+    color: colors.onSurfaceVariant,
+    fontSize: typography.fontSize.sm,
+    marginBottom: spacing.lg,
+  },
   googleButtonText: {
     color: '#000000',
     fontSize: typography.fontSize.lg,

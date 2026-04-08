@@ -22,9 +22,17 @@ interface UseGoogleAuthReturn {
    */
   signInWithGoogle: () => Promise<void>;
   /**
+   * Clears Google + Supabase sessions so user can switch accounts
+   */
+  signOut: () => Promise<void>;
+  /**
    * Whether the authentication process is in progress
    */
   isLoading: boolean;
+  /**
+   * Whether sign out is currently running
+   */
+  isSigningOut: boolean;
   /**
    * Error message if authentication fails
    */
@@ -50,6 +58,7 @@ interface UseGoogleAuthReturn {
  */
 export function useGoogleAuth(): UseGoogleAuthReturn {
   const [isLoading, setIsLoading] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   /**
@@ -114,9 +123,32 @@ export function useGoogleAuth(): UseGoogleAuthReturn {
     }
   };
 
+  const signOut = async () => {
+    try {
+      setIsSigningOut(true);
+      setError(null);
+
+      await GoogleSignin.signOut();
+      const { error: supabaseError } = await supabase.auth.signOut();
+
+      if (supabaseError) {
+        throw supabaseError;
+      }
+
+      console.log('Signed out of Google and Supabase');
+    } catch (err) {
+      console.error('Sign out error:', err);
+      setError(err instanceof Error ? err.message : 'Failed to sign out');
+    } finally {
+      setIsSigningOut(false);
+    }
+  };
+
   return {
     signInWithGoogle,
+    signOut,
     isLoading,
+    isSigningOut,
     error,
   };
 }

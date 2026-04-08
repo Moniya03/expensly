@@ -11,6 +11,33 @@ export interface VoiceExpenseResponse {
   transaction?: any;
   transcription?: string;
   error?: string;
+  details?: string;
+}
+
+async function extractFunctionError(error: any): Promise<string> {
+  let details: string | undefined = error?.details;
+
+  if (!details && error?.context) {
+    try {
+      details = await error.context.text();
+    } catch {
+      details = undefined;
+    }
+  }
+
+  if (details && typeof details === 'string') {
+    try {
+      const parsed = JSON.parse(details);
+      if (parsed?.error) {
+        return parsed.details ? `${parsed.error}: ${parsed.details}` : parsed.error;
+      }
+    } catch {
+      return details;
+    }
+  }
+
+  if (error?.message) return error.message;
+  return 'Unknown error occurred';
 }
 
 /**
@@ -26,22 +53,48 @@ export async function processVoiceExpense(
   try {
     console.log('Processing voice expense for user:', userId);
 
+    // Ensure we always send an auth header when invoking the Edge Function
+    const { data: sessionData } = await supabase.auth.getSession();
+    const accessToken = sessionData.session?.access_token;
+    const anonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+
+    const headers: Record<string, string> = {};
+
+    if (anonKey) {
+      headers['apikey'] = anonKey;
+    }
+
+    if (accessToken) {
+      headers['Authorization'] = `Bearer ${accessToken}`;
+    } else if (anonKey) {
+      headers['Authorization'] = `Bearer ${anonKey}`;
+    }
+
     const { data, error } = await supabase.functions.invoke('process-voice', {
       body: { audioBase64, userId },
+      headers,
     });
 
     if (error) {
-      console.error('Voice expense edge function error:', error);
-      throw error;
+      const parsedError = await extractFunctionError(error);
+      console.error('Voice expense edge function error:', {
+        status: error?.context?.status,
+        error: parsedError,
+      });
+      return {
+        success: false,
+        error: parsedError,
+      };
     }
 
     console.log('Voice expense processed successfully:', data);
     return data;
   } catch (error) {
-    console.error('Voice expense error:', error);
+    const parsedError = await extractFunctionError(error);
+    console.error('Voice expense error:', parsedError);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error occurred',
+      error: parsedError,
     };
   }
 }

@@ -1,7 +1,9 @@
 import React, { useEffect } from 'react';
-import { StyleSheet, TouchableOpacity, View, ActivityIndicator, Alert, Animated } from 'react-native';
+import { StyleSheet, Pressable, View, ActivityIndicator, Animated, Text } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import { useQueryClient } from '@tanstack/react-query';
 import { colors } from '../constants/theme';
 import { AudioWaveform } from './ui/AudioWaveform';
 import { useVoiceRecording } from '../hooks/useVoiceRecording';
@@ -21,6 +23,8 @@ export default function VoiceFAB() {
   } = useVoiceRecording();
 
   const { session } = useAuthStore();
+  const router = useRouter();
+  const queryClient = useQueryClient();
   const pulseAnim = React.useRef(new Animated.Value(1)).current;
 
   // Pulsing animation for recording state
@@ -54,15 +58,6 @@ export default function VoiceFAB() {
       return () => clearTimeout(timer);
     }
   }, [state]);
-
-  // Show error alerts
-  useEffect(() => {
-    if (errorMessage) {
-      Alert.alert('Recording Error', errorMessage, [
-        { text: 'OK', onPress: () => setErrorMessage(null) },
-      ]);
-    }
-  }, [errorMessage]);
 
   /**
    * Handle button press based on current state
@@ -99,8 +94,10 @@ export default function VoiceFAB() {
 
         if (response.success) {
           setState('success');
+          await queryClient.invalidateQueries({ queryKey: ['transactions'] });
           console.log('Voice expense created:', response.transaction);
         } else {
+          console.error('Voice expense processing failed:', response.error);
           setErrorMessage(response.error || 'Failed to process voice expense');
           setState('error');
         }
@@ -112,6 +109,21 @@ export default function VoiceFAB() {
         error instanceof Error ? error.message : 'An unexpected error occurred'
       );
       setState('error');
+    }
+  };
+
+  const inlineErrorMessage =
+    state === 'error' && errorMessage
+      ? "Couldn't understand that. Please re-record."
+      : null;
+
+  /**
+   * Handle long press to navigate to manual expense form
+   */
+  const handleLongPress = () => {
+    // Only allow long-press when idle (not recording/processing)
+    if (state === 'idle') {
+      router.push('/transaction/add' as any);
     }
   };
 
@@ -147,10 +159,19 @@ export default function VoiceFAB() {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity
-        activeOpacity={0.8}
+      {inlineErrorMessage ? (
+        <View style={styles.errorBanner}>
+          <Text numberOfLines={1} style={styles.errorText}>
+            {inlineErrorMessage}
+          </Text>
+        </View>
+      ) : null}
+      <Pressable
         onPress={handlePress}
+        onLongPress={handleLongPress}
+        delayLongPress={500}
         disabled={state === 'processing' || state === 'success' || state === 'error'}
+        style={({ pressed }) => [{ opacity: pressed ? 0.8 : 1 }]}
       >
         <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
           <LinearGradient
@@ -165,7 +186,7 @@ export default function VoiceFAB() {
             </View>
           </LinearGradient>
         </Animated.View>
-      </TouchableOpacity>
+      </Pressable>
     </View>
   );
 }
@@ -187,6 +208,22 @@ const styles = StyleSheet.create({
     // Elevation for Android
     elevation: 10,
     borderRadius: 32,
+  },
+  errorBanner: {
+    marginBottom: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 999,
+    backgroundColor: 'rgba(0, 0, 0, 0.35)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+    maxWidth: 260,
+    alignSelf: 'center',
+  },
+  errorText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    textAlign: 'center',
   },
   button: {
     width: 64,
