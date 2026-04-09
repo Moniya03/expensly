@@ -1,56 +1,126 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, typography, spacing } from '../../constants/theme';
+import { borderRadius, colors, spacing, typography } from '../../constants/theme';
 import { useAuthStore } from '../../stores/authStore';
 import { useMonthlyBudget } from '../../hooks/useBudget';
-import { useRecentTransactions, useCategorySpending } from '../../hooks/useTransactions';
 import {
-  SpendingRing,
+  useCategorySpending,
+  useMonthlyTransactions,
+  useRecentTransactions,
+} from '../../hooks/useTransactions';
+import {
+  CategorySpendingBars,
+  HeroBudgetCard,
+  MondayRoast,
   QuickStats,
   RecentTransactions,
-  MondayRoast,
-  EmptyState,
 } from '../../components/home';
 import VoiceFAB from '../../components/VoiceFAB';
-import { GlassmorphicCard } from '../../components/ui/GlassmorphicCard';
+import { getCategoryConfig } from '../../constants/categories';
+import { Category } from '../../types';
+import { getGreeting } from '../../utils/date';
+
+function getRoastMessage({
+  spent,
+  budget,
+  weekSpent,
+  streak,
+  topCategory,
+}: {
+  spent: number;
+  budget: number;
+  weekSpent: number;
+  streak: number;
+  topCategory?: { label: string; amount: number };
+}) {
+  if (spent <= 0) {
+    return 'No spends logged yet — clean slate energy. Let’s keep the first swipe intentional.';
+  }
+
+  if (budget > 0 && spent > budget) {
+    return `You’re already over budget, and ${topCategory?.label ?? 'that top category'} is doing the heavy lifting. Time for fewer “just one more” spends.`;
+  }
+
+  if (budget > 0 && spent / budget >= 0.8) {
+    return `You’ve burned through ${Math.round((spent / budget) * 100)}% of this month’s budget. Future-you would love a quieter week.`;
+  }
+
+  if (topCategory && topCategory.amount >= weekSpent && topCategory.amount > 0) {
+    return `${topCategory.label} is leading your spending this month. Apparently that category has a VIP lane to your wallet.`;
+  }
+
+  if (streak > 0) {
+    return `${streak}-day streak intact. Accountability looks good on you — now keep this week’s ₹${weekSpent.toLocaleString('en-IN')} from getting too confident.`;
+  }
+
+  return `This week is at ₹${weekSpent.toLocaleString('en-IN')}. Not chaos, not monk mode — just enough to keep an eye on.`;
+}
 
 export default function HomeScreen() {
   const { profile } = useAuthStore();
-  const { budget, spent, isLoading: budgetLoading } = useMonthlyBudget();
-  const { data: recentTransactions, isLoading: transactionsLoading } = useRecentTransactions(5);
+  const { budget, spent, remaining, percentUsed, isOverBudget, isLoading: budgetLoading } =
+    useMonthlyBudget();
+  const { data: recentTransactions = [], isLoading: transactionsLoading } = useRecentTransactions(5);
+  const { data: monthlyTransactions = [], isLoading: monthlyTransactionsLoading } =
+    useMonthlyTransactions();
   const { byCategory, isLoading: categoryLoading } = useCategorySpending();
 
   const displayName = profile?.display_name || 'there';
-  const isLoading = budgetLoading || transactionsLoading || categoryLoading;
-  const hasTransactions = recentTransactions && recentTransactions.length > 0;
-  const isMonday = new Date().getDay() === 1;
+  const streakCount = profile?.streak_count ?? 0;
+  const greeting = getGreeting();
+  const isLoading = budgetLoading || transactionsLoading || monthlyTransactionsLoading || categoryLoading;
 
-  // Format current month for header
-  const currentMonth = new Date().toLocaleDateString('en-US', {
-    month: 'long',
-    year: 'numeric',
-  });
-
-  // Calculate today and week spending from recent transactions
   const todaySpent = React.useMemo(() => {
-    if (!recentTransactions) return 0;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    return recentTransactions
-      .filter((t) => new Date(t.transaction_date) >= today)
-      .reduce((sum, t) => sum + t.amount, 0);
-  }, [recentTransactions]);
+
+    return monthlyTransactions
+      .filter((transaction) => {
+        const date = new Date(transaction.transaction_date);
+        date.setHours(0, 0, 0, 0);
+        return date.getTime() === today.getTime();
+      })
+      .reduce((sum, transaction) => sum + transaction.amount, 0);
+  }, [monthlyTransactions]);
 
   const weekSpent = React.useMemo(() => {
-    if (!recentTransactions) return 0;
-    const weekAgo = new Date();
-    weekAgo.setDate(weekAgo.getDate() - 7);
-    weekAgo.setHours(0, 0, 0, 0);
-    return recentTransactions
-      .filter((t) => new Date(t.transaction_date) >= weekAgo)
-      .reduce((sum, t) => sum + t.amount, 0);
-  }, [recentTransactions]);
+    const now = new Date();
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - now.getDay());
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    return monthlyTransactions
+      .filter((transaction) => new Date(transaction.transaction_date) >= startOfWeek)
+      .reduce((sum, transaction) => sum + transaction.amount, 0);
+  }, [monthlyTransactions]);
+
+  const topCategory = React.useMemo(() => {
+    const [category, amount] = Object.entries(byCategory)
+      .filter(([, value]) => value > 0)
+      .sort(([, a], [, b]) => b - a)[0] || [];
+
+    if (!category || typeof amount !== 'number') {
+      return undefined;
+    }
+
+    return {
+      label: getCategoryConfig(category as Category).label,
+      amount,
+    };
+  }, [byCategory]);
+
+  const roastMessage = React.useMemo(
+    () =>
+      getRoastMessage({
+        spent,
+        budget,
+        weekSpent,
+        streak: streakCount,
+        topCategory,
+      }),
+    [budget, spent, streakCount, topCategory, weekSpent]
+  );
 
   if (isLoading) {
     return (
@@ -69,46 +139,45 @@ export default function HomeScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.greeting}>Hi, {displayName} 👋</Text>
-          <Text style={styles.month}>{currentMonth}</Text>
-        </View>
-
-        {hasTransactions ? (
-          <>
-            {/* Spending Ring */}
-            <View style={styles.ringContainer}>
-              <SpendingRing
-                budget={budget}
-                spent={spent}
-                categoryBreakdown={byCategory}
-              />
-            </View>
-
-            {/* Quick Stats */}
-            <GlassmorphicCard intensity={8} style={{ marginBottom: spacing.lg }}>
-              <QuickStats today={todaySpent} week={weekSpent} />
-            </GlassmorphicCard>
-
-            {/* Monday Roast - only on Mondays */}
-            {isMonday && (
-              <MondayRoast
-                roastText="Happy Monday! Ready to track your spending like a pro? 💪"
-                isVisible={true}
-              />
+          <View style={styles.headerLeft}>
+            {profile?.avatar_url ? (
+              <Image source={{ uri: profile.avatar_url }} style={styles.avatar} />
+            ) : (
+              <View style={styles.avatarFallback}>
+                <Text style={styles.avatarInitial}>{displayName.charAt(0).toUpperCase()}</Text>
+              </View>
             )}
 
-            {/* Recent Transactions */}
-            <RecentTransactions transactions={recentTransactions} />
-          </>
-        ) : (
-          /* Empty State - when no transactions exist */
-          <EmptyState />
-        )}
+            <View>
+              <Text style={styles.greeting}>{greeting},</Text>
+              <Text style={styles.name}>{displayName} 👋</Text>
+            </View>
+          </View>
+
+          <View style={styles.streakPill}>
+            <Text style={styles.streakEmoji}>🔥</Text>
+            <Text style={styles.streakText}>STREAK: {streakCount}</Text>
+          </View>
+        </View>
+
+        <HeroBudgetCard
+          spent={spent}
+          budget={budget}
+          remaining={remaining}
+          percentUsed={percentUsed}
+          isOverBudget={isOverBudget}
+        />
+
+        <QuickStats today={todaySpent} week={weekSpent} streak={streakCount} />
+
+        <CategorySpendingBars byCategory={byCategory} />
+
+        <MondayRoast roastText={roastMessage} isVisible />
+
+        <RecentTransactions transactions={recentTransactions} />
       </ScrollView>
 
-      {/* Voice FAB - positioned outside ScrollView */}
       <VoiceFAB />
     </SafeAreaView>
   );
@@ -129,27 +198,69 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: spacing.md,
-    paddingBottom: 100, // Extra padding for FAB
+    paddingBottom: 100,
+    gap: spacing.lg,
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'space-between',
     marginTop: spacing.md,
-    marginBottom: spacing.lg,
+    gap: spacing.md,
   },
-  greeting: {
-    fontSize: typography.fontSize.xl,
+  headerLeft: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  avatar: {
+    width: 48,
+    height: 48,
+    borderRadius: borderRadius.full,
+    borderWidth: 2,
+    borderColor: colors.primary,
+  },
+  avatarFallback: {
+    width: 48,
+    height: 48,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.surfaceContainerHighest,
+    borderWidth: 2,
+    borderColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarInitial: {
+    fontSize: typography.fontSize.lg,
     fontWeight: typography.fontWeight.bold,
     color: colors.onSurface,
   },
-  month: {
-    fontSize: typography.fontSize.md,
+  greeting: {
+    fontSize: typography.fontSize.xs,
+    color: '#8B9CC7',
     fontWeight: typography.fontWeight.medium,
-    color: colors.onSurfaceVariant,
   },
-  ringContainer: {
+  name: {
+    fontSize: typography.fontSize.xl,
+    color: colors.onSurface,
+    fontWeight: typography.fontWeight.bold,
+  },
+  streakPill: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: spacing.xl,
+    gap: 6,
+    backgroundColor: colors.surfaceContainerHighest,
+    borderRadius: borderRadius.full,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  streakEmoji: {
+    fontSize: 14,
+  },
+  streakText: {
+    fontSize: typography.fontSize.xs,
+    fontWeight: typography.fontWeight.bold,
+    color: colors.onSurface,
   },
 });

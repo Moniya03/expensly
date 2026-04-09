@@ -16,17 +16,15 @@ export default function RecentTransactions({ transactions, onSeeAll }: RecentTra
 
   return (
     <View style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>Recent</Text>
         {onSeeAll && (
           <TouchableOpacity onPress={onSeeAll} activeOpacity={0.7}>
-            <Text style={styles.seeAllText}>See all →</Text>
+            <Text style={styles.seeAllText}>See all</Text>
           </TouchableOpacity>
         )}
       </View>
 
-      {/* Transaction List */}
       {recentTransactions.length > 0 ? (
         <View style={styles.list}>
           {recentTransactions.map((transaction) => {
@@ -35,24 +33,22 @@ export default function RecentTransactions({ transactions, onSeeAll }: RecentTra
             
             return (
               <View key={transaction.id} style={styles.transactionItem}>
-                {/* Category Icon */}
-                <View style={styles.iconContainer}>
-                  <View style={[styles.categoryDot, { backgroundColor: categoryColor }]} />
+                <View style={[styles.iconContainer, { backgroundColor: `${categoryColor}22` }]}>
                   <Text style={styles.categoryEmoji}>{categoryConfig.emoji}</Text>
                 </View>
 
-                {/* Details */}
                 <View style={styles.details}>
                   <Text style={styles.description} numberOfLines={1}>
-                    {transaction.description}
+                    {transaction.description || categoryConfig.label}
                   </Text>
                   <Text style={styles.timeAgo}>
                     {getRelativeTime(new Date(transaction.transaction_date))}
                   </Text>
                 </View>
 
-                {/* Amount */}
-                <Text style={styles.amount}>{formatRupees(transaction.amount)}</Text>
+                <Text style={[styles.amount, { color: categoryColor }]}>
+                  -{formatRupees(transaction.amount)}
+                </Text>
               </View>
             );
           })}
@@ -68,7 +64,7 @@ export default function RecentTransactions({ transactions, onSeeAll }: RecentTra
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: spacing.lg,
+    gap: spacing.md,
   },
   header: {
     flexDirection: 'row',
@@ -83,7 +79,7 @@ const styles = StyleSheet.create({
   },
   seeAllText: {
     fontSize: typography.fontSize.sm,
-    fontWeight: typography.fontWeight.medium,
+    fontWeight: typography.fontWeight.semiBold,
     color: colors.primary,
   },
   list: {
@@ -95,27 +91,19 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceContainerHigh,
     borderRadius: borderRadius.md,
     padding: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.outlineVariant,
   },
   iconContainer: {
-    position: 'relative',
-    width: 40,
-    height: 40,
+    width: 44,
+    height: 44,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: spacing.md,
-  },
-  categoryDot: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: colors.surfaceContainerHigh,
+    borderRadius: borderRadius.full,
   },
   categoryEmoji: {
-    fontSize: 24,
+    fontSize: 20,
   },
   details: {
     flex: 1,
@@ -134,7 +122,6 @@ const styles = StyleSheet.create({
   amount: {
     fontSize: typography.fontSize.lg,
     fontWeight: typography.fontWeight.semiBold,
-    color: colors.onSurface,
     marginLeft: spacing.sm,
   },
   emptyContainer: {
@@ -142,6 +129,8 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.md,
     padding: spacing.xl,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.outlineVariant,
   },
   emptyText: {
     fontSize: typography.fontSize.md,

@@ -14,11 +14,12 @@ export default function MondayRoast({ roastText, isVisible }: MondayRoastProps) 
 
   return (
     <View style={styles.container}>
-      {/* Robot Emoji */}
-      <Text style={styles.robotEmoji}>🤖</Text>
+      <View style={styles.badge}>
+        <Text style={styles.badgeText}>🤖</Text>
+      </View>
 
-      {/* Chat Bubble */}
-      <View style={styles.bubble}>
+      <View style={styles.content}>
+        <Text style={styles.eyebrow}>SPENDING INSIGHT</Text>
         <Text style={styles.roastText}>{roastText}</Text>
       </View>
     </View>
@@ -29,25 +30,38 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    paddingHorizontal: spacing.lg,
-    marginBottom: spacing.lg,
-  },
-  robotEmoji: {
-    fontSize: 32,
-    marginRight: spacing.sm,
-  },
-  bubble: {
-    flex: 1,
-    backgroundColor: `${colors.primary}15`,
+    backgroundColor: 'rgba(168, 85, 247, 0.10)',
     borderRadius: borderRadius.md,
     borderWidth: 1,
-    borderColor: `${colors.primary}30`,
+    borderColor: 'rgba(168, 85, 247, 0.30)',
     padding: spacing.md,
+    gap: spacing.md,
+  },
+  badge: {
+    width: 42,
+    height: 42,
+    borderRadius: borderRadius.full,
+    backgroundColor: 'rgba(168, 85, 247, 0.18)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  badgeText: {
+    fontSize: 22,
+  },
+  content: {
+    flex: 1,
+    gap: spacing.xs,
+  },
+  eyebrow: {
+    fontSize: 10,
+    fontWeight: typography.fontWeight.bold,
+    color: '#C084FC',
+    letterSpacing: 1,
   },
   roastText: {
-    fontSize: typography.fontSize.md,
-    fontWeight: typography.fontWeight.regular,
+    fontSize: typography.fontSize.sm,
+    fontWeight: typography.fontWeight.medium,
     color: colors.onSurface,
-    lineHeight: typography.lineHeight.relaxed * typography.fontSize.md,
+    lineHeight: typography.lineHeight.relaxed * typography.fontSize.sm,
   },
 });
