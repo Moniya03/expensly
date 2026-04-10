@@ -65,22 +65,24 @@ export interface Transaction {
 }
 
 /**
- * Budget entry for category spending limits
- * Defines spending limits for specific categories over a time period
+ * Budget entry stored in Supabase
+ * Monthly budgets can be split across rows/categories for a given month/year
  */
 export interface Budget {
   /** Unique budget identifier */
   id: string;
   /** User who created this budget */
   user_id: string;
-  /** Category this budget applies to */
-  category: Category;
-  /** Budget limit amount in rupees (whole numbers only) */
-  limit: number;
-  /** Time period for the budget (weekly or monthly) */
-  period: 'weekly' | 'monthly';
+  /** Category this budget applies to, if any */
+  category: Category | null;
+  /** Budget amount in rupees (whole numbers only) */
+  amount: number;
+  /** Budget month (1-12) */
+  month: number;
+  /** Budget year (e.g. 2026) */
+  year: number;
   /** Timestamp when the budget was created */
-  created_at: string;
+  created_at: string | null;
 }
 
 /**

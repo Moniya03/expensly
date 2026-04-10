@@ -4,6 +4,24 @@ import { Budget } from '../types';
 import { useAuthStore } from '../stores/authStore';
 import { useMonthlySpent } from './useTransactions';
 
+export function getHistoricalBudgetForMonth({
+  budgets,
+  fallbackBudget,
+  month,
+  year,
+}: {
+  budgets: Budget[];
+  fallbackBudget: number;
+  month: number;
+  year: number;
+}) {
+  const monthlyBudget = budgets
+    .filter((budget) => budget.month === month && budget.year === year)
+    .reduce((sum, budget) => sum + budget.amount, 0);
+
+  return monthlyBudget > 0 ? monthlyBudget : fallbackBudget;
+}
+
 /**
  * Fetch user's budgets
  */

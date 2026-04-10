@@ -2,19 +2,42 @@ import 'react-native-url-polyfill/auto';
 import { createClient } from '@supabase/supabase-js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Environment variables with fallback for development
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || '';
+const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 
-// Validate environment variables
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn(
-    'Supabase environment variables are not set. Please ensure EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY are configured.'
+  throw new Error(
+    'Missing Supabase environment variables. Please set EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY.'
   );
 }
 
-// Create Supabase client
+const supabaseFetch: typeof fetch = async (input, init) => {
+  const request = input instanceof Request ? input : new Request(input, init);
+  const method = request.method || 'GET';
+  const url = request.url;
+
+  try {
+    const response = await fetch(input, init);
+
+    if (__DEV__) {
+      const log = response.ok ? console.log : console.warn;
+      log(`[Supabase] ${method} ${url} -> ${response.status} ${response.statusText}`);
+    }
+
+    return response;
+  } catch (error) {
+    if (__DEV__) {
+      console.error(`[Supabase] Network failure for ${method} ${url}`, error);
+    }
+
+    throw error;
+  }
+};
+
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  global: {
+    fetch: supabaseFetch,
+  },
   auth: {
     storage: AsyncStorage,
     autoRefreshToken: true,

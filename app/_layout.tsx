@@ -10,6 +10,30 @@ import { configureGoogleSignIn } from '../hooks/useGoogleAuth';
 // Configure Google Sign-In on app startup
 configureGoogleSignIn();
 
+if (__DEV__) {
+  const globalWithFetchPatch = globalThis as typeof globalThis & {
+    __EXPENSLY_FETCH_REJECTION_LOGGER_PATCHED__?: boolean;
+  };
+
+  if (!globalWithFetchPatch.__EXPENSLY_FETCH_REJECTION_LOGGER_PATCHED__) {
+    const originalFetch = globalThis.fetch;
+
+    globalThis.fetch = async (input, init) => {
+      const method = input instanceof Request ? input.method : init?.method || 'GET';
+      const url = input instanceof Request ? input.url : String(input);
+
+      try {
+        return await originalFetch(input, init);
+      } catch (error) {
+        console.error(`[fetch] Request failed: ${method} ${url}`, error);
+        throw error;
+      }
+    };
+
+    globalWithFetchPatch.__EXPENSLY_FETCH_REJECTION_LOGGER_PATCHED__ = true;
+  }
+}
+
 const queryClient = new QueryClient();
 
 function RootLayoutNav() {
@@ -58,6 +82,7 @@ function RootLayoutNav() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(auth)" />
       <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="insights" />
     </Stack>
   );
 }

@@ -1,16 +1,19 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import Svg, { Circle, Defs, Stop, LinearGradient as SvgLinearGradient } from 'react-native-svg';
+import Svg, { Circle } from 'react-native-svg';
+import { getCategoryColor } from '../../constants/categories';
 import { borderRadius, colors, spacing, typography } from '../../constants/theme';
+import { Category } from '../../types';
 import { formatRupees } from '../../utils/currency';
 
 interface HeroBudgetCardProps {
   spent: number;
   budget: number;
   remaining: number;
-  percentUsed: number;
   isOverBudget: boolean;
+  byCategory: Record<string, number>;
+  onPress?: () => void;
 }
 
 const DONUT_SIZE = 108;
@@ -22,70 +25,149 @@ export default function HeroBudgetCard({
   spent,
   budget,
   remaining,
-  percentUsed,
   isOverBudget,
+  byCategory,
+  onPress,
 }: HeroBudgetCardProps) {
-  const progress = Math.max(0, Math.min(percentUsed, 100));
-  const strokeDashoffset = CIRCUMFERENCE - (progress / 100) * CIRCUMFERENCE;
+  const categorySegments = React.useMemo(() => {
+    const entries = Object.entries(byCategory)
+      .filter(([, amount]) => amount > 0)
+      .sort(([, a], [, b]) => b - a);
+
+    const total = entries.reduce((sum, [, amount]) => sum + amount, 0);
+
+    if (total <= 0) {
+      return [];
+    }
+
+    const gap = 4;
+    let offset = 0;
+
+    return entries.map(([category, amount]) => {
+      const rawLength = (amount / total) * CIRCUMFERENCE;
+      const segmentLength = Math.max(rawLength - gap, 0);
+      const segment = {
+        key: category,
+        color: getCategoryColor(category as Category),
+        length: segmentLength,
+        offset: -offset,
+      };
+
+      offset += rawLength;
+      return segment;
+    });
+  }, [byCategory]);
 
   return (
     <LinearGradient colors={['#10367B', '#0D2D6B']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.card}>
       <View style={styles.overlay} />
-      <View style={styles.content}>
-        <View style={styles.leftColumn}>
-          <View style={styles.titleBlock}>
-            <Text style={styles.eyebrow}>SPENT THIS MONTH</Text>
-            <Text style={styles.amount}>{formatRupees(spent)}</Text>
+      {onPress ? (
+        <Pressable onPress={onPress} android_ripple={{ color: 'rgba(255,255,255,0.08)' }} style={styles.content}>
+          <View style={styles.leftColumn}>
+            <View style={styles.titleBlock}>
+              <Text style={styles.eyebrow}>SPENT THIS MONTH</Text>
+              <Text style={styles.amount}>{formatRupees(spent)}</Text>
+            </View>
+
+            <View style={styles.divider} />
+
+            <View style={styles.metaRow}>
+              <Text style={[styles.remaining, isOverBudget && styles.overBudget]}>
+                {formatRupees(Math.abs(remaining))} {isOverBudget ? 'over' : 'left'}
+              </Text>
+              <Text style={styles.context}>of {formatRupees(budget)} budget</Text>
+            </View>
           </View>
 
-          <View style={styles.divider} />
+          <View style={styles.chartWrap}>
+            <Svg width={DONUT_SIZE} height={DONUT_SIZE}>
+              <Circle
+                cx={DONUT_SIZE / 2}
+                cy={DONUT_SIZE / 2}
+                r={RADIUS}
+                stroke="rgba(255,255,255,0.10)"
+                strokeWidth={STROKE_WIDTH}
+                fill="none"
+              />
+              {categorySegments.map((segment) => (
+                <Circle
+                  key={segment.key}
+                  cx={DONUT_SIZE / 2}
+                  cy={DONUT_SIZE / 2}
+                  r={RADIUS}
+                  stroke={segment.color}
+                  strokeWidth={STROKE_WIDTH}
+                  fill="none"
+                  strokeLinecap="butt"
+                  strokeDasharray={`${segment.length} ${CIRCUMFERENCE}`}
+                  strokeDashoffset={segment.offset}
+                  originX={DONUT_SIZE / 2}
+                  originY={DONUT_SIZE / 2}
+                  rotation={-90}
+                />
+              ))}
+            </Svg>
 
-          <View style={styles.metaRow}>
-            <Text style={[styles.remaining, isOverBudget && styles.overBudget]}>
-              {formatRupees(Math.abs(remaining))} {isOverBudget ? 'over' : 'left'}
-            </Text>
-            <Text style={styles.context}>of {formatRupees(budget)} budget</Text>
+            <View style={styles.chartCenter}>
+              <Text style={styles.centerAmount}>{formatRupees(spent)}</Text>
+              <Text style={styles.centerLabel}>Spent</Text>
+            </View>
+          </View>
+        </Pressable>
+      ) : (
+        <View style={styles.content}>
+          <View style={styles.leftColumn}>
+            <View style={styles.titleBlock}>
+              <Text style={styles.eyebrow}>SPENT THIS MONTH</Text>
+              <Text style={styles.amount}>{formatRupees(spent)}</Text>
+            </View>
+
+            <View style={styles.divider} />
+
+            <View style={styles.metaRow}>
+              <Text style={[styles.remaining, isOverBudget && styles.overBudget]}>
+                {formatRupees(Math.abs(remaining))} {isOverBudget ? 'over' : 'left'}
+              </Text>
+              <Text style={styles.context}>of {formatRupees(budget)} budget</Text>
+            </View>
+          </View>
+
+          <View style={styles.chartWrap}>
+            <Svg width={DONUT_SIZE} height={DONUT_SIZE}>
+              <Circle
+                cx={DONUT_SIZE / 2}
+                cy={DONUT_SIZE / 2}
+                r={RADIUS}
+                stroke="rgba(255,255,255,0.10)"
+                strokeWidth={STROKE_WIDTH}
+                fill="none"
+              />
+              {categorySegments.map((segment) => (
+                <Circle
+                  key={segment.key}
+                  cx={DONUT_SIZE / 2}
+                  cy={DONUT_SIZE / 2}
+                  r={RADIUS}
+                  stroke={segment.color}
+                  strokeWidth={STROKE_WIDTH}
+                  fill="none"
+                  strokeLinecap="butt"
+                  strokeDasharray={`${segment.length} ${CIRCUMFERENCE}`}
+                  strokeDashoffset={segment.offset}
+                  originX={DONUT_SIZE / 2}
+                  originY={DONUT_SIZE / 2}
+                  rotation={-90}
+                />
+              ))}
+            </Svg>
+
+            <View style={styles.chartCenter}>
+              <Text style={styles.centerAmount}>{formatRupees(spent)}</Text>
+              <Text style={styles.centerLabel}>Spent</Text>
+            </View>
           </View>
         </View>
-
-        <View style={styles.chartWrap}>
-          <Svg width={DONUT_SIZE} height={DONUT_SIZE}>
-            <Defs>
-              <SvgLinearGradient id="budgetGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <Stop offset="0%" stopColor={colors.primary} />
-                <Stop offset="100%" stopColor={colors.secondary} />
-              </SvgLinearGradient>
-            </Defs>
-            <Circle
-              cx={DONUT_SIZE / 2}
-              cy={DONUT_SIZE / 2}
-              r={RADIUS}
-              stroke="rgba(255,255,255,0.10)"
-              strokeWidth={STROKE_WIDTH}
-              fill="none"
-            />
-            <Circle
-              cx={DONUT_SIZE / 2}
-              cy={DONUT_SIZE / 2}
-              r={RADIUS}
-              stroke="url(#budgetGradient)"
-              strokeWidth={STROKE_WIDTH}
-              fill="none"
-              strokeLinecap="round"
-              strokeDasharray={`${CIRCUMFERENCE} ${CIRCUMFERENCE}`}
-              strokeDashoffset={strokeDashoffset}
-              originX={DONUT_SIZE / 2}
-              originY={DONUT_SIZE / 2}
-              rotation={-90}
-            />
-          </Svg>
-
-          <View style={styles.chartCenter}>
-            <Text style={styles.percent}>{Math.round(percentUsed)}%</Text>
-            <Text style={styles.percentLabel}>used</Text>
-          </View>
-        </View>
-      </View>
+      )}
     </LinearGradient>
   );
 }
@@ -156,12 +238,13 @@ const styles = StyleSheet.create({
     position: 'absolute',
     alignItems: 'center',
   },
-  percent: {
-    fontSize: typography.fontSize.xl,
+  centerAmount: {
+    fontSize: typography.fontSize.lg,
     fontWeight: typography.fontWeight.bold,
     color: colors.onSurface,
+    textAlign: 'center',
   },
-  percentLabel: {
+  centerLabel: {
     fontSize: typography.fontSize.xs,
     color: '#8B9CC7',
   },

@@ -1,16 +1,11 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import { borderRadius, colors, spacing, typography } from '../../constants/theme';
 import { useAuthStore } from '../../stores/authStore';
-import { useMonthlyBudget } from '../../hooks/useBudget';
+import { useMonthlyTransactions, useRecentTransactions } from '../../hooks/useTransactions';
 import {
-  useCategorySpending,
-  useMonthlyTransactions,
-  useRecentTransactions,
-} from '../../hooks/useTransactions';
-import {
-  CategorySpendingBars,
   HeroBudgetCard,
   MondayRoast,
   QuickStats,
@@ -25,13 +20,11 @@ function getRoastMessage({
   spent,
   budget,
   weekSpent,
-  streak,
   topCategory,
 }: {
   spent: number;
   budget: number;
   weekSpent: number;
-  streak: number;
   topCategory?: { label: string; amount: number };
 }) {
   if (spent <= 0) {
@@ -50,26 +43,38 @@ function getRoastMessage({
     return `${topCategory.label} is leading your spending this month. Apparently that category has a VIP lane to your wallet.`;
   }
 
-  if (streak > 0) {
-    return `${streak}-day streak intact. Accountability looks good on you — now keep this week’s ₹${weekSpent.toLocaleString('en-IN')} from getting too confident.`;
-  }
-
   return `This week is at ₹${weekSpent.toLocaleString('en-IN')}. Not chaos, not monk mode — just enough to keep an eye on.`;
 }
 
 export default function HomeScreen() {
+  const router = useRouter();
   const { profile } = useAuthStore();
-  const { budget, spent, remaining, percentUsed, isOverBudget, isLoading: budgetLoading } =
-    useMonthlyBudget();
   const { data: recentTransactions = [], isLoading: transactionsLoading } = useRecentTransactions(5);
   const { data: monthlyTransactions = [], isLoading: monthlyTransactionsLoading } =
     useMonthlyTransactions();
-  const { byCategory, isLoading: categoryLoading } = useCategorySpending();
 
   const displayName = profile?.display_name || 'there';
-  const streakCount = profile?.streak_count ?? 0;
   const greeting = getGreeting();
-  const isLoading = budgetLoading || transactionsLoading || monthlyTransactionsLoading || categoryLoading;
+  const isLoading = transactionsLoading || monthlyTransactionsLoading;
+
+  const budget = profile?.monthly_budget ?? 0;
+
+  const spent = React.useMemo(
+    () => monthlyTransactions.reduce((sum, transaction) => sum + transaction.amount, 0),
+    [monthlyTransactions]
+  );
+
+  const byCategory = React.useMemo(
+    () =>
+      monthlyTransactions.reduce<Record<string, number>>((acc, transaction) => {
+        acc[transaction.category] = (acc[transaction.category] || 0) + transaction.amount;
+        return acc;
+      }, {}),
+    [monthlyTransactions]
+  );
+
+  const remaining = budget - spent;
+  const isOverBudget = spent > budget;
 
   const todaySpent = React.useMemo(() => {
     const today = new Date();
@@ -116,10 +121,9 @@ export default function HomeScreen() {
         spent,
         budget,
         weekSpent,
-        streak: streakCount,
         topCategory,
       }),
-    [budget, spent, streakCount, topCategory, weekSpent]
+    [budget, spent, topCategory, weekSpent]
   );
 
   if (isLoading) {
@@ -154,24 +158,18 @@ export default function HomeScreen() {
               <Text style={styles.name}>{displayName} 👋</Text>
             </View>
           </View>
-
-          <View style={styles.streakPill}>
-            <Text style={styles.streakEmoji}>🔥</Text>
-            <Text style={styles.streakText}>STREAK: {streakCount}</Text>
-          </View>
         </View>
 
         <HeroBudgetCard
           spent={spent}
           budget={budget}
           remaining={remaining}
-          percentUsed={percentUsed}
           isOverBudget={isOverBudget}
+          byCategory={byCategory}
+          onPress={() => router.push('/insights/month' as never)}
         />
 
-        <QuickStats today={todaySpent} week={weekSpent} streak={streakCount} />
-
-        <CategorySpendingBars byCategory={byCategory} />
+        <QuickStats today={todaySpent} week={weekSpent} />
 
         <MondayRoast roastText={roastMessage} isVisible />
 
@@ -245,22 +243,5 @@ const styles = StyleSheet.create({
     fontSize: typography.fontSize.xl,
     color: colors.onSurface,
     fontWeight: typography.fontWeight.bold,
-  },
-  streakPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: colors.surfaceContainerHighest,
-    borderRadius: borderRadius.full,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  streakEmoji: {
-    fontSize: 14,
-  },
-  streakText: {
-    fontSize: typography.fontSize.xs,
-    fontWeight: typography.fontWeight.bold,
-    color: colors.onSurface,
   },
 });
