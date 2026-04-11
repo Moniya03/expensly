@@ -1,14 +1,28 @@
-import React, { useEffect } from 'react';
-import { StyleSheet, Pressable, View, ActivityIndicator, Animated, Text } from 'react-native';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { StyleSheet, Pressable, View, Animated, Text } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useQueryClient } from '@tanstack/react-query';
-import { colors } from '../constants/theme';
+import { colors, spacing } from '../constants/theme';
 import { AudioWaveform } from './ui/AudioWaveform';
 import { useVoiceRecording } from '../hooks/useVoiceRecording';
 import { useAuthStore } from '../stores/authStore';
 import { processVoiceExpense, audioUriToBase64 } from '../services/voiceExpense';
+import { useCreateTransaction } from '../hooks/useTransactions';
+import { VoiceExpenseConfirmationSheet } from './voice/VoiceExpenseConfirmationSheet';
+import type { CreateTransactionInput, VoiceExpenseDraft, VoiceExpenseResponse } from '../types';
+
+function normalizeDraft(response: VoiceExpenseResponse): {
+  draft: VoiceExpenseDraft | null;
+  transcription: string;
+  parseMeta: VoiceExpenseResponse['parse_meta'];
+} {
+  return {
+    draft: response.draft ?? null,
+    transcription: response.transcription?.text ?? '',
+    parseMeta: response.parse_meta ?? null,
+  };
+}
 
 export default function VoiceFAB() {
   const {
@@ -18,138 +32,172 @@ export default function VoiceFAB() {
     setErrorMessage,
     startRecording,
     stopRecording,
-    cancelRecording,
     reset,
+    cancelRecording,
   } = useVoiceRecording();
 
   const { session } = useAuthStore();
   const router = useRouter();
-  const queryClient = useQueryClient();
-  const pulseAnim = React.useRef(new Animated.Value(1)).current;
+  const { mutateAsync: createTransaction } = useCreateTransaction();
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const longPressTriggered = useRef(false);
 
-  // Pulsing animation for recording state
+  const [draft, setDraft] = useState<VoiceExpenseDraft | null>(null);
+  const [transcription, setTranscription] = useState('');
+  const [parseMeta, setParseMeta] = useState<VoiceExpenseResponse['parse_meta']>(null);
+  const [showSheet, setShowSheet] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
   useEffect(() => {
+    let loop: Animated.CompositeAnimation | undefined;
+
     if (state === 'recording') {
-      Animated.loop(
+      loop = Animated.loop(
         Animated.sequence([
-          Animated.timing(pulseAnim, {
-            toValue: 1.15,
-            duration: 800,
-            useNativeDriver: true,
-          }),
-          Animated.timing(pulseAnim, {
-            toValue: 1,
-            duration: 800,
-            useNativeDriver: true,
-          }),
+          Animated.timing(pulseAnim, { toValue: 1.15, duration: 800, useNativeDriver: true }),
+          Animated.timing(pulseAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
         ])
-      ).start();
+      );
+      loop.start();
     } else {
       pulseAnim.setValue(1);
     }
-  }, [state]);
 
-  // Auto-reset after success or error
-  useEffect(() => {
-    if (state === 'success' || state === 'error') {
-      const timer = setTimeout(() => {
-        reset();
-      }, 2000);
-      return () => clearTimeout(timer);
+    return () => loop?.stop();
+  }, [pulseAnim, state]);
+
+  const inlineErrorMessage = useMemo(
+    () => (state === 'error' && errorMessage ? "Couldn't understand that. Please re-record." : null),
+    [errorMessage, state]
+  );
+
+  const handleLongPress = () => {
+    if (state === 'idle') {
+      longPressTriggered.current = true;
+      router.push('/transaction/add' as never);
     }
-  }, [state]);
+  };
 
-  /**
-   * Handle button press based on current state
-   */
-  const handlePress = async () => {
+  const handleRecordPress = async () => {
     try {
-      if (state === 'idle') {
-        // Start recording
-        await startRecording();
-      } else if (state === 'recording') {
-        // Stop recording and process
-        setState('processing');
-        const audioUri = await stopRecording();
-
-        if (!audioUri) {
-          setErrorMessage('Failed to get recording');
-          setState('error');
-          return;
-        }
-
-        // Get user ID
-        const userId = session?.user?.id;
-        if (!userId) {
-          setErrorMessage('You must be logged in to record expenses');
-          setState('error');
-          return;
-        }
-
-        // Convert to base64
-        const audioBase64 = await audioUriToBase64(audioUri);
-
-        // Send to backend
-        const response = await processVoiceExpense(audioBase64, userId);
-
-        if (response.success) {
-          setState('success');
-          await queryClient.invalidateQueries({ queryKey: ['transactions'] });
-          console.log('Voice expense created:', response.transaction);
-        } else {
-          console.error('Voice expense processing failed:', response.error);
-          setErrorMessage(response.error || 'Failed to process voice expense');
-          setState('error');
-        }
-      }
-      // Ignore presses during processing, success, or error states
+      if (state !== 'idle') return;
+      await startRecording();
     } catch (error) {
-      console.error('Error handling voice recording:', error);
-      setErrorMessage(
-        error instanceof Error ? error.message : 'An unexpected error occurred'
-      );
+      setErrorMessage(error instanceof Error ? error.message : 'Failed to start recording');
       setState('error');
     }
   };
 
-  const inlineErrorMessage =
-    state === 'error' && errorMessage
-      ? "Couldn't understand that. Please re-record."
-      : null;
+  const handleStopAndParse = async () => {
+    try {
+      setState('processing');
+      const audioUri = await stopRecording();
 
-  /**
-   * Handle long press to navigate to manual expense form
-   */
-  const handleLongPress = () => {
-    // Only allow long-press when idle (not recording/processing)
-    if (state === 'idle') {
-      router.push('/transaction/add' as any);
+      if (!audioUri) {
+        setErrorMessage('Failed to get recording');
+        setState('error');
+        return;
+      }
+
+      const userId = session?.user?.id;
+      if (!userId) {
+        setErrorMessage('You must be logged in to record expenses');
+        setState('error');
+        return;
+      }
+
+      const audioBase64 = await audioUriToBase64(audioUri);
+      const response = await processVoiceExpense(audioBase64, userId);
+
+      if (!response.success || !response.draft) {
+        setErrorMessage(response.error || 'Failed to process voice expense');
+        setState('error');
+        return;
+      }
+
+      const normalized = normalizeDraft(response);
+      setDraft(normalized.draft);
+      setTranscription(normalized.transcription);
+      setParseMeta(normalized.parseMeta);
+      setShowSheet(true);
+      setErrorMessage(null);
+      setState('idle');
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'An unexpected error occurred');
+      setState('error');
     }
   };
 
-  /**
-   * Get button colors based on state
-   */
+  const handlePress = async () => {
+    if (longPressTriggered.current) {
+      longPressTriggered.current = false;
+      return;
+    }
+
+    if (state === 'idle') {
+      await handleRecordPress();
+      return;
+    }
+
+    if (state === 'error') {
+      reset();
+      await handleRecordPress();
+      return;
+    }
+
+    if (state === 'recording') {
+      await handleStopAndParse();
+    }
+  };
+
+  const handleSave = async (transaction: CreateTransactionInput) => {
+    try {
+      setIsSaving(true);
+      await createTransaction(transaction);
+      setShowSheet(false);
+      setDraft(null);
+      setTranscription('');
+      setParseMeta(null);
+      setErrorMessage(null);
+      reset();
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Failed to save expense');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleReRecord = async () => {
+    setShowSheet(false);
+    setDraft(null);
+    setTranscription('');
+    setParseMeta(null);
+    await cancelRecording();
+    reset();
+  };
+
+  const handleCancel = async () => {
+    setShowSheet(false);
+    setDraft(null);
+    setTranscription('');
+    setParseMeta(null);
+    await cancelRecording();
+    reset();
+  };
+
   const getButtonColors = (): [string, string] => {
     switch (state) {
-      case 'success':
-        return ['#00D4AA', '#00D4AA']; // Green
       case 'error':
-        return [colors.error, colors.error]; // Red
+        return [colors.error, colors.error];
       default:
-        return [colors.primary, colors.secondary]; // Default gradient
+        return [colors.primary, colors.secondary];
     }
   };
 
-  /**
-   * Get icon based on state
-   */
   const getIcon = () => {
     switch (state) {
       case 'processing':
-        return <ActivityIndicator size="large" color="#FFFFFF" />;
-      case 'success':
-        return <Ionicons name="checkmark" size={32} color="#FFFFFF" />;
+        return <Text style={styles.processingText}>...</Text>;
       case 'error':
         return <Ionicons name="close" size={32} color="#FFFFFF" />;
       default:
@@ -158,56 +206,69 @@ export default function VoiceFAB() {
   };
 
   return (
-    <View style={styles.container}>
-      {inlineErrorMessage ? (
-        <View style={styles.errorBanner}>
-          <Text numberOfLines={1} style={styles.errorText}>
-            {inlineErrorMessage}
-          </Text>
-        </View>
-      ) : null}
-      <Pressable
-        onPress={handlePress}
-        onLongPress={handleLongPress}
-        delayLongPress={500}
-        disabled={state === 'processing' || state === 'success' || state === 'error'}
-        style={({ pressed }) => [{ opacity: pressed ? 0.8 : 1 }]}
-      >
-        <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
-          <LinearGradient
-            colors={getButtonColors()}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.button}
-          >
-            <View style={styles.contentWrapper}>
-              {getIcon()}
-              {state === 'recording' && <AudioWaveform isActive={true} barCount={5} />}
-            </View>
-          </LinearGradient>
-        </Animated.View>
-      </Pressable>
-    </View>
+    <>
+      <View style={styles.container} pointerEvents="box-none">
+        {inlineErrorMessage ? (
+          <View style={styles.errorBanner}>
+            <Text numberOfLines={1} style={styles.errorText}>
+              {inlineErrorMessage}
+            </Text>
+          </View>
+        ) : null}
+
+        <Text style={styles.hint}>Long press for manual</Text>
+
+        <Pressable
+          onPress={handlePress}
+          onLongPress={handleLongPress}
+          delayLongPress={500}
+          disabled={state === 'processing'}
+          style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}
+        >
+          <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
+            <LinearGradient
+              colors={getButtonColors()}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.button}
+            >
+              <View style={styles.contentWrapper}>
+                {getIcon()}
+                {state === 'recording' && <AudioWaveform isActive={true} barCount={5} />}
+              </View>
+            </LinearGradient>
+          </Animated.View>
+        </Pressable>
+      </View>
+
+      <VoiceExpenseConfirmationSheet
+        visible={showSheet}
+        draft={draft}
+        transcription={transcription}
+        parseMeta={parseMeta}
+        isSaving={isSaving}
+        errorMessage={errorMessage}
+        onSave={handleSave}
+        onReRecord={handleReRecord}
+        onCancel={handleCancel}
+      />
+    </>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    bottom: 20,
-    alignSelf: 'center',
+    left: 0,
+    right: 0,
+    bottom: 12,
+    alignItems: 'center',
     zIndex: 1000,
-    // Shadow for iOS
-    shadowColor: colors.primary,
-    shadowOffset: {
-      width: 0,
-      height: 6,
-    },
-    shadowOpacity: 0.35,
-    shadowRadius: 8,
-    // Elevation for Android
-    elevation: 10,
-    borderRadius: 32,
+  },
+  hint: {
+    marginBottom: 8,
+    color: colors.onSurfaceVariant,
+    fontSize: 12,
   },
   errorBanner: {
     marginBottom: 8,
@@ -226,14 +287,24 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   button: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 68,
+    height: 68,
+    borderRadius: 34,
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+    elevation: 10,
   },
   contentWrapper: {
     alignItems: 'center',
     gap: 4,
+  },
+  processingText: {
+    color: '#FFFFFF',
+    fontSize: 28,
+    lineHeight: 28,
   },
 });

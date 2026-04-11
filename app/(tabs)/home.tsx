@@ -11,10 +11,9 @@ import {
   QuickStats,
   RecentTransactions,
 } from '../../components/home';
-import VoiceFAB from '../../components/VoiceFAB';
 import { getCategoryConfig } from '../../constants/categories';
 import { Category } from '../../types';
-import { getGreeting } from '../../utils/date';
+import { getGreeting, parseLocalDate } from '../../utils/date';
 
 function getRoastMessage({
   spent,
@@ -82,7 +81,7 @@ export default function HomeScreen() {
 
     return monthlyTransactions
       .filter((transaction) => {
-        const date = new Date(transaction.transaction_date);
+        const date = parseLocalDate(transaction.transaction_date);
         date.setHours(0, 0, 0, 0);
         return date.getTime() === today.getTime();
       })
@@ -96,7 +95,7 @@ export default function HomeScreen() {
     startOfWeek.setHours(0, 0, 0, 0);
 
     return monthlyTransactions
-      .filter((transaction) => new Date(transaction.transaction_date) >= startOfWeek)
+      .filter((transaction) => parseLocalDate(transaction.transaction_date) >= startOfWeek)
       .reduce((sum, transaction) => sum + transaction.amount, 0);
   }, [monthlyTransactions]);
 
@@ -169,14 +168,18 @@ export default function HomeScreen() {
           onPress={() => router.push('/insights/month' as never)}
         />
 
-        <QuickStats today={todaySpent} week={weekSpent} />
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>At a glance</Text>
+          <QuickStats today={todaySpent} week={weekSpent} />
+        </View>
 
-        <MondayRoast roastText={roastMessage} isVisible />
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>Spending note</Text>
+          <MondayRoast roastText={roastMessage} isVisible />
+        </View>
 
         <RecentTransactions transactions={recentTransactions} />
       </ScrollView>
-
-      <VoiceFAB />
     </SafeAreaView>
   );
 }
@@ -196,8 +199,18 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: spacing.md,
-    paddingBottom: 100,
+    paddingBottom: 156,
     gap: spacing.lg,
+  },
+  section: {
+    gap: spacing.xs,
+  },
+  sectionLabel: {
+    fontSize: 10,
+    fontWeight: typography.fontWeight.semiBold,
+    color: colors.onSurfaceVariant,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
   },
   header: {
     flexDirection: 'row',

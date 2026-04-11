@@ -12,7 +12,7 @@ export const formatDate = (
   date: string | Date,
   format: 'full' | 'short' | 'time' | 'relative' = 'short'
 ): string => {
-  const d = typeof date === 'string' ? new Date(date) : date;
+  const d = typeof date === 'string' ? parseLocalDate(date) : date;
 
   switch (format) {
     case 'full':
@@ -123,7 +123,7 @@ export const getEndOfMonth = (): Date => {
  * @returns True if the date is today
  */
 export const isToday = (date: string | Date): boolean => {
-  const d = typeof date === 'string' ? new Date(date) : date;
+  const d = typeof date === 'string' ? parseLocalDate(date) : date;
   const today = new Date();
   return (
     d.getDate() === today.getDate() &&
@@ -138,7 +138,7 @@ export const isToday = (date: string | Date): boolean => {
  * @returns True if the date is yesterday
  */
 export const isYesterday = (date: string | Date): boolean => {
-  const d = typeof date === 'string' ? new Date(date) : date;
+  const d = typeof date === 'string' ? parseLocalDate(date) : date;
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
   return (
@@ -154,7 +154,27 @@ export const isYesterday = (date: string | Date): boolean => {
  * @returns ISO date string
  */
 export const toISODateString = (date: Date): string => {
-  return date.toISOString().split('T')[0];
+  return toLocalDateString(date);
+};
+
+export const parseLocalDate = (date: string | Date): Date => {
+  if (date instanceof Date) {
+    return date;
+  }
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    const [year, month, day] = date.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  }
+
+  return new Date(date);
+};
+
+export const toLocalDateString = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 };
 
 /**

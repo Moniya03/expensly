@@ -84,7 +84,9 @@ export function useVoiceRecording(): UseVoiceRecordingReturn {
 
       // Auto-stop after max duration
       maxDurationTimeoutRef.current = setTimeout(async () => {
-        await stopRecording();
+        await cancelRecording();
+        setErrorMessage('Recording timed out. Please tap to record again.');
+        setState('error');
       }, MAX_RECORDING_DURATION);
 
       console.log('Recording started');

@@ -65,6 +65,51 @@ export interface Transaction {
 }
 
 /**
+ * App-side payload used when creating a transaction
+ */
+export interface CreateTransactionInput {
+  amount: number;
+  category: Category;
+  description: string;
+  merchant: string | null;
+  transaction_date: string;
+  source: 'voice' | 'manual';
+  voice_transcript?: string | null;
+}
+
+/**
+ * Draft returned by the voice parser before user confirmation
+ */
+export interface VoiceExpenseDraft {
+  amount: number;
+  category: Category;
+  description: string;
+  merchant: string | null;
+  transaction_date?: string;
+  date?: string;
+}
+
+/**
+ * Voice parsing response returned by the backend
+ */
+export interface VoiceExpenseResponse {
+  success: boolean;
+  draft?: VoiceExpenseDraft;
+  transcription?: {
+    text: string;
+    confidence?: number;
+  };
+  parse_meta?: {
+    model_category: Category;
+    final_category: Category;
+    category_source: 'model' | 'heuristic';
+    warnings?: string[];
+  } | null;
+  error?: string;
+  details?: string;
+}
+
+/**
  * Budget entry stored in Supabase
  * Monthly budgets can be split across rows/categories for a given month/year
  */

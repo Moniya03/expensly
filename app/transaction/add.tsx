@@ -10,6 +10,7 @@ import { DatePicker } from '../../components/ui/DatePicker';
 import { useCreateTransaction } from '../../hooks/useTransactions';
 import { Category } from '../../types';
 import { colors, spacing, borderRadius, typography } from '../../constants/theme';
+import { toLocalDateString } from '../../utils/date';
 
 function normalizeCategory(category: Category): Category {
   // Temporary DB compatibility: the physical schema currently does not support bills.
@@ -50,7 +51,7 @@ export default function AddExpenseScreen() {
       category: normalizeCategory(category!),
       description: description || merchant || 'Manual expense',
       merchant: merchant || null,
-      transaction_date: date.toISOString(),
+      transaction_date: toLocalDateString(date),
       source: 'manual',
     }, {
       onSuccess: () => router.back(),

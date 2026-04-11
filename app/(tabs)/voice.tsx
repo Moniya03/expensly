@@ -1,4 +1,5 @@
-// Placeholder screen for voice tab (handled by VoiceFAB)
+import { Redirect } from 'expo-router';
+
 export default function VoiceScreen() {
-  return null;
+  return <Redirect href="/home" />;
 }

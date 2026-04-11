@@ -1,7 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../services/supabase';
-import { Transaction } from '../types';
+import { CreateTransactionInput, Transaction } from '../types';
 import { useAuthStore } from '../stores/authStore';
+import { toLocalDateString } from '../utils/date';
 
 const TRANSACTION_COLUMNS = 'id, user_id, amount, category, note, input_method, voice_transcript, date, created_at';
 
@@ -60,7 +61,7 @@ function mapRowToTransaction(row: TransactionRow): Transaction {
 }
 
 function mapTransactionToInsertRow(
-  transaction: Omit<Transaction, 'id' | 'created_at' | 'is_synced' | 'user_id'> & { user_id: string }
+  transaction: CreateTransactionInput & { user_id: string }
 ): Omit<TransactionRow, 'id' | 'created_at'> {
   const note = transaction.merchant
     ? `${transaction.description}${transaction.description ? ' · ' : ''}${transaction.merchant}`
@@ -72,13 +73,13 @@ function mapTransactionToInsertRow(
     category: transaction.category === 'bills' ? 'other' : transaction.category,
     note,
     input_method: transaction.source,
-    voice_transcript: null,
+    voice_transcript: transaction.voice_transcript ?? null,
     date: transaction.transaction_date.split('T')[0],
   };
 }
 
 function mapTransactionToUpdateRow(
-  transaction: Omit<Transaction, 'id' | 'created_at' | 'is_synced' | 'user_id'>
+  transaction: CreateTransactionInput
 ): Partial<Omit<TransactionRow, 'id' | 'user_id' | 'created_at' | 'voice_transcript'>> {
   const note = transaction.merchant
     ? `${transaction.description}${transaction.description ? ' · ' : ''}${transaction.merchant}`
@@ -98,7 +99,7 @@ function mapTransactionToUpdateRow(
  */
 function getMonthStart(): string {
   const now = new Date();
-  return new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+  return toLocalDateString(new Date(now.getFullYear(), now.getMonth(), 1));
 }
 
 /**
@@ -106,7 +107,7 @@ function getMonthStart(): string {
  */
 function getMonthEnd(): string {
   const now = new Date();
-  return new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+  return toLocalDateString(new Date(now.getFullYear(), now.getMonth() + 1, 0));
 }
 
 /**
@@ -182,7 +183,7 @@ async function fetchTransactionById(userId: string, id: string): Promise<Transac
  * Create a new transaction
  */
 async function createTransaction(
-  transaction: Omit<Transaction, 'id' | 'created_at' | 'is_synced'>
+  transaction: CreateTransactionInput & { user_id: string }
 ): Promise<Transaction> {
   const { data, error } = await supabase
     .from('transactions')
@@ -200,7 +201,7 @@ async function createTransaction(
 async function updateTransaction(
   userId: string,
   id: string,
-  transaction: Omit<Transaction, 'id' | 'created_at' | 'is_synced' | 'user_id'>
+  transaction: CreateTransactionInput
 ): Promise<Transaction> {
   const { data, error } = await supabase
     .from('transactions')
@@ -288,7 +289,7 @@ export function useCreateTransaction() {
   const userId = session?.user?.id;
 
   return useMutation({
-    mutationFn: (transaction: Omit<Transaction, 'id' | 'created_at' | 'is_synced' | 'user_id'>) =>
+    mutationFn: (transaction: CreateTransactionInput) =>
       createTransaction({ ...transaction, user_id: userId! }),
     onSuccess: () => {
       // Invalidate transaction queries to refetch
@@ -303,7 +304,7 @@ export function useUpdateTransaction(id: string) {
   const userId = session?.user?.id;
 
   return useMutation({
-    mutationFn: (transaction: Omit<Transaction, 'id' | 'created_at' | 'is_synced' | 'user_id'>) =>
+    mutationFn: (transaction: CreateTransactionInput) =>
       updateTransaction(userId!, id, transaction),
     onSuccess: (updatedTransaction) => {
       queryClient.setQueryData(['transaction', userId, id], updatedTransaction);

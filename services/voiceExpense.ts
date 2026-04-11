@@ -1,18 +1,6 @@
 import { supabase } from './supabase';
 import { readAsStringAsync, EncodingType } from 'expo-file-system/legacy';
-
-export interface VoiceExpenseRequest {
-  audioBase64: string;
-  userId: string;
-}
-
-export interface VoiceExpenseResponse {
-  success: boolean;
-  transaction?: any;
-  transcription?: string;
-  error?: string;
-  details?: string;
-}
+import type { VoiceExpenseResponse } from '../types';
 
 async function extractFunctionError(error: any): Promise<string> {
   let details: string | undefined = error?.details;
@@ -87,8 +75,15 @@ export async function processVoiceExpense(
       };
     }
 
+    if (!data || typeof data !== 'object' || !('success' in data)) {
+      return {
+        success: false,
+        error: 'Invalid response from voice parser',
+      };
+    }
+
     console.log('Voice expense processed successfully:', data);
-    return data;
+    return data as VoiceExpenseResponse;
   } catch (error) {
     const parsedError = await extractFunctionError(error);
     console.error('Voice expense error:', parsedError);

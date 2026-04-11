@@ -11,12 +11,18 @@ interface AmountInputProps {
   value: string;
   onChangeValue: (value: string) => void;
   error?: string;
+  integerOnly?: boolean;
 }
 
-export function AmountInput({ value, onChangeValue, error }: AmountInputProps) {
+export function AmountInput({ value, onChangeValue, error, integerOnly = false }: AmountInputProps) {
   const [isFocused, setIsFocused] = useState(false);
 
   const handleChange = (text: string) => {
+    if (integerOnly) {
+      onChangeValue(text.replace(/[^0-9]/g, ''));
+      return;
+    }
+
     const cleaned = text.replace(/[^0-9.]/g, '');
     const parts = cleaned.split('.');
     if (parts.length > 2) return;
@@ -41,7 +47,7 @@ export function AmountInput({ value, onChangeValue, error }: AmountInputProps) {
           placeholderTextColor={colors.onSurfaceVariant}
           value={value}
           onChangeText={handleChange}
-          keyboardType="decimal-pad"
+          keyboardType={integerOnly ? 'number-pad' : 'decimal-pad'}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           selectionColor={colors.primary}
