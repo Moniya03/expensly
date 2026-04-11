@@ -112,7 +112,7 @@ export default function MonthlyInsightsScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.summaryCard}>
+        <View style={styles.summaryBlock}>
           <Text style={styles.summaryLabel}>Spent this month</Text>
           <Text style={styles.summaryAmount}>{formatRupees(totalSpent)}</Text>
           <Text style={styles.summaryMeta}>
@@ -127,8 +127,11 @@ export default function MonthlyInsightsScreen() {
               const isExpanded = !!expandedCategories[item.category];
 
               return (
-                <View key={item.category} style={styles.categoryCard}>
-                  <Pressable onPress={() => toggleCategory(item.category)} style={styles.categoryRow}>
+                <View key={item.category} style={styles.categoryBlock}>
+                  <Pressable
+                    onPress={() => toggleCategory(item.category)}
+                    style={({ pressed }) => [styles.categoryRow, pressed && styles.pressed]}
+                  >
                     <View style={styles.categoryInfo}>
                       <View style={[styles.categoryDot, { backgroundColor: getCategoryColor(item.category) }]} />
                       <Text style={styles.categoryLabel}>{config.label}</Text>
@@ -216,13 +219,12 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xxl,
     gap: spacing.md,
   },
-  summaryCard: {
-    backgroundColor: colors.surfaceContainerHigh,
-    borderRadius: borderRadius.md,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.outlineVariant,
+  summaryBlock: {
     gap: spacing.xs,
+    paddingVertical: spacing.xs,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.outlineVariant,
+    paddingBottom: spacing.md,
   },
   summaryLabel: {
     fontSize: typography.fontSize.sm,
@@ -241,18 +243,16 @@ const styles = StyleSheet.create({
   section: {
     gap: spacing.sm,
   },
-  categoryCard: {
-    backgroundColor: colors.surfaceContainerHigh,
-    borderRadius: borderRadius.md,
-    borderWidth: 1,
-    borderColor: colors.outlineVariant,
-    overflow: 'hidden',
+  categoryBlock: {
+    paddingVertical: spacing.xs,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.outlineVariant,
   },
   categoryRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: spacing.md,
+    paddingVertical: spacing.md,
     gap: spacing.md,
   },
   categoryInfo: {
@@ -282,17 +282,17 @@ const styles = StyleSheet.create({
     color: colors.onSurface,
   },
   groupList: {
-    borderTopWidth: 1,
-    borderTopColor: colors.outlineVariant,
-    paddingHorizontal: spacing.md,
     paddingBottom: spacing.sm,
   },
   groupRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingTop: spacing.sm,
+    paddingVertical: spacing.sm,
     gap: spacing.md,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.outlineVariant,
+    marginLeft: 20,
   },
   groupLabel: {
     flex: 1,
@@ -305,12 +305,10 @@ const styles = StyleSheet.create({
     color: colors.onSurface,
   },
   emptyState: {
-    backgroundColor: colors.surfaceContainerHigh,
-    borderRadius: borderRadius.md,
-    padding: spacing.xl,
-    borderWidth: 1,
-    borderColor: colors.outlineVariant,
+    paddingVertical: spacing.lg,
     gap: spacing.xs,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.outlineVariant,
   },
   emptyTitle: {
     fontSize: typography.fontSize.lg,
@@ -320,5 +318,8 @@ const styles = StyleSheet.create({
   emptySubtitle: {
     fontSize: typography.fontSize.sm,
     color: colors.onSurfaceVariant,
+  },
+  pressed: {
+    opacity: 0.72,
   },
 });

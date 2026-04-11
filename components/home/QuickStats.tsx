@@ -21,11 +21,14 @@ export default function QuickStats({ today, week }: QuickStatsProps) {
 
   return (
     <View style={styles.container}>
-      {statCards.map((card) => (
-        <View key={card.key} style={styles.card}>
-          <Text style={styles.label}>{card.label}</Text>
-          <Text style={styles.value}>{values[card.key]}</Text>
-        </View>
+      {statCards.map((card, index) => (
+        <React.Fragment key={card.key}>
+          <View style={styles.stat}>
+            <Text style={styles.label}>{card.label}</Text>
+            <Text style={styles.value}>{values[card.key]}</Text>
+          </View>
+          {index < statCards.length - 1 ? <View style={styles.divider} /> : null}
+        </React.Fragment>
       ))}
     </View>
   );
@@ -34,24 +37,28 @@ export default function QuickStats({ today, week }: QuickStatsProps) {
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    gap: spacing.sm,
+    alignItems: 'stretch',
+    paddingVertical: spacing.xs,
   },
-  card: {
+  stat: {
     flex: 1,
-    backgroundColor: colors.surfaceContainerHigh,
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.outlineVariant,
-    gap: 6,
+    gap: 4,
+    paddingVertical: spacing.xs,
+  },
+  divider: {
+    width: StyleSheet.hairlineWidth,
+    backgroundColor: colors.outlineVariant,
+    marginHorizontal: spacing.md,
   },
   label: {
     fontSize: typography.fontSize.xs,
     fontWeight: typography.fontWeight.medium,
     color: colors.onSurfaceVariant,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
   },
   value: {
-    fontSize: typography.fontSize.md,
+    fontSize: typography.fontSize.lg,
     fontWeight: typography.fontWeight.bold,
     color: colors.onSurface,
   },

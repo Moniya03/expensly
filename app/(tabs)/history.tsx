@@ -8,6 +8,7 @@ import { getHistoricalBudgetForMonth, useBudgets } from '../../hooks/useBudget';
 import { Transaction } from '../../types';
 import { formatRupees } from '../../utils/currency';
 import { getCategoryColor, getCategoryConfig } from '../../constants/categories';
+import { parseLocalDate } from '../../utils/date';
 
 type MonthItem = {
   key: string;
@@ -33,7 +34,7 @@ export default function HistoryScreen() {
       const month = date.getMonth() + 1;
       const year = date.getFullYear();
       const monthTransactions = transactions.filter((transaction) => {
-        const transactionDate = new Date(transaction.transaction_date);
+        const transactionDate = parseLocalDate(transaction.transaction_date);
         return transactionDate.getMonth() + 1 === month && transactionDate.getFullYear() === year;
       });
       const spent = monthTransactions.reduce((sum, transaction) => sum + transaction.amount, 0);
@@ -52,7 +53,7 @@ export default function HistoryScreen() {
         spent,
         budget,
         transactions: monthTransactions.sort(
-          (a, b) => new Date(b.transaction_date).getTime() - new Date(a.transaction_date).getTime()
+          (a, b) => parseLocalDate(b.transaction_date).getTime() - parseLocalDate(a.transaction_date).getTime()
         ),
       };
     });
@@ -68,7 +69,7 @@ export default function HistoryScreen() {
 
   const selectedMonth = monthItems.find((item) => item.key === selectedKey) ?? monthItems[monthItems.length - 1];
   const maxValue = React.useMemo(
-    () => Math.max(...monthItems.flatMap((item) => [item.spent, item.budget]), 1),
+    () => Math.max(...monthItems.map((item) => item.spent), 1),
     [monthItems]
   );
 
@@ -89,7 +90,7 @@ export default function HistoryScreen() {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <Text style={styles.title}>History</Text>
-          <Text style={styles.subtitle}>Spent vs budget across recent months</Text>
+          <Text style={styles.subtitle}>Monthly spending across recent months</Text>
         </View>
 
         <View style={styles.chartCard}>
@@ -98,17 +99,12 @@ export default function HistoryScreen() {
               <View style={[styles.legendDot, { backgroundColor: colors.primary }]} />
               <Text style={styles.legendText}>Spent</Text>
             </View>
-            <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: colors.secondary }]} />
-              <Text style={styles.legendText}>Budget</Text>
-            </View>
           </View>
 
           <View style={styles.barChart}>
             {monthItems.map((item) => {
               const selected = item.key === selectedMonth?.key;
               const spentHeight = Math.max((item.spent / maxValue) * 140, item.spent > 0 ? 10 : 4);
-              const budgetHeight = Math.max((item.budget / maxValue) * 140, item.budget > 0 ? 10 : 4);
 
               return (
                 <Pressable
@@ -118,7 +114,6 @@ export default function HistoryScreen() {
                 >
                   <View style={styles.barGroup}>
                     <View style={[styles.bar, styles.spentBar, { height: spentHeight }]} />
-                    <View style={[styles.bar, styles.budgetBar, { height: budgetHeight }]} />
                   </View>
                   <Text style={[styles.monthLabel, selected && styles.monthLabelSelected]}>{item.label}</Text>
                 </Pressable>
@@ -128,7 +123,7 @@ export default function HistoryScreen() {
         </View>
 
         {selectedMonth ? (
-          <>
+          <View style={styles.monthSection}>
             <View style={styles.summaryCard}>
               <Text style={styles.summaryTitle}>
                 {new Date(selectedMonth.year, selectedMonth.month - 1, 1).toLocaleDateString('en-IN', {
@@ -151,8 +146,8 @@ export default function HistoryScreen() {
                   <Text style={[styles.summaryValue, delta < 0 && styles.overValue]}>
                     {formatRupees(Math.abs(delta))}
                   </Text>
+                  </View>
                 </View>
-              </View>
             </View>
 
             <View style={styles.transactionsSection}>
@@ -160,33 +155,36 @@ export default function HistoryScreen() {
 
               {selectedMonth.transactions.length > 0 ? (
                 <View style={styles.transactionList}>
-                  {selectedMonth.transactions.map((transaction) => {
+                  {selectedMonth.transactions.map((transaction, index) => {
                     const categoryConfig = getCategoryConfig(transaction.category);
                     const categoryColor = getCategoryColor(transaction.category);
 
                     return (
-                      <View key={transaction.id} style={styles.transactionItem}>
-                        <View style={[styles.transactionIcon, { backgroundColor: `${categoryColor}22` }]}>
-                          <Text style={styles.transactionEmoji}>{categoryConfig.emoji}</Text>
-                        </View>
+                      <React.Fragment key={transaction.id}>
+                        <View style={styles.transactionItem}>
+                          <View style={[styles.transactionIcon, { backgroundColor: `${categoryColor}18` }]}> 
+                            <Text style={styles.transactionEmoji}>{categoryConfig.emoji}</Text>
+                          </View>
 
-                        <View style={styles.transactionDetails}>
-                          <Text style={styles.transactionDescription} numberOfLines={1}>
-                            {transaction.description || categoryConfig.label}
-                          </Text>
-                          <Text style={styles.transactionMeta}>
-                            {new Date(transaction.transaction_date).toLocaleDateString('en-IN', {
-                              day: 'numeric',
-                              month: 'short',
-                            })}
-                            {transaction.merchant ? ` • ${transaction.merchant}` : ''}
+                          <View style={styles.transactionDetails}>
+                            <Text style={styles.transactionDescription} numberOfLines={1}>
+                              {transaction.description || categoryConfig.label}
+                            </Text>
+                            <Text style={styles.transactionMeta}>
+                              {parseLocalDate(transaction.transaction_date).toLocaleDateString('en-IN', {
+                                day: 'numeric',
+                                month: 'short',
+                              })}
+                              {transaction.merchant ? ` • ${transaction.merchant}` : ''}
+                            </Text>
+                          </View>
+
+                          <Text style={[styles.transactionAmount, { color: categoryColor }]}> 
+                            {formatRupees(transaction.amount)}
                           </Text>
                         </View>
-
-                        <Text style={[styles.transactionAmount, { color: categoryColor }]}>
-                          {formatRupees(transaction.amount)}
-                        </Text>
-                      </View>
+                        {index < selectedMonth.transactions.length - 1 ? <View style={styles.transactionSeparator} /> : null}
+                      </React.Fragment>
                     );
                   })}
                 </View>
@@ -196,7 +194,7 @@ export default function HistoryScreen() {
                 </View>
               )}
             </View>
-          </>
+          </View>
         ) : null}
       </ScrollView>
     </SafeAreaView>
@@ -215,7 +213,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: spacing.md,
-    paddingBottom: spacing.xxl,
+    paddingBottom: 156,
     gap: spacing.lg,
   },
   header: {
@@ -288,9 +286,6 @@ const styles = StyleSheet.create({
   spentBar: {
     backgroundColor: colors.primary,
   },
-  budgetBar: {
-    backgroundColor: colors.secondary,
-  },
   monthLabel: {
     marginTop: spacing.sm,
     fontSize: typography.fontSize.xs,
@@ -301,11 +296,13 @@ const styles = StyleSheet.create({
     fontWeight: typography.fontWeight.semiBold,
   },
   summaryCard: {
-    backgroundColor: colors.surfaceContainerHigh,
-    borderRadius: borderRadius.md,
-    borderWidth: 1,
-    borderColor: colors.outlineVariant,
+    backgroundColor: 'transparent',
     padding: spacing.md,
+    gap: spacing.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.outlineVariant,
+  },
+  monthSection: {
     gap: spacing.md,
   },
   summaryTitle: {
@@ -319,9 +316,7 @@ const styles = StyleSheet.create({
   },
   summaryStat: {
     flex: 1,
-    backgroundColor: colors.surfaceContainerHighest,
-    borderRadius: borderRadius.sm,
-    padding: spacing.sm,
+    paddingVertical: spacing.xs,
     gap: 4,
   },
   summaryLabel: {
@@ -340,21 +335,25 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   transactionsTitle: {
-    fontSize: typography.fontSize.xl,
-    fontWeight: typography.fontWeight.bold,
-    color: colors.onSurface,
+    fontSize: 10,
+    fontWeight: typography.fontWeight.semiBold,
+    color: colors.onSurfaceVariant,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
   },
   transactionList: {
-    gap: spacing.sm,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.outlineVariant,
   },
   transactionItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surfaceContainerHigh,
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.outlineVariant,
+    paddingVertical: spacing.md,
+  },
+  transactionSeparator: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: colors.outlineVariant,
+    marginLeft: 58,
   },
   transactionIcon: {
     width: 42,
@@ -386,12 +385,10 @@ const styles = StyleSheet.create({
     marginLeft: spacing.sm,
   },
   emptyCard: {
-    backgroundColor: colors.surfaceContainerHigh,
-    borderRadius: borderRadius.md,
-    padding: spacing.xl,
-    borderWidth: 1,
-    borderColor: colors.outlineVariant,
+    paddingVertical: spacing.lg,
     alignItems: 'center',
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.outlineVariant,
   },
   emptyText: {
     fontSize: typography.fontSize.md,

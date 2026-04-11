@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { colors, typography, spacing, borderRadius } from '../../constants/theme';
 import { formatRupees } from '../../utils/currency';
-import { getRelativeTime } from '../../utils/date';
+import { formatDate, getRelativeTime, parseLocalDate } from '../../utils/date';
 import { getCategoryConfig, getCategoryColor } from '../../constants/categories';
 import { Transaction } from '../../types';
 
@@ -32,24 +32,29 @@ export default function RecentTransactions({ transactions, onSeeAll }: RecentTra
             const categoryColor = getCategoryColor(transaction.category);
             
             return (
-              <View key={transaction.id} style={styles.transactionItem}>
-                <View style={[styles.iconContainer, { backgroundColor: `${categoryColor}22` }]}>
-                  <Text style={styles.categoryEmoji}>{categoryConfig.emoji}</Text>
-                </View>
+              <React.Fragment key={transaction.id}>
+                <View style={styles.transactionItem}>
+                  <View style={[styles.iconContainer, { backgroundColor: `${categoryColor}18` }]}>
+                    <Text style={styles.categoryEmoji}>{categoryConfig.emoji}</Text>
+                  </View>
 
-                <View style={styles.details}>
-                  <Text style={styles.description} numberOfLines={1}>
-                    {transaction.description || categoryConfig.label}
-                  </Text>
-                  <Text style={styles.timeAgo}>
-                    {getRelativeTime(new Date(transaction.transaction_date))}
+                  <View style={styles.details}>
+                    <Text style={styles.description} numberOfLines={1}>
+                      {transaction.description || categoryConfig.label}
+                    </Text>
+                    <Text style={styles.timeAgo}>
+                      {transaction.created_at
+                        ? getRelativeTime(new Date(transaction.created_at))
+                        : formatDate(parseLocalDate(transaction.transaction_date), 'short')}
+                    </Text>
+                  </View>
+
+                  <Text style={[styles.amount, { color: categoryColor }]}>
+                    -{formatRupees(transaction.amount)}
                   </Text>
                 </View>
-
-                <Text style={[styles.amount, { color: categoryColor }]}>
-                  -{formatRupees(transaction.amount)}
-                </Text>
-              </View>
+                <View style={styles.separator} />
+              </React.Fragment>
             );
           })}
         </View>
@@ -70,7 +75,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: spacing.md,
+    marginBottom: spacing.xs,
   },
   title: {
     fontSize: typography.fontSize.xl,
@@ -83,16 +88,13 @@ const styles = StyleSheet.create({
     color: colors.primary,
   },
   list: {
-    gap: spacing.sm,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.outlineVariant,
   },
   transactionItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surfaceContainerHigh,
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.outlineVariant,
+    paddingVertical: spacing.md,
   },
   iconContainer: {
     width: 44,
@@ -124,13 +126,16 @@ const styles = StyleSheet.create({
     fontWeight: typography.fontWeight.semiBold,
     marginLeft: spacing.sm,
   },
+  separator: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: colors.outlineVariant,
+    marginLeft: 60,
+  },
   emptyContainer: {
-    backgroundColor: colors.surfaceContainerHigh,
-    borderRadius: borderRadius.md,
-    padding: spacing.xl,
+    paddingVertical: spacing.lg,
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.outlineVariant,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.outlineVariant,
   },
   emptyText: {
     fontSize: typography.fontSize.md,
