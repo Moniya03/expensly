@@ -47,12 +47,16 @@ function getRoastMessage({
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { profile } = useAuthStore();
+  const { profile, session } = useAuthStore();
   const { data: recentTransactions = [], isLoading: transactionsLoading } = useRecentTransactions(5);
   const { data: monthlyTransactions = [], isLoading: monthlyTransactionsLoading } =
     useMonthlyTransactions();
 
-  const displayName = profile?.display_name || 'there';
+  const displayName =
+    profile?.name ||
+    profile?.display_name ||
+    session?.user.user_metadata?.name ||
+    'there';
   const greeting = getGreeting();
   const isLoading = transactionsLoading || monthlyTransactionsLoading;
 
@@ -168,15 +172,9 @@ export default function HomeScreen() {
           onPress={() => router.push('/insights/month' as never)}
         />
 
-        <View style={styles.section}>
-          <Text style={styles.sectionLabel}>At a glance</Text>
-          <QuickStats today={todaySpent} week={weekSpent} />
-        </View>
+        <QuickStats today={todaySpent} week={weekSpent} />
 
-        <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Spending note</Text>
-          <MondayRoast roastText={roastMessage} isVisible />
-        </View>
+        <MondayRoast roastText={roastMessage} isVisible />
 
         <RecentTransactions transactions={recentTransactions} />
       </ScrollView>
@@ -201,16 +199,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingBottom: 156,
     gap: spacing.lg,
-  },
-  section: {
-    gap: spacing.xs,
-  },
-  sectionLabel: {
-    fontSize: 10,
-    fontWeight: typography.fontWeight.semiBold,
-    color: colors.onSurfaceVariant,
-    letterSpacing: 1,
-    textTransform: 'uppercase',
   },
   header: {
     flexDirection: 'row',

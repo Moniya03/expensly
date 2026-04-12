@@ -39,7 +39,7 @@ const queryClient = new QueryClient();
 function RootLayoutNav() {
   const router = useRouter();
   const segments = useSegments();
-  const { session, isInitialized, initialize } = useAuthStore();
+  const { session, profile, isInitialized, hasResolvedProfile, initialize } = useAuthStore();
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -51,15 +51,22 @@ function RootLayoutNav() {
 
   useEffect(() => {
     if (!isInitialized) return;
-    
+
     const inAuthGroup = segments[0] === '(auth)';
-    
+    const inOnboarding = segments[0] === 'onboarding';
+    const hasName = Boolean((profile?.name || profile?.display_name || session?.user.user_metadata?.name || '').trim());
+    const needsNameOnboarding = !!session && hasResolvedProfile && (!profile?.onboarding_complete || !hasName);
+
     if (!session && !inAuthGroup) {
       router.replace('/(auth)/welcome');
-    } else if (session && inAuthGroup) {
+    } else if (session && !hasResolvedProfile) {
+      return;
+    } else if (needsNameOnboarding && !inOnboarding) {
+      router.replace('/onboarding/name');
+    } else if (session && !needsNameOnboarding && (inAuthGroup || inOnboarding)) {
       router.replace('/(tabs)/home');
     }
-  }, [session, isInitialized, segments]);
+  }, [session, profile, isInitialized, hasResolvedProfile, segments]);
 
   if (error) {
     return (
@@ -82,6 +89,7 @@ function RootLayoutNav() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(auth)" />
       <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="onboarding" />
       <Stack.Screen name="insights" />
     </Stack>
   );

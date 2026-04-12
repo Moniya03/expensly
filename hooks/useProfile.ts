@@ -36,14 +36,29 @@ const fetchProfile = async (userId: string): Promise<Profile | null> => {
  */
 const updateProfile = async (
   userId: string,
-  updates: Partial<Pick<Profile, 'display_name' | 'monthly_budget'>>
+  updates: Partial<Pick<Profile, 'name' | 'display_name' | 'monthly_budget' | 'onboarding_complete'>>
 ): Promise<Profile> => {
+  const payload: Record<string, unknown> = {
+    updated_at: new Date().toISOString(),
+  };
+
+  if (typeof updates.monthly_budget === 'number') {
+    payload.monthly_budget = updates.monthly_budget;
+  }
+
+  if (typeof updates.name === 'string') {
+    payload.name = updates.name;
+  } else if (typeof updates.display_name === 'string') {
+    payload.name = updates.display_name;
+  }
+
+  if (typeof updates.onboarding_complete === 'boolean') {
+    payload.onboarding_complete = updates.onboarding_complete;
+  }
+
   const { data, error } = await supabase
     .from('profiles')
-    .update({
-      ...updates,
-      updated_at: new Date().toISOString(),
-    })
+    .update(payload)
     .eq('id', userId)
     .select()
     .single();
@@ -85,7 +100,7 @@ export const useUpdateProfile = () => {
   const userId = session?.user?.id;
 
   return useMutation({
-    mutationFn: (updates: Partial<Pick<Profile, 'display_name' | 'monthly_budget'>>) => {
+    mutationFn: (updates: Partial<Pick<Profile, 'name' | 'display_name' | 'monthly_budget' | 'onboarding_complete'>>) => {
       if (!userId) {
         throw new Error('No user session');
       }

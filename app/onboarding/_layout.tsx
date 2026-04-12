@@ -1,0 +1,16 @@
+import { Stack } from 'expo-router';
+import { colors } from '../../constants/theme';
+
+export default function OnboardingLayout() {
+  return (
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        contentStyle: { backgroundColor: colors.surface },
+        animation: 'fade',
+      }}
+    >
+      <Stack.Screen name="name" />
+    </Stack>
+  );
+}

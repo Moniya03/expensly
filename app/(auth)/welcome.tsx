@@ -283,6 +283,7 @@ const styles = StyleSheet.create({
     color: colors.onSurfaceVariant,
     fontSize: typography.fontSize.sm,
     marginBottom: spacing.lg,
+    alignSelf: 'flex-start',
   },
   googleButtonText: {
     color: '#000000',

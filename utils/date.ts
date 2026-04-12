@@ -2,6 +2,23 @@
  * Date utilities for formatting and calculations
  */
 
+const INDIA_TIMEZONE = 'Asia/Kolkata';
+
+const getTimePartsInTimezone = (date: Date, timeZone: string) => {
+  return new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    hour: 'numeric',
+    minute: 'numeric',
+    second: 'numeric',
+    hour12: false,
+  }).formatToParts(date);
+};
+
+const getHourInTimezone = (date: Date, timeZone: string): number => {
+  const hourPart = getTimePartsInTimezone(date, timeZone).find((part) => part.type === 'hour');
+  return Number(hourPart?.value ?? 0);
+};
+
 /**
  * Format a date as a readable string
  * @param date - Date string or Date object
@@ -194,7 +211,7 @@ export const getDaysRemaining = (targetDate: string | Date): number => {
  * @returns Greeting string
  */
 export const getGreeting = (): string => {
-  const hour = new Date().getHours();
+  const hour = getHourInTimezone(new Date(), INDIA_TIMEZONE);
   if (hour < 12) {
     return 'Good morning';
   } else if (hour < 17) {

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { supabase } from '../services/supabase';
 

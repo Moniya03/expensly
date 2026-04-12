@@ -20,9 +20,11 @@ export interface Profile {
   /** Unique user identifier (matches Supabase auth.users.id) */
   id: string;
   /** User's email address */
-  email: string;
+  email?: string;
+  /** User's preferred name */
+  name?: string | null;
   /** Display name for the user (optional) */
-  display_name: string | null;
+  display_name?: string | null;
   /** URL to user's avatar image (optional) */
   avatar_url: string | null;
   /** Monthly budget amount in rupees (whole numbers only) */
@@ -30,11 +32,13 @@ export interface Profile {
   /** Current streak count for daily expense tracking */
   streak_count: number;
   /** Last date the streak was updated (ISO 8601 format) */
-  streak_last_date: string | null;
+  streak_last_date?: string | null;
   /** Timestamp when the profile was created */
   created_at: string;
   /** Timestamp when the profile was last updated */
   updated_at: string;
+  /** Whether the user completed onboarding */
+  onboarding_complete?: boolean;
 }
 
 /**

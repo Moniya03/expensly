@@ -22,7 +22,7 @@ export default function ProfileScreen() {
           <Ionicons name="person-circle" size={80} color={colors.primary} />
         </View>
         
-        <Text style={styles.name}>{profile?.display_name || 'User'}</Text>
+        <Text style={styles.name}>{profile?.name || profile?.display_name || 'User'}</Text>
         <Text style={styles.email}>{profile?.id ? 'Signed in' : 'Not signed in'}</Text>
 
         <TouchableOpacity 
