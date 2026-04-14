@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { colors, typography, spacing, borderRadius } from '../../constants/theme';
 import { formatRupees } from '../../utils/currency';
 import { formatDate, getRelativeTime, parseLocalDate } from '../../utils/date';
@@ -34,8 +35,17 @@ export default function RecentTransactions({ transactions, onSeeAll }: RecentTra
             return (
               <React.Fragment key={transaction.id}>
                 <View style={styles.transactionItem}>
-                  <View style={[styles.iconContainer, { backgroundColor: `${categoryColor}18` }]}>
-                    <Text style={styles.categoryEmoji}>{categoryConfig.emoji}</Text>
+                  <View
+                    style={[
+                      styles.iconContainer,
+                      { backgroundColor: categoryConfig.iconBackgroundColor ?? `${categoryConfig.iconColor}18` },
+                    ]}
+                  >
+                    <MaterialCommunityIcons
+                      name={categoryConfig.iconName as React.ComponentProps<typeof MaterialCommunityIcons>['name']}
+                      size={22}
+                      color={categoryConfig.iconColor}
+                    />
                   </View>
 
                   <View style={styles.details}>
@@ -49,7 +59,7 @@ export default function RecentTransactions({ transactions, onSeeAll }: RecentTra
                     </Text>
                   </View>
 
-                  <Text style={[styles.amount, { color: categoryColor }]}>
+                  <Text style={[styles.amount, { color: categoryColor }]}> 
                     -{formatRupees(transaction.amount)}
                   </Text>
                 </View>

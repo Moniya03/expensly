@@ -1,8 +1,9 @@
 /**
- * Category definitions with emoji and colors
+ * Category definitions with icon and colors
  * Used for displaying transaction categories throughout the app
  */
 
+import { colors } from './theme';
 import { Category } from '../types';
 
 export interface CategoryConfig {
@@ -10,74 +11,98 @@ export interface CategoryConfig {
   id: Category;
   /** Display label */
   label: string;
-  /** Emoji icon for the category */
-  emoji: string;
+  /** MaterialCommunityIcons name for the category */
+  iconName: string;
+  /** Icon tint color */
+  iconColor: string;
   /** Primary color for the category */
   color: string;
-  /** Background color (with opacity) for cards/badges */
-  backgroundColor: string;
+  /** Background tint for circular icon container */
+  iconBackgroundColor?: string;
 }
+
+const hexToRgba = (hex: string, alpha: number) => {
+  const normalized = hex.replace('#', '');
+  const fullHex = normalized.length === 3
+    ? normalized.split('').map((char) => char + char).join('')
+    : normalized;
+
+  const value = Number.parseInt(fullHex, 16);
+  const red = (value >> 16) & 255;
+  const green = (value >> 8) & 255;
+  const blue = value & 255;
+
+  return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+};
 
 /**
  * Category configuration map
- * Each category has an emoji, label, and color scheme
+ * Each category has an icon, label, and color scheme
  */
 export const categories: Record<Category, CategoryConfig> = {
   food: {
     id: 'food',
     label: 'Food',
-    emoji: '🍕',
+    iconName: 'silverware-fork-knife',
+    iconColor: colors.onSurface,
     color: '#FF9500',
-    backgroundColor: 'rgba(255, 149, 0, 0.15)',
+    iconBackgroundColor: hexToRgba(colors.onSurface, 0.18),
   },
   transport: {
     id: 'transport',
     label: 'Transport',
-    emoji: '🚗',
+    iconName: 'car',
+    iconColor: '#FF3B30',
     color: '#007AFF',
-    backgroundColor: 'rgba(0, 122, 255, 0.15)',
+    iconBackgroundColor: hexToRgba('#FF3B30', 0.18),
   },
   shopping: {
     id: 'shopping',
     label: 'Shopping',
-    emoji: '🛍️',
+    iconName: 'shopping',
+    iconColor: '#FFCC00',
     color: '#FF2D55',
-    backgroundColor: 'rgba(255, 45, 85, 0.15)',
+    iconBackgroundColor: hexToRgba('#FFCC00', 0.18),
   },
   entertainment: {
     id: 'entertainment',
     label: 'Entertainment',
-    emoji: '🎬',
+    iconName: 'headphones',
+    iconColor: colors.primary,
     color: '#FFCC00',
-    backgroundColor: 'rgba(255, 204, 0, 0.15)',
+    iconBackgroundColor: hexToRgba(colors.primary, 0.18),
   },
   bills: {
     id: 'bills',
     label: 'Bills',
-    emoji: '📄',
+    iconName: 'receipt',
+    iconColor: colors.onSurface,
     color: '#5856D6',
-    backgroundColor: 'rgba(88, 86, 214, 0.15)',
+    iconBackgroundColor: hexToRgba(colors.onSurface, 0.18),
   },
   health: {
     id: 'health',
     label: 'Health',
-    emoji: '💊',
+    iconName: 'hospital-building',
+    iconColor: colors.onSurface,
     color: '#34C759',
-    backgroundColor: 'rgba(52, 199, 89, 0.15)',
+    iconBackgroundColor: hexToRgba(colors.onSurface, 0.18),
   },
   education: {
     id: 'education',
     label: 'Education',
-    emoji: '📚',
+    iconName: 'book',
+    iconColor: colors.primary,
     color: '#00C7BE',
-    backgroundColor: 'rgba(0, 199, 190, 0.15)',
+    iconBackgroundColor: hexToRgba(colors.primary, 0.18),
   },
   other: {
     id: 'other',
     label: 'Other',
-    emoji: '📦',
+    iconName: 'package-variant',
+    iconColor: colors.onSurface,
     color: '#8E8E93',
-    backgroundColor: 'rgba(142, 142, 147, 0.15)',
+    iconBackgroundColor: hexToRgba('#AF52DE', 0.16),
   },
 };
 

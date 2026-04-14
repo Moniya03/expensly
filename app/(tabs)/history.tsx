@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, ActivityIndicator } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { borderRadius, colors, spacing, typography } from '../../constants/theme';
 import { useAuthStore } from '../../stores/authStore';
@@ -161,9 +162,18 @@ export default function HistoryScreen() {
 
                     return (
                       <React.Fragment key={transaction.id}>
-                        <View style={styles.transactionItem}>
-                          <View style={[styles.transactionIcon, { backgroundColor: `${categoryColor}18` }]}> 
-                            <Text style={styles.transactionEmoji}>{categoryConfig.emoji}</Text>
+                          <View style={styles.transactionItem}>
+                            <View
+                              style={[
+                                styles.transactionIcon,
+                                { backgroundColor: categoryConfig.iconBackgroundColor ?? `${categoryConfig.iconColor}18` },
+                              ]}
+                            >
+                            <MaterialCommunityIcons
+                              name={categoryConfig.iconName as React.ComponentProps<typeof MaterialCommunityIcons>['name']}
+                              size={20}
+                              color={categoryConfig.iconColor}
+                            />
                           </View>
 
                           <View style={styles.transactionDetails}>

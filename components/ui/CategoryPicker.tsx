@@ -1,8 +1,9 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { colors, spacing, borderRadius, typography } from '../../constants/theme';
 import { Category } from '../../types';
-import { categories, categoryList, CategoryConfig } from '../../constants/categories';
+import { categoryList } from '../../constants/categories';
 
 interface CategoryPickerProps {
   selectedCategory: Category | null;
@@ -30,7 +31,13 @@ export function CategoryPicker({
             onPress={() => onSelectCategory(category.id)}
             activeOpacity={0.7}
           >
-            <Text style={styles.emoji}>{category.emoji}</Text>
+            <View style={[styles.iconContainer, { backgroundColor: category.iconBackgroundColor ?? `${category.iconColor}18` }]}>
+              <MaterialCommunityIcons
+                name={category.iconName as React.ComponentProps<typeof MaterialCommunityIcons>['name']}
+                size={22}
+                color={category.iconColor}
+              />
+            </View>
             <Text
               style={[
                 styles.categoryLabel,
@@ -75,8 +82,12 @@ const styles = StyleSheet.create({
   categoryButtonSelected: {
     backgroundColor: colors.surfaceContainerHigh,
   },
-  emoji: {
-    fontSize: 24,
+  iconContainer: {
+    width: 34,
+    height: 34,
+    borderRadius: borderRadius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: spacing.xs,
   },
   categoryLabel: {

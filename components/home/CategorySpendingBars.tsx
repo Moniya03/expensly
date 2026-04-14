@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { getCategoryConfig, getCategoryColor } from '../../constants/categories';
 import { borderRadius, colors, spacing, typography } from '../../constants/theme';
 import { Category } from '../../types';
@@ -39,7 +40,18 @@ export default function CategorySpendingBars({ byCategory }: CategorySpendingBar
               <View key={item.category} style={styles.item}>
                 <View style={styles.row}>
                   <View style={styles.labelGroup}>
-                    <Text style={styles.emoji}>{config.emoji}</Text>
+                    <View
+                      style={[
+                        styles.iconBubble,
+                        { backgroundColor: config.iconBackgroundColor ?? `${config.iconColor}18` },
+                      ]}
+                    >
+                      <MaterialCommunityIcons
+                        name={config.iconName as React.ComponentProps<typeof MaterialCommunityIcons>['name']}
+                        size={14}
+                        color={config.iconColor}
+                      />
+                    </View>
                     <Text style={styles.label}>{config.label}</Text>
                   </View>
 
@@ -90,8 +102,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.sm,
   },
-  emoji: {
-    fontSize: typography.fontSize.md,
+  iconBubble: {
+    width: 24,
+    height: 24,
+    borderRadius: borderRadius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   label: {
     fontSize: typography.fontSize.sm,
