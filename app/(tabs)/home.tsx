@@ -1,49 +1,18 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Image } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Image, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { borderRadius, colors, spacing, typography } from '../../constants/theme';
 import { useAuthStore } from '../../stores/authStore';
 import { useMonthlyTransactions, useRecentTransactions } from '../../hooks/useTransactions';
 import {
   HeroBudgetCard,
-  MondayRoast,
   QuickStats,
   RecentTransactions,
 } from '../../components/home';
-import { getCategoryConfig } from '../../constants/categories';
-import { Category } from '../../types';
 import { getGreeting, parseLocalDate } from '../../utils/date';
 
-function getRoastMessage({
-  spent,
-  budget,
-  weekSpent,
-  topCategory,
-}: {
-  spent: number;
-  budget: number;
-  weekSpent: number;
-  topCategory?: { label: string; amount: number };
-}) {
-  if (spent <= 0) {
-    return 'No spends logged yet — clean slate energy. Let’s keep the first swipe intentional.';
-  }
-
-  if (budget > 0 && spent > budget) {
-    return `You’re already over budget, and ${topCategory?.label ?? 'that top category'} is doing the heavy lifting. Time for fewer “just one more” spends.`;
-  }
-
-  if (budget > 0 && spent / budget >= 0.8) {
-    return `You’ve burned through ${Math.round((spent / budget) * 100)}% of this month’s budget. Future-you would love a quieter week.`;
-  }
-
-  if (topCategory && topCategory.amount >= weekSpent && topCategory.amount > 0) {
-    return `${topCategory.label} is leading your spending this month. Apparently that category has a VIP lane to your wallet.`;
-  }
-
-  return `This week is at ₹${weekSpent.toLocaleString('en-IN')}. Not chaos, not monk mode — just enough to keep an eye on.`;
-}
+let budgetTipConsumed = false;
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -59,6 +28,10 @@ export default function HomeScreen() {
     'there';
   const greeting = getGreeting();
   const isLoading = transactionsLoading || monthlyTransactionsLoading;
+  const { showBudgetTip } = useLocalSearchParams<{ showBudgetTip?: string }>();
+  const [isBudgetTipVisible, setIsBudgetTipVisible] = React.useState(
+    showBudgetTip === '1' && !budgetTipConsumed
+  );
 
   const budget = profile?.monthly_budget ?? 0;
 
@@ -103,31 +76,12 @@ export default function HomeScreen() {
       .reduce((sum, transaction) => sum + transaction.amount, 0);
   }, [monthlyTransactions]);
 
-  const topCategory = React.useMemo(() => {
-    const [category, amount] = Object.entries(byCategory)
-      .filter(([, value]) => value > 0)
-      .sort(([, a], [, b]) => b - a)[0] || [];
-
-    if (!category || typeof amount !== 'number') {
-      return undefined;
+  React.useEffect(() => {
+    if (showBudgetTip === '1' && !budgetTipConsumed) {
+      budgetTipConsumed = true;
+      setIsBudgetTipVisible(true);
     }
-
-    return {
-      label: getCategoryConfig(category as Category).label,
-      amount,
-    };
-  }, [byCategory]);
-
-  const roastMessage = React.useMemo(
-    () =>
-      getRoastMessage({
-        spent,
-        budget,
-        weekSpent,
-        topCategory,
-      }),
-    [budget, spent, topCategory, weekSpent]
-  );
+  }, [showBudgetTip]);
 
   if (isLoading) {
     return (
@@ -174,10 +128,21 @@ export default function HomeScreen() {
 
         <QuickStats today={todaySpent} week={weekSpent} />
 
-        <MondayRoast roastText={roastMessage} isVisible />
-
         <RecentTransactions transactions={recentTransactions} />
       </ScrollView>
+
+      {isBudgetTipVisible ? (
+        <View style={styles.tipOverlay} pointerEvents="box-none">
+          <View style={styles.tipCard}>
+            <Text style={styles.tipTitle}>Profile tab</Text>
+            <Text style={styles.tipBody}>Finish budget setup there later.</Text>
+            <Pressable style={styles.tipButton} onPress={() => setIsBudgetTipVisible(false)}>
+              <Text style={styles.tipButtonText}>Dismiss</Text>
+            </Pressable>
+            <View style={styles.tipPointer} />
+          </View>
+        </View>
+      ) : null}
     </SafeAreaView>
   );
 }
@@ -244,5 +209,54 @@ const styles = StyleSheet.create({
     fontSize: typography.fontSize.xl,
     color: colors.onSurface,
     fontWeight: typography.fontWeight.bold,
+  },
+  tipOverlay: {
+    position: 'absolute',
+    right: spacing.sm,
+    bottom: 86,
+    alignItems: 'flex-end',
+  },
+  tipCard: {
+    maxWidth: 220,
+    backgroundColor: colors.surfaceContainerHigh,
+    borderWidth: 1,
+    borderColor: colors.outlineVariant,
+    borderRadius: borderRadius.xl,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    gap: 2,
+    position: 'relative',
+  },
+  tipTitle: {
+    color: colors.onSurface,
+    fontSize: typography.fontSize.sm,
+    fontWeight: typography.fontWeight.semiBold,
+  },
+  tipBody: {
+    color: colors.onSurfaceVariant,
+    fontSize: typography.fontSize.xs,
+    lineHeight: typography.lineHeight.relaxed * typography.fontSize.xs,
+  },
+  tipButton: {
+    alignSelf: 'flex-start',
+    marginTop: 2,
+  },
+  tipButtonText: {
+    color: colors.primary,
+    fontSize: typography.fontSize.xs,
+    fontWeight: typography.fontWeight.semiBold,
+  },
+  tipPointer: {
+    position: 'absolute',
+    right: 18,
+    bottom: -12,
+    width: 0,
+    height: 0,
+    borderLeftWidth: 8,
+    borderRightWidth: 8,
+    borderTopWidth: 12,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderTopColor: colors.surfaceContainerHigh,
   },
 });

@@ -6,6 +6,7 @@ import { supabase } from '../services/supabase';
 let authSubscription: { unsubscribe: () => void } | null = null;
 let initializePromise: Promise<void> | null = null;
 const profileRequests = new Map<string, Promise<Profile | null>>();
+const PROFILE_FETCH_TIMEOUT_MS = 8000;
 
 /**
  * Auth store state interface
@@ -60,6 +61,26 @@ const fetchProfile = async (userId: string): Promise<Profile | null> => {
   }
 };
 
+const fetchProfileWithTimeout = async (userId: string): Promise<Profile | null> => {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+
+  try {
+    return await Promise.race([
+      fetchProfile(userId),
+      new Promise<Profile | null>((resolve) => {
+        timeoutId = setTimeout(() => {
+          console.error(`Profile fetch timed out after ${PROFILE_FETCH_TIMEOUT_MS}ms for user ${userId}`);
+          resolve(null);
+        }, PROFILE_FETCH_TIMEOUT_MS);
+      }),
+    ]);
+  } finally {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+  }
+};
+
 const fetchProfileOnce = (userId: string): Promise<Profile | null> => {
   const inFlightRequest = profileRequests.get(userId);
 
@@ -67,7 +88,7 @@ const fetchProfileOnce = (userId: string): Promise<Profile | null> => {
     return inFlightRequest;
   }
 
-  const request = fetchProfile(userId).finally(() => {
+  const request = fetchProfileWithTimeout(userId).finally(() => {
     profileRequests.delete(userId);
   });
 

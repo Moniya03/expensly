@@ -11,6 +11,7 @@ export default function OnboardingLayout() {
       }}
     >
       <Stack.Screen name="name" />
+      <Stack.Screen name="budget" />
     </Stack>
   );
 }

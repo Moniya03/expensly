@@ -146,11 +146,17 @@ export interface Goal {
   /** Name/description of the savings goal */
   name: string;
   /** Target amount to save in rupees (whole numbers only) */
-  target: number;
+  target_amount: number;
   /** Amount saved so far in rupees (whole numbers only) */
-  saved: number;
+  saved_amount: number;
   /** Target date to achieve the goal (ISO 8601 format, optional) */
   target_date: string | null;
+  /** Stored icon name in the existing emoji column */
+  icon: string;
+  /** Whether the goal is completed */
+  is_completed: boolean;
+  /** Timestamp when the goal was completed */
+  completed_at: string | null;
   /** Timestamp when the goal was created */
   created_at: string;
 }
