@@ -54,8 +54,14 @@ function RootLayoutNav() {
 
     const inAuthGroup = segments[0] === '(auth)';
     const inOnboarding = segments[0] === 'onboarding';
-    const hasName = Boolean((profile?.name || profile?.display_name || session?.user.user_metadata?.name || '').trim());
-    const needsNameOnboarding = !!session && hasResolvedProfile && (!profile?.onboarding_complete || !hasName);
+    // Untouched auto-created profiles keep created_at === updated_at.
+    const hasConfirmedUsername = Boolean(
+      profile?.created_at &&
+        profile?.updated_at &&
+        new Date(profile.updated_at).getTime() > new Date(profile.created_at).getTime()
+    );
+    const needsBudgetOnboarding = !!session && hasResolvedProfile && !profile?.onboarding_complete;
+    const needsNameOnboarding = !!session && hasResolvedProfile && needsBudgetOnboarding && !hasConfirmedUsername;
 
     if (!session && !inAuthGroup) {
       router.replace('/(auth)/welcome');
@@ -63,7 +69,9 @@ function RootLayoutNav() {
       return;
     } else if (needsNameOnboarding && !inOnboarding) {
       router.replace('/onboarding/name');
-    } else if (session && !needsNameOnboarding && (inAuthGroup || inOnboarding)) {
+    } else if (needsBudgetOnboarding && !needsNameOnboarding && !inOnboarding) {
+      router.replace('/onboarding/budget');
+    } else if (session && !needsNameOnboarding && !needsBudgetOnboarding && (inAuthGroup || inOnboarding)) {
       router.replace('/(tabs)/home');
     }
   }, [session, profile, isInitialized, hasResolvedProfile, segments]);
