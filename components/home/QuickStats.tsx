@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { borderRadius, colors, spacing, typography } from '../../constants/theme';
 import { formatRupees } from '../../utils/currency';
+import { SoftDivider } from '../ui/SoftDivider';
 
 interface QuickStatsProps {
   today: number;
@@ -21,34 +22,47 @@ export default function QuickStats({ today, week }: QuickStatsProps) {
 
   return (
     <View style={styles.container}>
-      {statCards.map((card, index) => (
-        <React.Fragment key={card.key}>
-          <View style={styles.stat}>
-            <Text style={styles.label}>{card.label}</Text>
-            <Text style={styles.value}>{values[card.key]}</Text>
-          </View>
-          {index < statCards.length - 1 ? <View style={styles.divider} /> : null}
-        </React.Fragment>
-      ))}
+      <View style={styles.frame}>
+        {statCards.map((card, index) => (
+          <React.Fragment key={card.key}>
+            <View style={styles.stat}>
+              <Text style={styles.label}>{card.label}</Text>
+              <Text style={styles.value}>{values[card.key]}</Text>
+            </View>
+            {index < statCards.length - 1 ? <SoftDivider vertical style={styles.divider} /> : null}
+          </React.Fragment>
+        ))}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
+    borderRadius: borderRadius.xl,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)',
+    shadowColor: colors.primary,
+    shadowOpacity: 0.06,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 8 },
+  },
+  frame: {
     flexDirection: 'row',
     alignItems: 'stretch',
-    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
   },
   stat: {
     flex: 1,
-    gap: 4,
+    gap: 6,
     paddingVertical: spacing.xs,
   },
   divider: {
-    width: StyleSheet.hairlineWidth,
-    backgroundColor: colors.outlineVariant,
-    marginHorizontal: spacing.md,
+    width: 1,
+    marginHorizontal: spacing.sm,
+    opacity: 0.7,
   },
   label: {
     fontSize: typography.fontSize.xs,

@@ -4,8 +4,9 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { colors, typography, spacing, borderRadius } from '../../constants/theme';
 import { formatRupees } from '../../utils/currency';
 import { formatDate, getRelativeTime, parseLocalDate } from '../../utils/date';
-import { getCategoryConfig, getCategoryColor } from '../../constants/categories';
+import { getCategoryConfig } from '../../constants/categories';
 import { Transaction } from '../../types';
+import { SoftDivider } from '../ui/SoftDivider';
 
 interface RecentTransactionsProps {
   transactions: Transaction[];
@@ -30,8 +31,7 @@ export default function RecentTransactions({ transactions, onSeeAll }: RecentTra
         <View style={styles.list}>
           {recentTransactions.map((transaction) => {
             const categoryConfig = getCategoryConfig(transaction.category);
-            const categoryColor = getCategoryColor(transaction.category);
-            
+
             return (
               <React.Fragment key={transaction.id}>
                 <View style={styles.transactionItem}>
@@ -59,11 +59,11 @@ export default function RecentTransactions({ transactions, onSeeAll }: RecentTra
                     </Text>
                   </View>
 
-                  <Text style={[styles.amount, { color: categoryColor }]}> 
+                  <Text style={styles.amount}>
                     -{formatRupees(transaction.amount)}
                   </Text>
                 </View>
-                <View style={styles.separator} />
+                <SoftDivider style={styles.separator} />
               </React.Fragment>
             );
           })}
@@ -98,8 +98,7 @@ const styles = StyleSheet.create({
     color: colors.primary,
   },
   list: {
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.outlineVariant,
+    borderTopWidth: 0,
   },
   transactionItem: {
     flexDirection: 'row',
@@ -137,15 +136,12 @@ const styles = StyleSheet.create({
     marginLeft: spacing.sm,
   },
   separator: {
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: colors.outlineVariant,
     marginLeft: 60,
+    opacity: 0.55,
   },
   emptyContainer: {
     paddingVertical: spacing.lg,
     alignItems: 'center',
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.outlineVariant,
   },
   emptyText: {
     fontSize: typography.fontSize.md,

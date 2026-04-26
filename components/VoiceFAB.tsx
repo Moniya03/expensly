@@ -40,6 +40,7 @@ export default function VoiceFAB() {
   const router = useRouter();
   const { mutateAsync: createTransaction } = useCreateTransaction();
   const pulseAnim = useRef(new Animated.Value(1)).current;
+  const idlePulse = useRef(new Animated.Value(0.3)).current;
   const longPressTriggered = useRef(false);
 
   const [draft, setDraft] = useState<VoiceExpenseDraft | null>(null);
@@ -50,6 +51,15 @@ export default function VoiceFAB() {
 
   useEffect(() => {
     let loop: Animated.CompositeAnimation | undefined;
+    let idleLoop: Animated.CompositeAnimation | undefined;
+
+    idleLoop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(idlePulse, { toValue: 0.55, duration: 1800, useNativeDriver: true }),
+        Animated.timing(idlePulse, { toValue: 0.3, duration: 1800, useNativeDriver: true }),
+      ])
+    );
+    idleLoop.start();
 
     if (state === 'recording') {
       loop = Animated.loop(
@@ -63,8 +73,11 @@ export default function VoiceFAB() {
       pulseAnim.setValue(1);
     }
 
-    return () => loop?.stop();
-  }, [pulseAnim, state]);
+    return () => {
+      loop?.stop();
+      idleLoop?.stop();
+    };
+  }, [idlePulse, pulseAnim, state]);
 
   const inlineErrorMessage = useMemo(
     () => (state === 'error' && errorMessage ? "Couldn't understand that. Please re-record." : null),
@@ -225,6 +238,23 @@ export default function VoiceFAB() {
           disabled={state === 'processing'}
           style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}
         >
+          <Animated.View
+            pointerEvents="none"
+            style={[
+              styles.idleAura,
+              {
+                opacity: idlePulse,
+                transform: [
+                  {
+                    scale: idlePulse.interpolate({
+                      inputRange: [0.3, 0.55],
+                      outputRange: [0.96, 1.06],
+                    }),
+                  },
+                ],
+              },
+            ]}
+          />
           <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
             <LinearGradient
               colors={getButtonColors()}
@@ -297,6 +327,17 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.35,
     shadowRadius: 8,
     elevation: 10,
+  },
+  idleAura: {
+    position: 'absolute',
+    width: 82,
+    height: 82,
+    borderRadius: 41,
+    alignSelf: 'center',
+    top: -7,
+    backgroundColor: 'rgba(26,107,255,0.10)',
+    borderWidth: 1,
+    borderColor: 'rgba(45,226,255,0.16)',
   },
   contentWrapper: {
     alignItems: 'center',

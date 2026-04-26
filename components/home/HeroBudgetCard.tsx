@@ -1,11 +1,12 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle } from 'react-native-svg';
 import { getCategoryColor } from '../../constants/categories';
 import { borderRadius, colors, spacing, typography } from '../../constants/theme';
 import { Category } from '../../types';
 import { formatRupees } from '../../utils/currency';
+import { GlassmorphicCard } from '../ui/GlassmorphicCard';
+import { LinearGradient } from 'expo-linear-gradient';
 
 interface HeroBudgetCardProps {
   spent: number;
@@ -59,8 +60,17 @@ export default function HeroBudgetCard({
   }, [byCategory]);
 
   return (
-    <LinearGradient colors={['#10367B', '#0D2D6B']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.card}>
-      <View style={styles.overlay} />
+    <GlassmorphicCard intensity={18} style={styles.card}>
+      <LinearGradient
+        colors={['rgba(26,107,255,0.16)', 'rgba(0,212,170,0.10)', 'rgba(255,255,255,0.02)']}
+        start={{ x: 0.05, y: 0 }}
+        end={{ x: 0.95, y: 1 }}
+        style={styles.overlay}
+      />
+      <View style={styles.cardSheen} />
+      <View style={styles.cardEdgeHighlight} />
+      <View style={styles.glowOrbPrimary} />
+      <View style={styles.glowOrbSecondary} />
       {onPress ? (
         <Pressable onPress={onPress} android_ripple={{ color: 'rgba(255,255,255,0.08)' }} style={styles.content}>
           <View style={styles.leftColumn}>
@@ -168,7 +178,7 @@ export default function HeroBudgetCard({
           </View>
         </View>
       )}
-    </LinearGradient>
+    </GlassmorphicCard>
   );
 }
 
@@ -178,11 +188,51 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: 'rgba(26, 107, 255, 0.24)',
+    borderColor: 'rgba(255,255,255,0.14)',
+    backgroundColor: 'rgba(255,255,255,0.045)',
+    shadowColor: colors.primary,
+    shadowOpacity: 0.16,
+    shadowRadius: 26,
+    shadowOffset: { width: 0, height: 12 },
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(255,255,255,0.02)',
+    opacity: 1,
+  },
+  cardSheen: {
+    position: 'absolute',
+    left: -42,
+    top: -62,
+    width: 186,
+    height: 186,
+    borderRadius: 93,
+    backgroundColor: 'rgba(255,255,255,0.028)',
+  },
+  cardEdgeHighlight: {
+    position: 'absolute',
+    left: 18,
+    right: 18,
+    top: 0,
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.10)',
+  },
+  glowOrbPrimary: {
+    position: 'absolute',
+    width: 136,
+    height: 136,
+    borderRadius: 68,
+    top: -64,
+    left: -36,
+    backgroundColor: 'rgba(26,107,255,0.11)',
+  },
+  glowOrbSecondary: {
+    position: 'absolute',
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    right: -40,
+    bottom: -38,
+    backgroundColor: 'rgba(0,212,170,0.085)',
   },
   content: {
     flexDirection: 'row',
@@ -200,18 +250,19 @@ const styles = StyleSheet.create({
   eyebrow: {
     fontSize: 11,
     fontWeight: typography.fontWeight.bold,
-    color: '#8B9CC7',
-    letterSpacing: 1,
+    color: '#9AA8D0',
+    letterSpacing: 1.15,
   },
   amount: {
-    fontSize: 34,
+    fontSize: 35,
     fontWeight: typography.fontWeight.bold,
     color: colors.onSurface,
+    letterSpacing: -0.6,
   },
   divider: {
-    width: 56,
+    width: 60,
     height: 1,
-    backgroundColor: 'rgba(255,255,255,0.10)',
+    backgroundColor: 'rgba(255,255,255,0.12)',
   },
   metaRow: {
     gap: 2,
@@ -220,13 +271,14 @@ const styles = StyleSheet.create({
     fontSize: typography.fontSize.md,
     fontWeight: typography.fontWeight.bold,
     color: colors.secondary,
+    letterSpacing: -0.2,
   },
   overBudget: {
     color: colors.error,
   },
   context: {
     fontSize: typography.fontSize.xs,
-    color: colors.onSurfaceVariant,
+    color: '#A5B1CF',
   },
   chartWrap: {
     width: DONUT_SIZE,
@@ -243,9 +295,11 @@ const styles = StyleSheet.create({
     fontWeight: typography.fontWeight.bold,
     color: colors.onSurface,
     textAlign: 'center',
+    letterSpacing: -0.3,
   },
   centerLabel: {
     fontSize: typography.fontSize.xs,
-    color: '#8B9CC7',
+    color: '#AAB6DB',
+    letterSpacing: 0.5,
   },
 });
