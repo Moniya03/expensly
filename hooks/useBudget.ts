@@ -29,7 +29,8 @@ async function fetchBudgets(userId: string): Promise<Budget[]> {
   const { data, error } = await supabase
     .from('budgets')
     .select('*')
-    .eq('user_id', userId);
+    .eq('user_id', userId)
+    .limit(100);
 
   if (error) {
     throw new Error(error.message);

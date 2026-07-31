@@ -11,7 +11,7 @@
 export const colors = {
   // Primary colors
   primary: '#1A6BFF',
-  secondary: '#00D4AA',
+  secondary: '#4D9FFF',
   tertiary: '#2DE2FF',
 
   // Surface colors (backgrounds)

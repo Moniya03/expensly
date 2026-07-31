@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { View, StyleSheet, Dimensions } from 'react-native';
+import { View, StyleSheet, Dimensions, Platform } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -7,8 +7,6 @@ import Animated, {
   withTiming,
   Easing,
 } from 'react-native-reanimated';
-import { theme } from '../../constants/theme';
-
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 interface FloatingParticlesProps {
@@ -26,19 +24,21 @@ interface ParticleConfig {
   range: number;
 }
 
+const MAX_PARTICLES = Platform.OS === 'android' ? 6 : 10;
+
 const Particle: React.FC<{ config: ParticleConfig }> = ({ config }) => {
-  const translateY = useSharedValue(0);
+  const translateY = useSharedValue(config.range);
 
   React.useEffect(() => {
     translateY.value = withRepeat(
-      withTiming(config.range, {
+      withTiming(-config.range, {
         duration: config.duration,
         easing: Easing.inOut(Easing.ease),
       }),
       -1,
-      true
+      false
     );
-  }, []);
+  }, [config.duration, config.range, translateY]);
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
@@ -66,20 +66,21 @@ const Particle: React.FC<{ config: ParticleConfig }> = ({ config }) => {
 };
 
 export const FloatingParticles: React.FC<FloatingParticlesProps> = ({
-  count = 20,
+  count = MAX_PARTICLES,
 }) => {
   const particles = useMemo<ParticleConfig[]>(() => {
-    const colors = [theme.colors.primary, theme.colors.secondary, theme.colors.tertiary];
-    
-    return Array.from({ length: count }, (_, i) => ({
+    const palette = ['#2E86FF', '#6FB4FF'];
+    const actualCount = Math.min(count, MAX_PARTICLES);
+
+    return Array.from({ length: actualCount }, (_, i) => ({
       id: i,
       x: Math.random() * SCREEN_WIDTH,
-      y: Math.random() * SCREEN_HEIGHT,
-      size: Math.random() * 4 + 2, // 2-6
-      color: colors[Math.floor(Math.random() * colors.length)],
-      duration: Math.random() * 3000 + 2000, // 2000-5000ms
-      opacity: Math.random() * 0.2 + 0.1, // 0.1-0.3
-      range: Math.random() * 100 + 50, // floating range 50-150px
+      y: SCREEN_HEIGHT * (0.12 + Math.random() * 0.76),
+      size: 4 + Math.random() * 4,
+      color: palette[Math.floor(Math.random() * palette.length)],
+      duration: 8000 + Math.random() * 2000,
+      opacity: 0.35 + Math.random() * 0.3,
+      range: 40 + Math.random() * 70,
     }));
   }, [count]);
 
@@ -102,5 +103,8 @@ const styles = StyleSheet.create({
   },
   particle: {
     position: 'absolute',
+    shadowColor: '#000000',
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
   },
 });

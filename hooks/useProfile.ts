@@ -4,71 +4,11 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '../services/supabase';
 import { Profile } from '../types';
 import { useAuthStore } from '../stores/authStore';
+import { fetchProfile, saveProfile } from '../services/profile';
 
 const PROFILE_KEY = ['profile'];
-
-/**
- * Fetch profile from Supabase
- */
-const fetchProfile = async (userId: string): Promise<Profile | null> => {
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', userId)
-    .single();
-
-  if (error) {
-    // PGRST116 = no rows found (new user, profile not yet created)
-    if (error.code === 'PGRST116') {
-      return null;
-    }
-    throw new Error(error.message);
-  }
-
-  return data;
-};
-
-/**
- * Update profile in Supabase
- */
-const updateProfile = async (
-  userId: string,
-  updates: Partial<Pick<Profile, 'name' | 'display_name' | 'monthly_budget' | 'onboarding_complete'>>
-): Promise<Profile> => {
-  const payload: Record<string, unknown> = {
-    updated_at: new Date().toISOString(),
-  };
-
-  if (typeof updates.monthly_budget === 'number') {
-    payload.monthly_budget = updates.monthly_budget;
-  }
-
-  if (typeof updates.name === 'string') {
-    payload.name = updates.name;
-  } else if (typeof updates.display_name === 'string') {
-    payload.name = updates.display_name;
-  }
-
-  if (typeof updates.onboarding_complete === 'boolean') {
-    payload.onboarding_complete = updates.onboarding_complete;
-  }
-
-  const { data, error } = await supabase
-    .from('profiles')
-    .update(payload)
-    .eq('id', userId)
-    .select()
-    .single();
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  return data;
-};
 
 /**
  * Hook to fetch and cache user profile
@@ -100,11 +40,11 @@ export const useUpdateProfile = () => {
   const userId = session?.user?.id;
 
   return useMutation({
-    mutationFn: (updates: Partial<Pick<Profile, 'name' | 'display_name' | 'monthly_budget' | 'onboarding_complete'>>) => {
+    mutationFn: (updates: Partial<Pick<Profile, 'name' | 'monthly_budget' | 'onboarding_complete'>>) => {
       if (!userId) {
         throw new Error('No user session');
       }
-      return updateProfile(userId, updates);
+      return saveProfile(userId, updates);
     },
     onSuccess: (data) => {
       // Update the profile cache

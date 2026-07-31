@@ -4,6 +4,20 @@
 
 const INDIA_TIMEZONE = 'Asia/Kolkata';
 
+type TimeOfDayBucket = 'morning' | 'afternoon' | 'evening' | 'night';
+
+interface GreetingWithEmoji {
+  greeting: string;
+  emoji: string;
+}
+
+const TIME_OF_DAY_CONFIG: Record<TimeOfDayBucket, { greeting: string; emojis: readonly string[] }> = {
+  morning: { greeting: 'Good morning', emojis: ['☀️', '🌅', '🌤️'] },
+  afternoon: { greeting: 'Good afternoon', emojis: ['✨', '😌', '🌤️'] },
+  evening: { greeting: 'Good evening', emojis: ['🌙', '🌆', '⭐'] },
+  night: { greeting: 'Good night', emojis: ['🌙', '🌌', '💤'] },
+};
+
 const getTimePartsInTimezone = (date: Date, timeZone: string) => {
   return new Intl.DateTimeFormat('en-US', {
     timeZone,
@@ -12,6 +26,26 @@ const getTimePartsInTimezone = (date: Date, timeZone: string) => {
     second: 'numeric',
     hour12: false,
   }).formatToParts(date);
+};
+
+const getDatePartsInTimezone = (date: Date, timeZone: string) => {
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(date);
+
+  const getPart = (type: Intl.DateTimeFormatPartTypes) => {
+    const part = parts.find((item) => item.type === type);
+    return Number(part?.value ?? 0);
+  };
+
+  return {
+    year: getPart('year'),
+    month: getPart('month'),
+    day: getPart('day'),
+  };
 };
 
 const getHourInTimezone = (date: Date, timeZone: string): number => {
@@ -219,4 +253,38 @@ export const getGreeting = (): string => {
   } else {
     return 'Good evening';
   }
+};
+
+const getTimeOfDayBucket = (hour: number): TimeOfDayBucket => {
+  if (hour < 12) {
+    return 'morning';
+  }
+
+  if (hour < 17) {
+    return 'afternoon';
+  }
+
+  if (hour < 21) {
+    return 'evening';
+  }
+
+  return 'night';
+};
+
+const getRotatedEmoji = (bucket: TimeOfDayBucket, date: Date): string => {
+  const { year, month, day } = getDatePartsInTimezone(date, INDIA_TIMEZONE);
+  const emojis = TIME_OF_DAY_CONFIG[bucket].emojis;
+  const rotationIndex = (year + month + day) % emojis.length;
+
+  return emojis[rotationIndex];
+};
+
+export const getGreetingWithEmoji = (date: Date = new Date()): GreetingWithEmoji => {
+  const hour = getHourInTimezone(date, INDIA_TIMEZONE);
+  const bucket = getTimeOfDayBucket(hour);
+
+  return {
+    greeting: TIME_OF_DAY_CONFIG[bucket].greeting,
+    emoji: getRotatedEmoji(bucket, date),
+  };
 };

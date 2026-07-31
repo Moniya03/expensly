@@ -70,7 +70,7 @@ export default function HistoryScreen() {
 
   const selectedMonth = monthItems.find((item) => item.key === selectedKey) ?? monthItems[monthItems.length - 1];
   const maxValue = React.useMemo(
-    () => Math.max(...monthItems.map((item) => item.spent), 1),
+    () => Math.max(...monthItems.flatMap((item) => [item.spent, item.budget]), 1),
     [monthItems]
   );
 
@@ -100,12 +100,18 @@ export default function HistoryScreen() {
               <View style={[styles.legendDot, { backgroundColor: colors.primary }]} />
               <Text style={styles.legendText}>Spent</Text>
             </View>
+            <View style={styles.legendItem}>
+              <View style={[styles.legendDot, { backgroundColor: colors.onSurfaceVariant }]} />
+              <Text style={styles.legendText}>Budget</Text>
+            </View>
           </View>
 
           <View style={styles.barChart}>
             {monthItems.map((item) => {
               const selected = item.key === selectedMonth?.key;
               const spentHeight = Math.max((item.spent / maxValue) * 140, item.spent > 0 ? 10 : 4);
+
+              const budgetHeight = Math.max((item.budget / maxValue) * 140, item.budget > 0 ? 10 : 4);
 
               return (
                 <Pressable
@@ -114,6 +120,7 @@ export default function HistoryScreen() {
                   style={[styles.monthColumn, selected && styles.monthColumnSelected]}
                 >
                   <View style={styles.barGroup}>
+                    <View style={[styles.bar, styles.budgetBar, { height: budgetHeight }]} />
                     <View style={[styles.bar, styles.spentBar, { height: spentHeight }]} />
                   </View>
                   <Text style={[styles.monthLabel, selected && styles.monthLabelSelected]}>{item.label}</Text>
@@ -295,6 +302,10 @@ const styles = StyleSheet.create({
   },
   spentBar: {
     backgroundColor: colors.primary,
+  },
+  budgetBar: {
+    backgroundColor: colors.onSurfaceVariant,
+    opacity: 0.3,
   },
   monthLabel: {
     marginTop: spacing.sm,

@@ -41,6 +41,16 @@ type SparkleSpec = {
   opacity: number;
 };
 
+type ConfettiSpec = {
+  id: string;
+  left: number;
+  size: number;
+  duration: number;
+  delay: number;
+  color: string;
+  rotation: number;
+};
+
 export function GoalCelebrationOverlay({ visible, goal, onDone }: Props) {
   const screen = Dimensions.get('window');
   const fade = useRef(new Animated.Value(0)).current;
@@ -64,6 +74,36 @@ export function GoalCelebrationOverlay({ visible, goal, onDone }: Props) {
   }, [goal?.id, screen.height, screen.width]);
 
   const sparkleValues = useRef(sparkles.map(() => new Animated.Value(0))).current;
+
+  const confetti = useMemo(() => {
+    const colors = ['#4D9FFF', '#2DE2FF', '#B48CFF', '#F5A623', '#FF716C', '#F472B6'];
+    const count = 22;
+    return Array.from({ length: count }, (_, index) => ({
+      id: `confetti-${goal?.id ?? 'goal'}-${index}`,
+      left: Math.random() * screen.width,
+      size: 6 + Math.random() * 6,
+      duration: 1600 + Math.random() * 1600,
+      delay: index * 60 + Math.random() * 300,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      rotation: (Math.random() - 0.5) * 720,
+    }));
+  }, [goal?.id, screen.width]);
+
+  const confettiValues = useRef(confetti.map(() => new Animated.Value(0))).current;
+
+  const iconBounce = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    if (!visible) return;
+    iconBounce.setValue(1);
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(iconBounce, { toValue: 1.18, duration: 320, useNativeDriver: true }),
+        Animated.timing(iconBounce, { toValue: 1, duration: 320, useNativeDriver: true }),
+      ])
+    ).start();
+    return () => iconBounce.stopAnimation();
+  }, [visible, iconBounce]);
 
   useEffect(() => {
     Animated.parallel([
@@ -114,6 +154,34 @@ export function GoalCelebrationOverlay({ visible, goal, onDone }: Props) {
     };
   }, [sparkleValues, sparkles, visible]);
 
+  useEffect(() => {
+    if (!visible) return;
+
+    const animations = confettiValues.map((value, index) =>
+      Animated.loop(
+        Animated.sequence([
+          Animated.delay(confetti[index]?.delay ?? 0),
+          Animated.timing(value, {
+            toValue: 1,
+            duration: confetti[index]?.duration ?? 2400,
+            useNativeDriver: true,
+          }),
+          Animated.timing(value, {
+            toValue: 0,
+            duration: 0,
+            useNativeDriver: true,
+          }),
+        ])
+      )
+    );
+
+    animations.forEach((animation) => animation.start());
+
+    return () => {
+      animations.forEach((animation) => animation.stop());
+    };
+  }, [confettiValues, confetti, visible]);
+
   if (!goal) return null;
 
   const Icon = iconMap[goal.icon] || 'briefcase-outline';
@@ -160,6 +228,35 @@ export function GoalCelebrationOverlay({ visible, goal, onDone }: Props) {
           })}
         </View>
 
+        <View style={styles.confettiLayer} pointerEvents="none">
+          {confetti.map((piece, index) => {
+            const value = confettiValues[index] ?? new Animated.Value(0);
+            return (
+              <Animated.View
+                key={piece.id}
+                style={[
+                  styles.confetti,
+                  {
+                    left: piece.left,
+                    width: piece.size,
+                    height: piece.size * 0.55,
+                    backgroundColor: piece.color,
+                    opacity: value.interpolate({ inputRange: [0, 0.12, 0.9, 1], outputRange: [0, 1, 1, 0] }),
+                    transform: [
+                      {
+                        translateY: value.interpolate({ inputRange: [0, 1], outputRange: [-screen.height * 0.15, screen.height * 0.85] }),
+                      },
+                      {
+                        rotate: value.interpolate({ inputRange: [0, 1], outputRange: ['0deg', `${piece.rotation}deg`] }),
+                      },
+                    ],
+                  },
+                ]}
+              />
+            );
+          })}
+        </View>
+
         <Pressable style={styles.dismissArea} onPress={onDone}>
           <Animated.View
             style={[
@@ -180,9 +277,9 @@ export function GoalCelebrationOverlay({ visible, goal, onDone }: Props) {
               </View>
 
               <View style={styles.goalRow}>
-                <View style={styles.iconWrap}>
-                  <Ionicons name={Icon} size={24} color={colors.onSurface} />
-                </View>
+                <Animated.View style={[styles.iconWrap, { transform: [{ scale: iconBounce }] }]}>
+                  <Ionicons name={Icon} size={26} color={colors.onSurface} />
+                </Animated.View>
                 <View style={styles.goalMeta}>
                   <Text style={styles.goalName} numberOfLines={1}>{goal.name}</Text>
                   <Text style={styles.goalDeadline}>{deadline}</Text>
@@ -239,6 +336,15 @@ const styles = StyleSheet.create({
   },
   sparkleLayer: {
     ...StyleSheet.absoluteFillObject,
+  },
+  confettiLayer: {
+    ...StyleSheet.absoluteFillObject,
+    overflow: 'hidden',
+  },
+  confetti: {
+    position: 'absolute',
+    top: 0,
+    borderRadius: 2,
   },
   sparkle: {
     position: 'absolute',

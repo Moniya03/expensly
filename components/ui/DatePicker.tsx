@@ -621,6 +621,6 @@ const styles = StyleSheet.create({
   confirmButtonText: {
     fontSize: typography.fontSize.md,
     fontWeight: typography.fontWeight.semiBold,
-    color: colors.surface,
+    color: '#FFFFFF',
   },
 });

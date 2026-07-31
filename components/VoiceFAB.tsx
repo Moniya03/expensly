@@ -55,8 +55,8 @@ export default function VoiceFAB() {
 
     idleLoop = Animated.loop(
       Animated.sequence([
-        Animated.timing(idlePulse, { toValue: 0.55, duration: 1800, useNativeDriver: true }),
-        Animated.timing(idlePulse, { toValue: 0.3, duration: 1800, useNativeDriver: true }),
+        Animated.timing(idlePulse, { toValue: 0.48, duration: 3000, useNativeDriver: true }),
+        Animated.timing(idlePulse, { toValue: 0.3, duration: 3000, useNativeDriver: true }),
       ])
     );
     idleLoop.start();
@@ -201,9 +201,9 @@ export default function VoiceFAB() {
   const getButtonColors = (): [string, string] => {
     switch (state) {
       case 'error':
-        return [colors.error, colors.error];
+        return ['#F5A623', '#F5A623'];
       default:
-        return [colors.primary, colors.secondary];
+        return ['#1A6BFF', '#4D9FFF'];
     }
   };
 
@@ -212,9 +212,9 @@ export default function VoiceFAB() {
       case 'processing':
         return <Text style={styles.processingText}>...</Text>;
       case 'error':
-        return <Ionicons name="close" size={32} color="#FFFFFF" />;
+        return <Ionicons name="close" size={24} color="#FFFFFF" />;
       default:
-        return <Ionicons name="mic" size={32} color="#FFFFFF" />;
+        return <Ionicons name="mic" size={24} color="#FFFFFF" />;
     }
   };
 
@@ -317,31 +317,31 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   button: {
-    width: 68,
-    height: 68,
-    borderRadius: 34,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: colors.primary,
+    shadowColor: '#1A6BFF',
     shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.35,
-    shadowRadius: 8,
-    elevation: 10,
+    shadowOpacity: 0.22,
+    shadowRadius: 10,
+    elevation: 8,
   },
   idleAura: {
     position: 'absolute',
-    width: 82,
-    height: 82,
-    borderRadius: 41,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     alignSelf: 'center',
-    top: -7,
-    backgroundColor: 'rgba(26,107,255,0.10)',
+    top: -8,
+    backgroundColor: 'rgba(29,196,150,0.08)',
     borderWidth: 1,
-    borderColor: 'rgba(45,226,255,0.16)',
+    borderColor: 'rgba(29,196,150,0.12)',
   },
   contentWrapper: {
     alignItems: 'center',
-    gap: 4,
+    gap: 0,
   },
   processingText: {
     color: '#FFFFFF',

@@ -23,8 +23,6 @@ export interface Profile {
   email?: string;
   /** User's preferred name */
   name?: string | null;
-  /** Display name for the user (optional) */
-  display_name?: string | null;
   /** URL to user's avatar image (optional) */
   avatar_url: string | null;
   /** Monthly budget amount in rupees (whole numbers only) */
@@ -172,12 +170,18 @@ export interface Split {
   user_id: string;
   /** Name of the friend involved in the split */
   friend_name: string;
-  /** Amount in rupees (whole numbers only) - positive if they owe you, negative if you owe them */
-  amount: number;
   /** Description of what the split is for */
   description: string;
+  /** Full bill amount in rupees (whole numbers only) */
+  total_amount: number;
+  /** User's portion in rupees (whole numbers only) */
+  my_share: number;
+  /** Direction of the debt: 'owe' = user owes friend, 'owed' = friend owes user */
+  direction: 'owe' | 'owed';
   /** Whether the split has been settled/paid */
   is_settled: boolean;
+  /** Timestamp when the split was marked as settled */
+  settled_at: string | null;
   /** Timestamp when the split was created */
   created_at: string;
 }

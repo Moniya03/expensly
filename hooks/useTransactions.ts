@@ -70,7 +70,7 @@ function mapTransactionToInsertRow(
   return {
     user_id: transaction.user_id,
     amount: transaction.amount,
-    category: transaction.category === 'bills' ? 'other' : transaction.category,
+    category: transaction.category,
     note,
     input_method: transaction.source,
     voice_transcript: transaction.voice_transcript ?? null,
@@ -87,7 +87,7 @@ function mapTransactionToUpdateRow(
 
   return {
     amount: transaction.amount,
-    category: transaction.category === 'bills' ? 'other' : transaction.category,
+    category: transaction.category,
     note,
     input_method: transaction.source,
     date: transaction.transaction_date.split('T')[0],
@@ -155,7 +155,8 @@ async function fetchAllTransactions(userId: string): Promise<Transaction[]> {
     .select(TRANSACTION_COLUMNS)
     .eq('user_id', userId)
     .order('date', { ascending: false })
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .limit(200);
 
   if (error) {
     throw new Error(error.message);

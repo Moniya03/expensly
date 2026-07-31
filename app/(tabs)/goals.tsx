@@ -1,25 +1,26 @@
-import React from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import Animated, { useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
 import { colors, spacing, borderRadius, typography } from '../../constants/theme';
 import { useGoalGroups } from '../../hooks/useGoals';
-import { GoalCard } from '../../components/goals/GoalCard';
+import { GoalCard, GoalOrigin } from '../../components/goals/GoalCard';
 import { CompletedGoalsAccordion } from '../../components/goals/CompletedGoalsAccordion';
 import { GoalEmptyState } from '../../components/goals/GoalEmptyState';
-import { GoalDetailsSheet } from '../../components/goals/GoalDetailsSheet';
-import { GoalProgressSheet } from '../../components/goals/GoalProgressSheet';
+import { GoalCreateCard } from '../../components/goals/GoalCreateCard';
+import { ExpandedGoalCard } from '../../components/goals/ExpandedGoalCard';
 import { DeleteGoalConfirmSheet } from '../../components/goals/DeleteGoalConfirmSheet';
 import { GoalCelebrationOverlay } from '../../components/goals/GoalCelebrationOverlay';
 import { useDeleteGoal, useUpdateGoalProgress } from '../../hooks/useGoals';
 import { Goal } from '../../types';
 
 export default function GoalsScreen() {
-  const router = useRouter();
   const { active, completed, isLoading } = useGoalGroups();
   const [selectedGoalId, setSelectedGoalId] = React.useState<string | null>(null);
-  const [showProgress, setShowProgress] = React.useState(false);
+  const [origin, setOrigin] = React.useState<GoalOrigin | null>(null);
+  const [createOpen, setCreateOpen] = React.useState(false);
+  const [editingGoal, setEditingGoal] = React.useState<Goal | null>(null);
   const [showDelete, setShowDelete] = React.useState(false);
   const [pendingCelebrationGoal, setPendingCelebrationGoal] = React.useState<Goal | null>(null);
   const [shouldOpenCompleted, setShouldOpenCompleted] = React.useState(false);
@@ -31,17 +32,50 @@ export default function GoalsScreen() {
     [active, completed, selectedGoalId]
   );
 
-  const closeDetails = () => setSelectedGoalId(null);
+  const openGoal = (goal: Goal, goalOrigin: GoalOrigin) => {
+    setOrigin(goalOrigin);
+    setSelectedGoalId(goal.id);
+  };
+
+  const closeDetails = () => {
+    setSelectedGoalId(null);
+    setOrigin(null);
+  };
+
+  const openCreate = (goal: Goal | null) => {
+    closeDetails();
+    setEditingGoal(goal);
+    setCreateOpen(true);
+  };
+
   const showCelebration = !!pendingCelebrationGoal;
   const completedAccordionOpen = shouldOpenCompleted || !!pendingCelebrationGoal;
+
+  // Pulsing add button
+  const pulse = useSharedValue(1);
+  const pulseStyle = useAnimatedStyle(() => ({ transform: [{ scale: pulse.value }] }));
+  React.useEffect(() => {
+    pulse.value = withRepeat(
+      withSequence(
+        withTiming(1.06, { duration: 800 }),
+        withTiming(1, { duration: 800 })
+      ),
+      -1
+    );
+  }, [pulse]);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
-        <Text style={styles.title}>Goals</Text>
-        <Pressable style={styles.addButton} onPress={() => router.push('/goals/create' as never)}>
-          <Ionicons name="add" size={22} color={colors.surface} />
-        </Pressable>
+        <View>
+          <Text style={styles.title}>Goals</Text>
+          <Text style={styles.subtitle}>Small milestones, steady wins</Text>
+        </View>
+        <Animated.View style={pulseStyle}>
+          <Pressable style={styles.addButton} onPress={() => openCreate(null)} hitSlop={8}>
+            <Ionicons name="add" size={24} color={colors.surface} />
+          </Pressable>
+        </Animated.View>
       </View>
 
       {isLoading ? (
@@ -49,51 +83,38 @@ export default function GoalsScreen() {
       ) : (
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           {!active.length && !completed.length ? (
-            <GoalEmptyState onCreate={() => router.push('/goals/create' as never)} />
+            <GoalEmptyState onCreate={() => openCreate(null)} />
           ) : (
             <View style={styles.stack}>
-              {active.map((goal) => <GoalCard key={goal.id} goal={goal} onPress={() => setSelectedGoalId(goal.id)} />)}
+              {active.map((goal) => <GoalCard key={goal.id} goal={goal} onOpen={(origin) => openGoal(goal, origin)} />)}
             </View>
           )}
 
-          <CompletedGoalsAccordion
-            goals={completed}
-            onGoalPress={(goal) => setSelectedGoalId(goal.id)}
-            defaultOpen={completedAccordionOpen}
-          />
+          <CompletedGoalsAccordion goals={completed} onOpen={openGoal} defaultOpen={completedAccordionOpen} />
         </ScrollView>
       )}
 
-      <GoalDetailsSheet
-        visible={!!selectedGoal && !showProgress && !showDelete}
+      <ExpandedGoalCard
+        visible={!!selectedGoal && !showDelete}
         goal={selectedGoal}
-        onClose={closeDetails}
-        onUpdateProgress={() => setShowProgress(true)}
-        onEdit={() => {
-          if (!selectedGoal) return;
-          closeDetails();
-          router.push({ pathname: '/goals/create', params: { goalId: selectedGoal.id } } as never);
-        }}
-        onDelete={() => setShowDelete(true)}
-      />
-
-      <GoalProgressSheet
-        visible={!!selectedGoal && showProgress}
-        goal={selectedGoal}
+        origin={origin}
         isSaving={isUpdatingProgress}
-        onClose={() => setShowProgress(false)}
-        onSave={async (amount) => {
+        onClose={closeDetails}
+        onSaveProgress={async (amount) => {
           if (!selectedGoal) return;
           const beforeCompleted = selectedGoal.is_completed;
           const updatedGoal = await updateProgress({ id: selectedGoal.id, amount });
-          setShowProgress(false);
           closeDetails();
           if (!beforeCompleted && updatedGoal.is_completed) {
             setShouldOpenCompleted(true);
             setPendingCelebrationGoal(updatedGoal);
           }
         }}
+        onEdit={() => openCreate(selectedGoal)}
+        onDelete={() => setShowDelete(true)}
       />
+
+      <GoalCreateCard visible={createOpen} goal={editingGoal} onClose={() => setCreateOpen(false)} />
 
       <GoalCelebrationOverlay
         visible={showCelebration}
@@ -121,7 +142,20 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.surface },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.md, paddingTop: spacing.md, paddingBottom: spacing.sm },
   title: { color: colors.onSurface, fontSize: typography.fontSize.xxxl, fontWeight: typography.fontWeight.bold },
-  addButton: { width: 44, height: 44, borderRadius: borderRadius.full, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
+  subtitle: { color: colors.onSurfaceVariant, fontSize: typography.fontSize.sm, marginTop: 2 },
+  addButton: {
+    width: 48,
+    height: 48,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
+    elevation: 6,
+  },
   loading: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   content: { paddingHorizontal: spacing.md, paddingBottom: 140, gap: spacing.lg },
   stack: { gap: spacing.md },

@@ -1,24 +1,21 @@
 import React from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
-import Svg, { Circle } from 'react-native-svg';
-import { getCategoryColor } from '../../constants/categories';
-import { borderRadius, colors, spacing, typography } from '../../constants/theme';
-import { Category } from '../../types';
-import { formatRupees } from '../../utils/currency';
-import { GlassmorphicCard } from '../ui/GlassmorphicCard';
+import { View, Text, StyleSheet, Pressable, Animated, Easing } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import Svg, { Circle, Defs, Pattern, Path, Rect } from 'react-native-svg';
+import { typography } from '../../constants/theme';
+import { formatRupees } from '../../utils/currency';
 
 interface HeroBudgetCardProps {
   spent: number;
   budget: number;
   remaining: number;
-  isOverBudget: boolean;
-  byCategory: Record<string, number>;
+  todaySpent: number;
+  weekSpent: number;
   onPress?: () => void;
 }
 
-const DONUT_SIZE = 108;
-const STROKE_WIDTH = 10;
+const DONUT_SIZE = 116;
+const STROKE_WIDTH = 11;
 const RADIUS = (DONUT_SIZE - STROKE_WIDTH) / 2;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
@@ -26,280 +23,284 @@ export default function HeroBudgetCard({
   spent,
   budget,
   remaining,
-  isOverBudget,
-  byCategory,
+  todaySpent,
+  weekSpent,
   onPress,
 }: HeroBudgetCardProps) {
-  const categorySegments = React.useMemo(() => {
-    const entries = Object.entries(byCategory)
-      .filter(([, amount]) => amount > 0)
-      .sort(([, a], [, b]) => b - a);
+  const progress = budget > 0 ? Math.min(spent / budget, 1) : 0;
+  const remainingPercent = budget > 0 ? Math.max((remaining / budget) * 100, 0) : 0;
+  const dashOffset = CIRCUMFERENCE * (1 - progress);
+  const glowAnim = React.useRef(new Animated.Value(0)).current;
 
-    const total = entries.reduce((sum, [, amount]) => sum + amount, 0);
+  React.useEffect(() => {
+    const glow = Animated.loop(
+      Animated.sequence([
+        Animated.timing(glowAnim, { toValue: 1, duration: 4000, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+        Animated.timing(glowAnim, { toValue: 0, duration: 4000, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+      ])
+    );
+    glow.start();
+    return () => {
+      glow.stop();
+    };
+  }, [glowAnim]);
 
-    if (total <= 0) {
-      return [];
-    }
-
-    const gap = 4;
-    let offset = 0;
-
-    return entries.map(([category, amount]) => {
-      const rawLength = (amount / total) * CIRCUMFERENCE;
-      const segmentLength = Math.max(rawLength - gap, 0);
-      const segment = {
-        key: category,
-        color: getCategoryColor(category as Category),
-        length: segmentLength,
-        offset: -offset,
-      };
-
-      offset += rawLength;
-      return segment;
-    });
-  }, [byCategory]);
-
-  return (
-    <GlassmorphicCard intensity={18} style={styles.card}>
-      <LinearGradient
-        colors={['rgba(26,107,255,0.16)', 'rgba(0,212,170,0.10)', 'rgba(255,255,255,0.02)']}
-        start={{ x: 0.05, y: 0 }}
-        end={{ x: 0.95, y: 1 }}
-        style={styles.overlay}
+  const content = (
+    <View style={styles.content}>
+      <Animated.View
+        pointerEvents="none"
+        style={[
+          styles.glowLayer,
+          {
+            opacity: glowAnim.interpolate({ inputRange: [0, 1], outputRange: [0.06, 0.12] }),
+          },
+        ]}
       />
-      <View style={styles.cardSheen} />
-      <View style={styles.cardEdgeHighlight} />
-      <View style={styles.glowOrbPrimary} />
-      <View style={styles.glowOrbSecondary} />
-      {onPress ? (
-        <Pressable onPress={onPress} android_ripple={{ color: 'rgba(255,255,255,0.08)' }} style={styles.content}>
-          <View style={styles.leftColumn}>
-            <View style={styles.titleBlock}>
-              <Text style={styles.eyebrow}>SPENT THIS MONTH</Text>
-              <Text style={styles.amount}>{formatRupees(spent)}</Text>
-            </View>
-
-            <View style={styles.divider} />
-
-            <View style={styles.metaRow}>
-              <Text style={[styles.remaining, isOverBudget && styles.overBudget]}>
-                {formatRupees(Math.abs(remaining))} {isOverBudget ? 'over' : 'left'}
-              </Text>
-              <Text style={styles.context}>of {formatRupees(budget)} budget</Text>
-            </View>
-          </View>
-
-          <View style={styles.chartWrap}>
-            <Svg width={DONUT_SIZE} height={DONUT_SIZE}>
-              <Circle
-                cx={DONUT_SIZE / 2}
-                cy={DONUT_SIZE / 2}
-                r={RADIUS}
-                stroke="rgba(255,255,255,0.10)"
-                strokeWidth={STROKE_WIDTH}
-                fill="none"
-              />
-              {categorySegments.map((segment) => (
-                <Circle
-                  key={segment.key}
-                  cx={DONUT_SIZE / 2}
-                  cy={DONUT_SIZE / 2}
-                  r={RADIUS}
-                  stroke={segment.color}
-                  strokeWidth={STROKE_WIDTH}
-                  fill="none"
-                  strokeLinecap="butt"
-                  strokeDasharray={`${segment.length} ${CIRCUMFERENCE}`}
-                  strokeDashoffset={segment.offset}
-                  originX={DONUT_SIZE / 2}
-                  originY={DONUT_SIZE / 2}
-                  rotation={-90}
-                />
-              ))}
-            </Svg>
-
-            <View style={styles.chartCenter}>
-              <Text style={styles.centerAmount}>{formatRupees(spent)}</Text>
-              <Text style={styles.centerLabel}>Spent</Text>
-            </View>
-          </View>
-        </Pressable>
-      ) : (
-        <View style={styles.content}>
-          <View style={styles.leftColumn}>
-            <View style={styles.titleBlock}>
-              <Text style={styles.eyebrow}>SPENT THIS MONTH</Text>
-              <Text style={styles.amount}>{formatRupees(spent)}</Text>
-            </View>
-
-            <View style={styles.divider} />
-
-            <View style={styles.metaRow}>
-              <Text style={[styles.remaining, isOverBudget && styles.overBudget]}>
-                {formatRupees(Math.abs(remaining))} {isOverBudget ? 'over' : 'left'}
-              </Text>
-              <Text style={styles.context}>of {formatRupees(budget)} budget</Text>
-            </View>
-          </View>
-
-          <View style={styles.chartWrap}>
-            <Svg width={DONUT_SIZE} height={DONUT_SIZE}>
-              <Circle
-                cx={DONUT_SIZE / 2}
-                cy={DONUT_SIZE / 2}
-                r={RADIUS}
-                stroke="rgba(255,255,255,0.10)"
-                strokeWidth={STROKE_WIDTH}
-                fill="none"
-              />
-              {categorySegments.map((segment) => (
-                <Circle
-                  key={segment.key}
-                  cx={DONUT_SIZE / 2}
-                  cy={DONUT_SIZE / 2}
-                  r={RADIUS}
-                  stroke={segment.color}
-                  strokeWidth={STROKE_WIDTH}
-                  fill="none"
-                  strokeLinecap="butt"
-                  strokeDasharray={`${segment.length} ${CIRCUMFERENCE}`}
-                  strokeDashoffset={segment.offset}
-                  originX={DONUT_SIZE / 2}
-                  originY={DONUT_SIZE / 2}
-                  rotation={-90}
-                />
-              ))}
-            </Svg>
-
-            <View style={styles.chartCenter}>
-              <Text style={styles.centerAmount}>{formatRupees(spent)}</Text>
-              <Text style={styles.centerLabel}>Spent</Text>
-            </View>
+      <Svg pointerEvents="none" style={styles.gridOverlay} width="100%" height="100%">
+        <Defs>
+          <Pattern id="grid" width={30} height={30} patternUnits="userSpaceOnUse">
+            <Path d="M 30 0 L 0 0 0 30" fill="none" stroke="rgba(90,140,255,0.06)" strokeWidth={1} />
+          </Pattern>
+        </Defs>
+        <Rect x="0" y="0" width="100%" height="100%" fill="url(#grid)" />
+      </Svg>
+      <View style={styles.topRow}>
+        <View style={styles.leftColumn}>
+          <Text style={styles.eyebrow}>SPENT THIS MONTH</Text>
+          <Text style={styles.spentAmount}>{formatRupees(spent)}</Text>
+          <View style={styles.remainingRow}>
+            <View style={styles.greenDot} />
+            <Text style={styles.remainingText}>{formatRupees(Math.abs(remaining))} {remaining >= 0 ? 'left' : 'over'}</Text>
+            <Text style={styles.ofText}>of {formatRupees(budget)}</Text>
           </View>
         </View>
-      )}
-    </GlassmorphicCard>
+
+        <View style={styles.chartWrap}>
+          <Svg width={DONUT_SIZE} height={DONUT_SIZE}>
+            <Circle
+              cx={DONUT_SIZE / 2}
+              cy={DONUT_SIZE / 2}
+              r={RADIUS}
+              stroke="rgba(245,166,35,0.16)"
+              strokeWidth={STROKE_WIDTH + 8}
+              fill="none"
+              strokeLinecap="round"
+              strokeDasharray={`${CIRCUMFERENCE}`}
+              strokeDashoffset={dashOffset}
+              originX={DONUT_SIZE / 2}
+              originY={DONUT_SIZE / 2}
+              rotation={-90}
+            />
+            <Circle
+              cx={DONUT_SIZE / 2}
+              cy={DONUT_SIZE / 2}
+              r={RADIUS}
+              stroke="rgba(255,255,255,0.05)"
+              strokeWidth={STROKE_WIDTH}
+              fill="none"
+            />
+            <Circle
+              cx={DONUT_SIZE / 2}
+              cy={DONUT_SIZE / 2}
+              r={RADIUS}
+              stroke="#F5A623"
+              strokeWidth={STROKE_WIDTH}
+              fill="none"
+              strokeLinecap="round"
+              strokeDasharray={`${CIRCUMFERENCE}`}
+              strokeDashoffset={dashOffset}
+              originX={DONUT_SIZE / 2}
+              originY={DONUT_SIZE / 2}
+              rotation={-90}
+            />
+          </Svg>
+          <View style={styles.chartCenter}>
+            <Text style={styles.centerAmount}>{formatRupees(spent)}</Text>
+            <Text style={styles.centerLabel}>SPENT</Text>
+          </View>
+        </View>
+      </View>
+
+      <View style={styles.bottomStats}>
+        <Stat label="TODAY" value={formatRupees(todaySpent)} />
+        <Hairline />
+        <Stat label="THIS WEEK" value={formatRupees(weekSpent)} />
+        <Hairline />
+        <Stat label="SAVINGS %" value={`${remainingPercent.toFixed(0)}%`} valueColor="#1DC496" />
+      </View>
+    </View>
+  );
+
+  return onPress ? (
+    <Pressable onPress={onPress} style={styles.pressable}>
+      <LinearGradient
+        colors={['#123C86', '#0F2F63', '#0B223F', '#0A191D']}
+        start={{ x: 0.08, y: 0.02 }}
+        end={{ x: 0.94, y: 0.98 }}
+        style={styles.gradient}
+      >
+        {content}
+      </LinearGradient>
+    </Pressable>
+  ) : (
+    <View style={styles.pressable}>
+      <LinearGradient
+        colors={['#123C86', '#0F2F63', '#0B223F', '#0A191D']}
+        start={{ x: 0.08, y: 0.02 }}
+        end={{ x: 0.94, y: 0.98 }}
+        style={styles.gradient}
+      >
+        {content}
+      </LinearGradient>
+    </View>
   );
 }
 
+function Stat({ label, value, valueColor }: { label: string; value: string; valueColor?: string }) {
+  return (
+    <View style={styles.stat}>
+      <Text style={styles.statLabel}>{label}</Text>
+      <Text style={[styles.statValue, valueColor ? { color: valueColor } : null]}>{value}</Text>
+    </View>
+  );
+}
+
+function Hairline() {
+  return <View style={styles.hairline} />;
+}
+
 const styles = StyleSheet.create({
-  card: {
-    borderRadius: borderRadius.md,
-    padding: spacing.lg,
+  pressable: {
+    borderRadius: 24,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.14)',
-    backgroundColor: 'rgba(255,255,255,0.045)',
-    shadowColor: colors.primary,
-    shadowOpacity: 0.16,
-    shadowRadius: 26,
-    shadowOffset: { width: 0, height: 12 },
+    borderColor: 'rgba(90,140,255,0.18)',
+    shadowColor: '#1A6BFF',
+    shadowOpacity: 0.12,
+    shadowRadius: 28,
+    shadowOffset: { width: 0, height: 14 },
   },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    opacity: 1,
-  },
-  cardSheen: {
-    position: 'absolute',
-    left: -42,
-    top: -62,
-    width: 186,
-    height: 186,
-    borderRadius: 93,
-    backgroundColor: 'rgba(255,255,255,0.028)',
-  },
-  cardEdgeHighlight: {
-    position: 'absolute',
-    left: 18,
-    right: 18,
-    top: 0,
-    height: 1,
-    backgroundColor: 'rgba(255,255,255,0.10)',
-  },
-  glowOrbPrimary: {
-    position: 'absolute',
-    width: 136,
-    height: 136,
-    borderRadius: 68,
-    top: -64,
-    left: -36,
-    backgroundColor: 'rgba(26,107,255,0.11)',
-  },
-  glowOrbSecondary: {
-    position: 'absolute',
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    right: -40,
-    bottom: -38,
-    backgroundColor: 'rgba(0,212,170,0.085)',
+  gradient: {
+    borderRadius: 24,
   },
   content: {
+    position: 'relative',
+    borderRadius: 24,
+    paddingHorizontal: 20,
+    paddingTop: 22,
+    paddingBottom: 20,
+    gap: 20,
+    backgroundColor: '#0A0F1A',
+    overflow: 'hidden',
+    minHeight: 250,
+  },
+  topRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: spacing.md,
+    gap: 18,
+  },
+  glowLayer: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(26,107,255,0.05)',
+  },
+  gridOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    opacity: 0.8,
   },
   leftColumn: {
     flex: 1,
-    gap: spacing.md,
-  },
-  titleBlock: {
-    gap: spacing.xs,
+    gap: 10,
   },
   eyebrow: {
     fontSize: 11,
+    letterSpacing: 1.2,
+    color: 'rgba(120,170,255,0.7)',
     fontWeight: typography.fontWeight.bold,
-    color: '#9AA8D0',
-    letterSpacing: 1.15,
   },
-  amount: {
-    fontSize: 35,
+  spentAmount: {
+    fontSize: 30,
+    lineHeight: 34,
+    color: '#FFFFFF',
     fontWeight: typography.fontWeight.bold,
-    color: colors.onSurface,
-    letterSpacing: -0.6,
+    letterSpacing: -0.4,
   },
-  divider: {
-    width: 60,
-    height: 1,
-    backgroundColor: 'rgba(255,255,255,0.12)',
+  remainingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 6,
   },
-  metaRow: {
-    gap: 2,
+  greenDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#4FD2FF',
   },
-  remaining: {
-    fontSize: typography.fontSize.md,
-    fontWeight: typography.fontWeight.bold,
-    color: colors.secondary,
-    letterSpacing: -0.2,
+  remainingText: {
+    color: '#8ADFFF',
+    fontSize: 13,
+    fontWeight: typography.fontWeight.semiBold,
   },
-  overBudget: {
-    color: colors.error,
-  },
-  context: {
-    fontSize: typography.fontSize.xs,
-    color: '#A5B1CF',
+  ofText: {
+    color: 'rgba(173,186,214,0.75)',
+    fontSize: 13,
   },
   chartWrap: {
     width: DONUT_SIZE,
     height: DONUT_SIZE,
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#1A6BFF',
+    shadowOpacity: 0.18,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 7,
   },
   chartCenter: {
     position: 'absolute',
     alignItems: 'center',
+    justifyContent: 'center',
   },
   centerAmount: {
-    fontSize: typography.fontSize.lg,
+    color: '#4FD2FF',
+    fontSize: 18,
     fontWeight: typography.fontWeight.bold,
-    color: colors.onSurface,
-    textAlign: 'center',
-    letterSpacing: -0.3,
   },
   centerLabel: {
-    fontSize: typography.fontSize.xs,
-    color: '#AAB6DB',
-    letterSpacing: 0.5,
+    marginTop: 2,
+    color: 'rgba(181,228,255,0.72)',
+    fontSize: 11,
+    letterSpacing: 0.8,
+    fontWeight: typography.fontWeight.bold,
+  },
+  bottomStats: {
+    flexDirection: 'row',
+    alignItems: 'stretch',
+    justifyContent: 'space-between',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(120,170,255,0.12)',
+    paddingTop: 12,
+  },
+  stat: {
+    flex: 1,
+    gap: 4,
+  },
+  statLabel: {
+    color: 'rgba(154,199,255,0.74)',
+    fontSize: 10,
+    letterSpacing: 0.9,
+    fontWeight: typography.fontWeight.bold,
+  },
+  statValue: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: typography.fontWeight.semiBold,
+  },
+  hairline: {
+    width: 1,
+    alignSelf: 'stretch',
+    backgroundColor: 'rgba(120,170,255,0.12)',
+    marginHorizontal: 10,
   },
 });

@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useAuthStore } from '../stores/authStore';
 import { colors } from '../constants/theme';
 import { configureGoogleSignIn } from '../hooks/useGoogleAuth';
+import { consumeOnboardingReplay, shouldReplayOnboarding } from '../utils/devOnboardingReplay';
 
 // Configure Google Sign-In on app startup
 configureGoogleSignIn();
@@ -67,8 +68,11 @@ function RootLayoutNav() {
       router.replace('/(auth)/welcome');
     } else if (session && !hasResolvedProfile) {
       return;
+    } else if (session && hasResolvedProfile && shouldReplayOnboarding() && !inOnboarding) {
+      consumeOnboardingReplay();
+      router.replace('/onboarding/welcome');
     } else if (needsNameOnboarding && !inOnboarding) {
-      router.replace('/onboarding/name');
+      router.replace('/onboarding/welcome');
     } else if (needsBudgetOnboarding && !needsNameOnboarding && !inOnboarding) {
       router.replace('/onboarding/budget');
     } else if (session && !needsNameOnboarding && !needsBudgetOnboarding && (inAuthGroup || inOnboarding)) {
@@ -99,7 +103,6 @@ function RootLayoutNav() {
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="onboarding" />
       <Stack.Screen name="insights" />
-      <Stack.Screen name="goals/create" options={{ presentation: 'modal' }} />
     </Stack>
   );
 }

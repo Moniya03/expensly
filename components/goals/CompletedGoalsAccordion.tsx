@@ -1,27 +1,40 @@
 import React, { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import Animated, { useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
 import { Goal } from '../../types';
 import { colors, spacing, borderRadius, typography } from '../../constants/theme';
-import { GoalCard } from './GoalCard';
+import { GoalCard, GoalOrigin } from './GoalCard';
 
-export function CompletedGoalsAccordion({ goals, onGoalPress, defaultOpen = false }: { goals: Goal[]; onGoalPress?: (goal: Goal) => void; defaultOpen?: boolean }) {
+export function CompletedGoalsAccordion({ goals, onOpen, defaultOpen = false }: { goals: Goal[]; onOpen?: (goal: Goal, origin: GoalOrigin) => void; defaultOpen?: boolean }) {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
     if (defaultOpen) setOpen(true);
   }, [defaultOpen]);
 
+  const chevronRotate = useSharedValue(0);
+  const chevronStyle = useAnimatedStyle(() => ({ transform: [{ rotate: `${chevronRotate.value}deg` }] }));
+
+  useEffect(() => {
+    chevronRotate.value = withTiming(open ? 180 : 0, { duration: 220 });
+  }, [open, chevronRotate]);
+
   if (!goals.length) return null;
 
   return (
     <View style={styles.wrap}>
       <Pressable style={styles.header} onPress={() => setOpen((v) => !v)}>
+        <View style={styles.headerIcon}>
+          <Ionicons name="checkmark-done" size={16} color={colors.secondary} />
+        </View>
         <Text style={styles.title}>Completed goals</Text>
         <View style={styles.badge}><Text style={styles.badgeText}>{goals.length}</Text></View>
-        <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={18} color={colors.onSurfaceVariant} />
+        <Animated.View style={chevronStyle}>
+          <Ionicons name="chevron-down" size={18} color={colors.onSurfaceVariant} />
+        </Animated.View>
       </Pressable>
-      {open ? <View style={styles.list}>{goals.map((goal) => <GoalCard key={goal.id} goal={goal} onPress={onGoalPress ? () => onGoalPress(goal) : undefined} />)}</View> : null}
+      {open ? <View style={styles.list}>{goals.map((goal) => <GoalCard key={goal.id} goal={goal} onOpen={onOpen ? (origin) => onOpen(goal, origin) : undefined} />)}</View> : null}
     </View>
   );
 }
@@ -39,6 +52,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: spacing.md,
     gap: spacing.sm,
+  },
+  headerIcon: {
+    width: 30,
+    height: 30,
+    borderRadius: borderRadius.full,
+    backgroundColor: `${colors.secondary}1A`,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   title: { flex: 1, color: colors.onSurface, fontSize: typography.fontSize.md, fontWeight: typography.fontWeight.semiBold },
   badge: { minWidth: 28, paddingHorizontal: 8, height: 24, borderRadius: 999, backgroundColor: colors.surfaceContainerHigh, alignItems: 'center', justifyContent: 'center' },

@@ -46,16 +46,39 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   },
 });
 
+export const isInvalidRefreshTokenError = (error: { message?: string | null } | null | undefined) => {
+  const message = String(error?.message || '').toLowerCase();
+  return message.includes('invalid refresh token') || message.includes('refresh token not found');
+};
+
+export const clearLocalSession = async () => {
+  const { error } = await supabase.auth.signOut({ scope: 'local' });
+
+  if (error) {
+    console.error('Error clearing local session:', error.message);
+    return false;
+  }
+
+  return true;
+};
+
 /**
  * Get the current user session
  * @returns The current session or null if not authenticated
  */
 export const getSession = async () => {
   const { data, error } = await supabase.auth.getSession();
+
   if (error) {
+    if (isInvalidRefreshTokenError(error)) {
+      await clearLocalSession();
+      return null;
+    }
+
     console.error('Error getting session:', error.message);
     return null;
   }
+
   return data.session;
 };
 
@@ -64,10 +87,5 @@ export const getSession = async () => {
  * @returns True if sign out was successful, false otherwise
  */
 export const signOut = async () => {
-  const { error } = await supabase.auth.signOut();
-  if (error) {
-    console.error('Error signing out:', error.message);
-    return false;
-  }
-  return true;
+  return clearLocalSession();
 };

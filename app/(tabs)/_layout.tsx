@@ -1,24 +1,23 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { View } from 'react-native';
-import { colors } from '../../constants/theme';
 import VoiceFAB from '../../components/VoiceFAB';
 
 export default function TabsLayout() {
   return (
-    <View style={{ flex: 1, backgroundColor: colors.surface }}>
+    <View style={{ flex: 1, backgroundColor: '#0A0F1A' }}>
       <Tabs
         screenOptions={{
           headerShown: false,
           tabBarStyle: {
-            backgroundColor: colors.surfaceContainer,
+            backgroundColor: '#080D18',
             borderTopWidth: 0,
             height: 72,
             paddingBottom: 10,
             paddingTop: 8,
           },
-          tabBarActiveTintColor: colors.primary,
-          tabBarInactiveTintColor: colors.onSurfaceVariant,
+          tabBarActiveTintColor: '#1DC496',
+          tabBarInactiveTintColor: 'rgba(173,186,214,0.58)',
         }}
       >
         <Tabs.Screen

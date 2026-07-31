@@ -1,7 +1,8 @@
 import { create } from 'zustand';
 import { Session } from '@supabase/supabase-js';
 import { Profile } from '../types';
-import { supabase } from '../services/supabase';
+import { clearLocalSession, isInvalidRefreshTokenError, supabase } from '../services/supabase';
+import { ensureProfile } from '../services/profile';
 
 let authSubscription: { unsubscribe: () => void } | null = null;
 let initializePromise: Promise<void> | null = null;
@@ -38,25 +39,11 @@ interface AuthState {
   signInWithGoogle: (idToken: string) => Promise<void>;
 }
 
-/**
- * Fetch user profile from the database
- */
-const fetchProfile = async (userId: string): Promise<Profile | null> => {
+const resolveProfile = async (userId: string): Promise<Profile | null> => {
   try {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
-
-    if (error) {
-      console.error('Error fetching profile:', error.message);
-      return null;
-    }
-
-    return data;
+    return await ensureProfile(userId);
   } catch (error) {
-    console.error('Unexpected error fetching profile:', error);
+    console.error('Unexpected error resolving profile:', error);
     return null;
   }
 };
@@ -66,7 +53,7 @@ const fetchProfileWithTimeout = async (userId: string): Promise<Profile | null> 
 
   try {
     return await Promise.race([
-      fetchProfile(userId),
+      resolveProfile(userId),
       new Promise<Profile | null>((resolve) => {
         timeoutId = setTimeout(() => {
           console.error(`Profile fetch timed out after ${PROFILE_FETCH_TIMEOUT_MS}ms for user ${userId}`);
@@ -160,6 +147,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         } = await supabase.auth.getSession();
 
         if (sessionError) {
+          if (isInvalidRefreshTokenError(sessionError)) {
+            await clearLocalSession();
+            set({ session: null, profile: null, isInitialized: true, hasResolvedProfile: true });
+            return;
+          }
+
           console.error('Error getting initial session:', sessionError.message);
           set({ session: null, profile: null, isInitialized: true, hasResolvedProfile: true });
           return;
@@ -170,18 +163,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           return;
         }
 
-        set({ session, hasResolvedProfile: false });
+        set({ session });
 
-        const currentProfile = get().profile;
-        const currentSession = get().session;
-
-        if (currentSession?.user.id === session.user.id && currentProfile) {
-          set({ isInitialized: true, hasResolvedProfile: true });
-          return;
-        }
-
-        const profile = await fetchProfileOnce(session.user.id);
-        set({ session, profile, isInitialized: true, hasResolvedProfile: true });
+        // Wait for the INITIAL_SESSION listener to resolve the profile,
+        // then mark initialization as complete. The listener's fetchProfileOnce
+        // is already in-flight; we just piggyback on it.
+        await fetchProfileOnce(session.user.id);
+        set({ isInitialized: true, hasResolvedProfile: true });
       } catch (error) {
         console.error('Unexpected error during auth initialization:', error);
         set({ session: null, profile: null, isInitialized: true, hasResolvedProfile: true });
@@ -198,11 +186,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       set({ isLoading: true });
 
-      const { error } = await supabase.auth.signOut();
+      const cleared = await clearLocalSession();
 
-      if (error) {
-        console.error('Error signing out:', error.message);
-        throw error;
+      if (!cleared) {
+        throw new Error('Failed to clear local session');
       }
 
       // Clear state

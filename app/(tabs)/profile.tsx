@@ -28,7 +28,7 @@ export default function ProfileScreen() {
     return () => clearTimeout(timer);
   }, [feedback]);
 
-  const displayName = profile?.name || profile?.display_name || 'User';
+  const displayName = profile?.name || 'User';
   const budgetValue = profile?.monthly_budget ?? 0;
   const version = appVersion;
 
