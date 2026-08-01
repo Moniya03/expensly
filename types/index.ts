@@ -27,10 +27,6 @@ export interface Profile {
   avatar_url: string | null;
   /** Monthly budget amount in rupees (whole numbers only) */
   monthly_budget: number;
-  /** Current streak count for daily expense tracking */
-  streak_count: number;
-  /** Last date the streak was updated (ISO 8601 format) */
-  streak_last_date?: string | null;
   /** Timestamp when the profile was created */
   created_at: string;
   /** Timestamp when the profile was last updated */
