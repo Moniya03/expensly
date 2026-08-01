@@ -40,7 +40,7 @@ export const useUpdateProfile = () => {
   const userId = session?.user?.id;
 
   return useMutation({
-    mutationFn: (updates: Partial<Pick<Profile, 'name' | 'monthly_budget' | 'onboarding_complete' | 'avatar_url'>>) => {
+    mutationFn: (updates: Partial<Pick<Profile, 'name' | 'monthly_budget' | 'onboarding_complete' | 'avatar_url' | 'daily_reminder_enabled' | 'budget_alert_enabled'>>) => {
       if (!userId) {
         throw new Error('No user session');
       }

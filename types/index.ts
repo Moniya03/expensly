@@ -37,6 +37,10 @@ export interface Profile {
   updated_at: string;
   /** Whether the user completed onboarding */
   onboarding_complete?: boolean;
+  /** User wants a daily expense-logging reminder notification */
+  daily_reminder_enabled: boolean;
+  /** User wants a notification when spending crosses the monthly budget */
+  budget_alert_enabled: boolean;
 }
 
 /**

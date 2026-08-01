@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { borderRadius, colors, spacing, typography } from '../../constants/theme';
 import { useAuthStore } from '../../stores/authStore';
@@ -25,7 +26,8 @@ import NameEditSheet from '../../components/profile/NameEditSheet';
 const appVersion = (require('../../package.json') as { version?: string }).version ?? '1.0.0';
 
 export default function ProfileScreen() {
-  const { profile, session, signOut } = useAuthStore();
+  const { profile, session } = useAuthStore();
+  const router = useRouter();
   const { mutateAsync: updateProfile } = useUpdateProfile();
   const { data: transactions = [] } = useAllTransactions();
   const { data: budgets = [] } = useBudgets();
@@ -68,14 +70,6 @@ export default function ProfileScreen() {
 
     return savings;
   }, [transactions, budgets, fallbackBudget]);
-
-  const handleSignOut = async () => {
-    try {
-      await signOut();
-    } catch (error) {
-      console.error('Sign out error:', error);
-    }
-  };
 
   const handlePickAvatar = async () => {
     try {
@@ -128,7 +122,12 @@ export default function ProfileScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
-        <Text style={styles.screenTitle}>Profile</Text>
+        <View style={styles.titleRow}>
+          <Text style={styles.screenTitle}>Profile</Text>
+          <Pressable style={styles.gearButton} onPress={() => router.push('/settings')}>
+            <Ionicons name="settings-outline" size={22} color={colors.onSurface} />
+          </Pressable>
+        </View>
 
         <LinearGradient colors={['#123C86', '#0F2F63', '#0B223F', '#0A191D']} style={styles.heroCard}>
           <View style={styles.heroTopRow}>
@@ -225,11 +224,6 @@ export default function ProfileScreen() {
         <View style={styles.footerWrap}>
           <Text style={styles.version}>v{appVersion}</Text>
         </View>
-
-        <Pressable style={styles.signOutButton} onPress={handleSignOut}>
-          <Ionicons name="log-out-outline" size={20} color={colors.error} />
-          <Text style={styles.signOutText}>Sign out</Text>
-        </Pressable>
       </View>
 
       <NameEditSheet
@@ -256,7 +250,22 @@ const styles = StyleSheet.create({
     color: colors.onSurface,
     fontSize: typography.fontSize.xxxl,
     fontWeight: typography.fontWeight.bold,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: spacing.lg,
+  },
+  gearButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.surfaceContainer,
+    borderWidth: 1,
+    borderColor: colors.outlineVariant,
   },
   heroCard: {
     borderRadius: borderRadius.xl,
@@ -444,21 +453,5 @@ const styles = StyleSheet.create({
     color: colors.onSurfaceVariant,
     fontSize: typography.fontSize.xs,
     textAlign: 'center',
-  },
-  signOutButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 52,
-    borderRadius: borderRadius.md,
-    borderWidth: 1,
-    borderColor: colors.error,
-    marginBottom: spacing.md,
-  },
-  signOutText: {
-    color: colors.error,
-    fontSize: typography.fontSize.md,
-    fontWeight: typography.fontWeight.semiBold,
-    marginLeft: spacing.sm,
   },
 });
