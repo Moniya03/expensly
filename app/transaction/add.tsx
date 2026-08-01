@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -9,7 +9,7 @@ import { Input } from '../../components/ui/Input';
 import { DatePicker } from '../../components/ui/DatePicker';
 import { useCreateTransaction } from '../../hooks/useTransactions';
 import { Category } from '../../types';
-import { colors, spacing, borderRadius, typography } from '../../constants/theme';
+import { spacing, borderRadius, typography, useColors, type Colors } from '../../constants/theme';
 import { toLocalDateString } from '../../utils/date';
 
 function normalizeCategory(category: Category): Category {
@@ -18,6 +18,8 @@ function normalizeCategory(category: Category): Category {
 }
 
 export default function AddExpenseScreen() {
+  const colors = useColors();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const router = useRouter();
   const { mutate: createTransaction, isPending } = useCreateTransaction();
   
@@ -95,7 +97,7 @@ export default function AddExpenseScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: Colors) => StyleSheet.create({
   container: { 
     flex: 1, 
     backgroundColor: colors.surface 

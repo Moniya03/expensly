@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, ActivityIndicator } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { borderRadius, colors, spacing, typography } from '../../constants/theme';
+import { borderRadius, spacing, typography, useColors, type Colors } from '../../constants/theme';
 import { useAuthStore } from '../../stores/authStore';
 import { useAllTransactions } from '../../hooks/useTransactions';
 import { getHistoricalBudgetForMonth, useBudgets } from '../../hooks/useBudget';
@@ -22,6 +22,8 @@ type MonthItem = {
 };
 
 export default function HistoryScreen() {
+  const colors = useColors();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const { profile } = useAuthStore();
   const { data: transactions = [], isLoading: transactionsLoading } = useAllTransactions();
   const { data: budgets = [], isLoading: budgetsLoading } = useBudgets();
@@ -218,7 +220,7 @@ export default function HistoryScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: Colors) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.surface,

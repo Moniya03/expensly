@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { borderRadius, colors, spacing, typography } from '../../constants/theme';
+import { borderRadius, spacing, typography, useColors, type Colors } from '../../constants/theme';
 import { useAuthStore } from '../../stores/authStore';
 import { useMonthlyTransactions, useRecentTransactions } from '../../hooks/useTransactions';
 import { HeroBudgetCard, RecentTransactions } from '../../components/home';
@@ -12,6 +12,8 @@ import { getGreetingWithEmoji, parseLocalDate } from '../../utils/date';
 const HOME_DIAGNOSTIC_MODE = false;
 
 export default function HomeScreen() {
+  const colors = useColors();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const router = useRouter();
   const { profile, session } = useAuthStore();
   const { data: recentTransactions = [], isLoading: transactionsLoading } = useRecentTransactions(5);
@@ -165,10 +167,10 @@ export default function HomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: Colors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0A0F1A',
+    backgroundColor: colors.surface,
   },
   atmosphere: {
     ...StyleSheet.absoluteFillObject,
@@ -217,7 +219,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   diagnosticTitle: {
-    color: '#FFFFFF',
+    color: colors.onSurface,
     fontSize: typography.fontSize.xl,
     fontWeight: typography.fontWeight.bold,
   },

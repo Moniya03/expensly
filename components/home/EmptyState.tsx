@@ -1,11 +1,14 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, typography, spacing } from '../../constants/theme';
+import { typography, spacing, useColors, type Colors } from '../../constants/theme';
 
 const { width } = Dimensions.get('window');
 
 export default function EmptyState() {
+  const colors = useColors();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   return (
     <View style={styles.container}>
       {/* Ripple Rings */}
@@ -27,7 +30,7 @@ export default function EmptyState() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: Colors) => StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',

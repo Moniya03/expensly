@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import Animated, { useAnimatedProps, useSharedValue, withTiming, Easing } from 'react-native-reanimated';
-import { colors } from '../../constants/theme';
+import { useColors } from '../../constants/theme';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
@@ -15,7 +15,10 @@ type Props = {
   children?: React.ReactNode;
 };
 
-export function ProgressRing({ size = 72, strokeWidth = 6, progress, color = colors.primary, trackColor = colors.surfaceContainerHighest, children }: Props) {
+export function ProgressRing({ size = 72, strokeWidth = 6, progress, color, trackColor, children }: Props) {
+  const colors = useColors();
+  const resolvedColor = color ?? colors.primary;
+  const resolvedTrackColor = trackColor ?? colors.surfaceContainerHighest;
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const animatedProgress = useSharedValue(0);
@@ -34,12 +37,12 @@ export function ProgressRing({ size = 72, strokeWidth = 6, progress, color = col
   return (
     <View style={{ width: size, height: size }}>
       <Svg width={size} height={size}>
-        <Circle cx={size / 2} cy={size / 2} r={radius} stroke={trackColor} strokeWidth={strokeWidth} fill="none" />
+        <Circle cx={size / 2} cy={size / 2} r={radius} stroke={resolvedTrackColor} strokeWidth={strokeWidth} fill="none" />
         <AnimatedCircle
           cx={size / 2}
           cy={size / 2}
           r={radius}
-          stroke={color}
+          stroke={resolvedColor}
           strokeWidth={strokeWidth}
           fill="none"
           strokeLinecap="round"

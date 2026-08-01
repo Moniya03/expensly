@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   ActivityIndicator,
   Modal,
@@ -12,7 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { borderRadius, colors, spacing, typography } from '../constants/theme';
+import { borderRadius, spacing, typography, useColors, useThemeMode, type Colors } from '../constants/theme';
 import { useAuthStore } from '../stores/authStore';
 import { useUpdateProfile } from '../hooks/useProfile';
 import { deleteAccount } from '../services/account';
@@ -29,6 +29,8 @@ type SettingRowProps = {
 };
 
 function SettingRow({ icon, label, children, danger, onPress, soon }: SettingRowProps) {
+  const colors = useColors();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   return (
     <Pressable
       style={({ pressed }) => [styles.row, pressed && onPress ? { opacity: 0.6 } : null]}
@@ -51,7 +53,10 @@ function SettingRow({ icon, label, children, danger, onPress, soon }: SettingRow
 
 export default function SettingsScreen() {
   const router = useRouter();
+  const colors = useColors();
+  const { mode, setMode } = useThemeMode();
   const { profile, signOut } = useAuthStore();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const { mutateAsync: updateProfile, isPending: isProfileSaving } = useUpdateProfile();
 
   const [deleteSheetVisible, setDeleteSheetVisible] = React.useState(false);
@@ -140,6 +145,18 @@ export default function SettingsScreen() {
           </SettingRow>
         </View>
 
+        <Text style={styles.sectionLabel}>Appearance</Text>
+        <View style={styles.section}>
+          <SettingRow icon="moon-outline" label="Dark mode">
+            <Switch
+              value={mode === 'dark'}
+              onValueChange={(dark) => setMode(dark ? 'dark' : 'light')}
+              trackColor={{ false: colors.surfaceContainerHighest, true: colors.primary }}
+              thumbColor={colors.surface}
+            />
+          </SettingRow>
+        </View>
+
         <Text style={styles.sectionLabel}>Data</Text>
         <View style={styles.section}>
           <SettingRow icon="download-outline" label="Export data" soon />
@@ -198,7 +215,8 @@ export default function SettingsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: Colors) =>
+  StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.surface,

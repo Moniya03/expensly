@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { ActivityIndicator, Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { borderRadius, colors, spacing, typography } from '../../constants/theme';
+import { borderRadius, spacing, typography, useColors, type Colors } from '../../constants/theme';
 import { useUpdateProfile } from '../../hooks/useProfile';
 
 type NameEditSheetProps = {
@@ -12,6 +12,9 @@ type NameEditSheetProps = {
 };
 
 export default function NameEditSheet({ visible, currentName, onClose, onSaved }: NameEditSheetProps) {
+  const colors = useColors();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   const { mutateAsync: updateProfile, isPending } = useUpdateProfile();
   const [name, setName] = React.useState(currentName);
   const [error, setError] = React.useState<string | null>(null);
@@ -87,7 +90,7 @@ export default function NameEditSheet({ visible, currentName, onClose, onSaved }
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: Colors) => StyleSheet.create({
   backdrop: {
     flex: 1,
     justifyContent: 'flex-end',

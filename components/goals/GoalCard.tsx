@@ -1,10 +1,10 @@
-import React, { useRef } from 'react';
+import React, { useMemo, useRef } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
 import { Goal } from '../../types';
-import { colors, spacing, borderRadius, typography } from '../../constants/theme';
+import { spacing, borderRadius, typography, useColors, type Colors } from '../../constants/theme';
 import { formatRupees } from '../../utils/currency';
 import { parseLocalDate } from '../../utils/date';
 import { getGoalMeta } from './goalMeta';
@@ -18,6 +18,9 @@ const deadlineLabel = (goal: Goal) =>
     : 'No deadline';
 
 export function GoalCard({ goal, onOpen }: { goal: Goal; onOpen?: (origin: GoalOrigin) => void }) {
+  const colors = useColors();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   const ref = useRef<View>(null);
   const meta = getGoalMeta(goal.icon);
   const remaining = Math.max(goal.target_amount - goal.saved_amount, 0);
@@ -80,7 +83,7 @@ export function GoalCard({ goal, onOpen }: { goal: Goal; onOpen?: (origin: GoalO
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: Colors) => StyleSheet.create({
   shadow: {
     borderRadius: borderRadius.xl,
     shadowColor: '#000000',

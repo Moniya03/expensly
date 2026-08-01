@@ -1,12 +1,14 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { borderRadius, colors, spacing, typography } from '../../constants/theme';
+import { borderRadius, spacing, typography, useColors, type Colors } from '../../constants/theme';
 import { useUpdateProfile } from '../../hooks/useProfile';
 
 export default function NameOnboardingScreen() {
+  const colors = useColors();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const router = useRouter();
   const { mutateAsync: updateProfile, isPending } = useUpdateProfile();
 
@@ -92,7 +94,7 @@ export default function NameOnboardingScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: Colors) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.surface,
@@ -187,7 +189,7 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   primaryButtonText: {
-    color: '#000000',
+    color: colors.surface,
     fontSize: typography.fontSize.lg,
     fontWeight: typography.fontWeight.semiBold,
   },

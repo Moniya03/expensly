@@ -13,7 +13,7 @@ import {
   Platform,
   UIManager,
 } from 'react-native';
-import { colors, spacing, borderRadius, typography } from '../../constants/theme';
+import { spacing, borderRadius, typography, useColors, type Colors } from '../../constants/theme';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -34,6 +34,9 @@ export function DatePicker({
   allowFutureDates = false,
   inlineYearScroller = false,
 }: DatePickerProps) {
+  const colors = useColors();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   const [showCalendar, setShowCalendar] = useState(false);
   const [showYearScroller, setShowYearScroller] = useState(false);
   const [selectedDateInModal, setSelectedDateInModal] = useState(value);
@@ -408,7 +411,7 @@ export function DatePicker({
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: Colors) => StyleSheet.create({
   container: {
     marginBottom: spacing.md,
   },

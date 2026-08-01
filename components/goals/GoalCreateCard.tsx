@@ -1,10 +1,10 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming, Easing } from 'react-native-reanimated';
 import { Goal } from '../../types';
-import { colors, spacing, borderRadius, typography } from '../../constants/theme';
+import { spacing, borderRadius, typography, useColors, type Colors } from '../../constants/theme';
 import { Input } from '../ui/Input';
 import { AmountInput } from '../ui/AmountInput';
 import { DatePicker } from '../ui/DatePicker';
@@ -20,6 +20,9 @@ type Props = {
 };
 
 export function GoalCreateCard({ visible, goal, onClose }: Props) {
+  const colors = useColors();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   const createGoal = useCreateGoal();
   const updateGoal = useUpdateGoal();
   const isSaving = createGoal.isPending || updateGoal.isPending;
@@ -117,7 +120,7 @@ export function GoalCreateCard({ visible, goal, onClose }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: Colors) => StyleSheet.create({
   root: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.lg },
   scrim: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(4, 6, 12, 0.82)' },
   card: {

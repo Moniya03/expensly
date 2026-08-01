@@ -1,7 +1,8 @@
 import { Stack } from 'expo-router';
-import { colors } from '../../constants/theme';
+import { useColors } from '../../constants/theme';
 
 export default function TransactionLayout() {
+  const colors = useColors();
   return (
     <Stack
       screenOptions={{

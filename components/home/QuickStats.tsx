@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { borderRadius, colors, spacing, typography } from '../../constants/theme';
+import { borderRadius, spacing, typography, useColors, type Colors } from '../../constants/theme';
 import { formatRupees } from '../../utils/currency';
 import { SoftDivider } from '../ui/SoftDivider';
 
@@ -15,6 +15,9 @@ const statCards = [
 ] as const;
 
 export default function QuickStats({ today, week }: QuickStatsProps) {
+  const colors = useColors();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   const values = {
     today: formatRupees(today),
     week: formatRupees(week),
@@ -37,7 +40,7 @@ export default function QuickStats({ today, week }: QuickStatsProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: Colors) => StyleSheet.create({
   container: {
     borderRadius: borderRadius.xl,
     backgroundColor: 'rgba(255,255,255,0.03)',

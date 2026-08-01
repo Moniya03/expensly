@@ -1,10 +1,10 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withTiming, Easing } from 'react-native-reanimated';
-import { colors, typography, spacing, borderRadius } from '../../constants/theme';
+import { typography, spacing, borderRadius, useColors, type Colors } from '../../constants/theme';
 import { useGoogleAuth } from '../../hooks/useGoogleAuth';
 import { FloatingParticles } from '../../components/ui/FloatingParticles';
 import { GlassmorphicCard } from '../../components/ui/GlassmorphicCard';
@@ -13,6 +13,8 @@ import { GradientText } from '../../components/ui/GradientText';
 const { width } = Dimensions.get('window');
 
 export default function WelcomeScreen() {
+  const colors = useColors();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const { signInWithGoogle, isLoading, error } = useGoogleAuth();
 
   // Pulsing animation for rings
@@ -129,7 +131,7 @@ export default function WelcomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: Colors) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.surface,
@@ -286,7 +288,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   googleButtonText: {
-    color: '#000000',
+    color: colors.surface,
     fontSize: typography.fontSize.lg,
     fontWeight: typography.fontWeight.semiBold,
     marginLeft: 12,

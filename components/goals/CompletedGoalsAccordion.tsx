@@ -1,12 +1,15 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
 import { Goal } from '../../types';
-import { colors, spacing, borderRadius, typography } from '../../constants/theme';
+import { spacing, borderRadius, typography, useColors, type Colors } from '../../constants/theme';
 import { GoalCard, GoalOrigin } from './GoalCard';
 
 export function CompletedGoalsAccordion({ goals, onOpen, defaultOpen = false }: { goals: Goal[]; onOpen?: (goal: Goal, origin: GoalOrigin) => void; defaultOpen?: boolean }) {
+  const colors = useColors();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -39,7 +42,7 @@ export function CompletedGoalsAccordion({ goals, onOpen, defaultOpen = false }: 
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: Colors) => StyleSheet.create({
   wrap: {
     backgroundColor: colors.surfaceContainer,
     borderWidth: 1,

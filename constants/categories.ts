@@ -3,7 +3,6 @@
  * Used for displaying transaction categories throughout the app
  */
 
-import { colors } from './theme';
 import { Category } from '../types';
 
 export interface CategoryConfig {
@@ -44,9 +43,9 @@ export const categories: Record<Category, CategoryConfig> = {
     id: 'food',
     label: 'Food',
     iconName: 'silverware-fork-knife',
-    iconColor: colors.onSurface,
+    iconColor: '#A9ABB3',
     color: '#FF9500',
-    iconBackgroundColor: hexToRgba(colors.onSurface, 0.18),
+    iconBackgroundColor: hexToRgba('#A9ABB3', 0.18),
   },
   transport: {
     id: 'transport',
@@ -68,39 +67,39 @@ export const categories: Record<Category, CategoryConfig> = {
     id: 'entertainment',
     label: 'Entertainment',
     iconName: 'headphones',
-    iconColor: colors.primary,
+    iconColor: '#1A6BFF',
     color: '#FFCC00',
-    iconBackgroundColor: hexToRgba(colors.primary, 0.18),
+    iconBackgroundColor: hexToRgba('#1A6BFF', 0.18),
   },
   bills: {
     id: 'bills',
     label: 'Bills',
     iconName: 'receipt',
-    iconColor: colors.onSurface,
+    iconColor: '#A9ABB3',
     color: '#5856D6',
-    iconBackgroundColor: hexToRgba(colors.onSurface, 0.18),
+    iconBackgroundColor: hexToRgba('#A9ABB3', 0.18),
   },
   health: {
     id: 'health',
     label: 'Health',
     iconName: 'hospital-building',
-    iconColor: colors.onSurface,
+    iconColor: '#A9ABB3',
     color: '#34C759',
-    iconBackgroundColor: hexToRgba(colors.onSurface, 0.18),
+    iconBackgroundColor: hexToRgba('#A9ABB3', 0.18),
   },
   education: {
     id: 'education',
     label: 'Education',
     iconName: 'book',
-    iconColor: colors.primary,
+    iconColor: '#1A6BFF',
     color: '#00C7BE',
-    iconBackgroundColor: hexToRgba(colors.primary, 0.18),
+    iconBackgroundColor: hexToRgba('#1A6BFF', 0.18),
   },
   other: {
     id: 'other',
     label: 'Other',
     iconName: 'package-variant',
-    iconColor: colors.onSurface,
+    iconColor: '#A9ABB3',
     color: '#8E8E93',
     iconBackgroundColor: hexToRgba('#AF52DE', 0.16),
   },

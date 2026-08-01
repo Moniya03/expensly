@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { borderRadius, colors, spacing, typography } from '../../constants/theme';
+import { borderRadius, spacing, typography, useColors, type Colors } from '../../constants/theme';
 import { useMonthlyTransactions } from '../../hooks/useTransactions';
 import { useAuthStore } from '../../stores/authStore';
 import { Category, Transaction } from '../../types';
@@ -27,6 +27,8 @@ function getGroupLabel(transaction: Transaction) {
 }
 
 export default function MonthlyInsightsScreen() {
+  const colors = useColors();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const router = useRouter();
   const { profile } = useAuthStore();
   const { data: monthlyTransactions = [], isLoading } = useMonthlyTransactions();
@@ -174,7 +176,7 @@ export default function MonthlyInsightsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: Colors) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.surface,

@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { getCategoryConfig, getCategoryColor } from '../../constants/categories';
-import { borderRadius, colors, spacing, typography } from '../../constants/theme';
+import { borderRadius, spacing, typography, useColors, type Colors } from '../../constants/theme';
 import { Category } from '../../types';
 import { formatRupees } from '../../utils/currency';
 
@@ -11,6 +11,9 @@ interface CategorySpendingBarsProps {
 }
 
 export default function CategorySpendingBars({ byCategory }: CategorySpendingBarsProps) {
+  const colors = useColors();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   const items = useMemo(() => {
     const entries = Object.entries(byCategory)
       .filter(([, amount]) => amount > 0)
@@ -77,7 +80,7 @@ export default function CategorySpendingBars({ byCategory }: CategorySpendingBar
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: Colors) => StyleSheet.create({
   container: {
     gap: spacing.md,
   },

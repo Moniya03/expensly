@@ -1,6 +1,6 @@
 import React from 'react';
 import { Text, TextProps, StyleSheet } from 'react-native';
-import { theme } from '../../constants/theme';
+import { borderRadius, typography, useColors } from '../../constants/theme';
 
 interface GradientTextProps extends TextProps {
   colors?: [string, string];
@@ -8,17 +8,20 @@ interface GradientTextProps extends TextProps {
 
 export const GradientText: React.FC<GradientTextProps> = ({
   children,
-  colors = [theme.colors.primary, theme.colors.secondary],
+  colors,
   style,
   ...props
 }) => {
+  const palette = useColors();
+  const [start, end] = colors ?? [palette.primary, palette.secondary];
+
   return (
     <Text
       style={[
         styles.gradientText,
         {
-          color: colors[0],
-          textShadowColor: colors[1],
+          color: start,
+          textShadowColor: end,
         },
         style,
       ]}
@@ -31,7 +34,7 @@ export const GradientText: React.FC<GradientTextProps> = ({
 
 const styles = StyleSheet.create({
   gradientText: {
-    fontFamily: theme.typography.fontFamily.bold,
+    fontFamily: typography.fontFamily.bold,
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 3,
   },

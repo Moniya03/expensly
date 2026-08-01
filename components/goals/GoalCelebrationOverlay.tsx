@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef } from 'react';
 import { Animated, Dimensions, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Goal } from '../../types';
-import { colors, spacing, borderRadius, typography } from '../../constants/theme';
+import { spacing, borderRadius, typography, useColors, type Colors } from '../../constants/theme';
 import { formatRupees } from '../../utils/currency';
 import { parseLocalDate } from '../../utils/date';
 
@@ -52,6 +52,8 @@ type ConfettiSpec = {
 };
 
 export function GoalCelebrationOverlay({ visible, goal, onDone }: Props) {
+  const colors = useColors();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const screen = Dimensions.get('window');
   const fade = useRef(new Animated.Value(0)).current;
   const cardScale = useRef(new Animated.Value(0.94)).current;
@@ -322,7 +324,7 @@ export function GoalCelebrationOverlay({ visible, goal, onDone }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: Colors) => StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.6)',

@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { ActivityIndicator, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Goal } from '../../types';
-import { colors, spacing, borderRadius, typography } from '../../constants/theme';
+import { spacing, borderRadius, typography, useColors, type Colors } from '../../constants/theme';
 
 type Props = {
   visible: boolean;
@@ -12,6 +12,9 @@ type Props = {
 };
 
 export function DeleteGoalConfirmSheet({ visible, goal, isDeleting = false, onDelete, onClose }: Props) {
+  const colors = useColors();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   if (!goal) return null;
 
   return (
@@ -36,7 +39,7 @@ export function DeleteGoalConfirmSheet({ visible, goal, isDeleting = false, onDe
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: Colors) => StyleSheet.create({
   overlay: {
     flex: 1,
     justifyContent: 'flex-end',

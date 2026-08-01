@@ -1,6 +1,6 @@
 import { BlurView } from 'expo-blur';
 import { StyleSheet, ViewProps } from 'react-native';
-import { theme } from '../../constants/theme';
+import { borderRadius, spacing } from '../../constants/theme';
 
 interface GlassmorphicCardProps extends ViewProps {
   children: React.ReactNode;
@@ -30,8 +30,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.2)',
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.lg,
+    borderRadius: borderRadius.lg,
+    padding: spacing.lg,
     overflow: 'hidden',
   },
 });

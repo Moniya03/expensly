@@ -3,7 +3,7 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
-import { colors, spacing, borderRadius, typography } from '../../constants/theme';
+import { spacing, borderRadius, typography, useColors, type Colors } from '../../constants/theme';
 import { useGoalGroups } from '../../hooks/useGoals';
 import { GoalCard, GoalOrigin } from '../../components/goals/GoalCard';
 import { CompletedGoalsAccordion } from '../../components/goals/CompletedGoalsAccordion';
@@ -16,6 +16,8 @@ import { useDeleteGoal, useUpdateGoalProgress } from '../../hooks/useGoals';
 import { Goal } from '../../types';
 
 export default function GoalsScreen() {
+  const colors = useColors();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const { active, completed, isLoading } = useGoalGroups();
   const [selectedGoalId, setSelectedGoalId] = React.useState<string | null>(null);
   const [origin, setOrigin] = React.useState<GoalOrigin | null>(null);
@@ -138,7 +140,7 @@ export default function GoalsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: Colors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.surface },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.md, paddingTop: spacing.md, paddingBottom: spacing.sm },
   title: { color: colors.onSurface, fontSize: typography.fontSize.xxxl, fontWeight: typography.fontWeight.bold },

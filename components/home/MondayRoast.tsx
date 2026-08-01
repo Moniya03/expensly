@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { colors, typography, spacing, borderRadius } from '../../constants/theme';
+import { typography, spacing, borderRadius, useColors, type Colors } from '../../constants/theme';
 
 interface MondayRoastProps {
   roastText: string;
@@ -8,6 +8,9 @@ interface MondayRoastProps {
 }
 
 export default function MondayRoast({ roastText, isVisible }: MondayRoastProps) {
+  const colors = useColors();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   if (!isVisible) {
     return null;
   }
@@ -31,7 +34,7 @@ export default function MondayRoast({ roastText, isVisible }: MondayRoastProps) 
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: Colors) => StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'flex-start',

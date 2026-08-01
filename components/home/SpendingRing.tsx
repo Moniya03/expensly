@@ -3,7 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import Svg, { Circle, G } from 'react-native-svg';
 import { formatRupees } from '../../utils/currency';
 import { getCategoryColor } from '../../constants/categories';
-import { colors, typography } from '../../constants/theme';
+import { typography, useColors, type Colors } from '../../constants/theme';
 
 interface SpendingRingProps {
   budget: number;
@@ -22,6 +22,9 @@ export const SpendingRing: React.FC<SpendingRingProps> = ({
   spent,
   categoryBreakdown,
 }) => {
+  const colors = useColors();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   const isOverBudget = spent > budget;
   const remaining = isOverBudget ? spent - budget : budget - spent;
   
@@ -96,7 +99,7 @@ export const SpendingRing: React.FC<SpendingRingProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: Colors) => StyleSheet.create({
   container: {
     width: RING_SIZE,
     height: RING_SIZE,

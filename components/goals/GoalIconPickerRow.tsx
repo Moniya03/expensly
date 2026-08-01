@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, spacing, borderRadius, typography } from '../../constants/theme';
+import { spacing, borderRadius, typography, useColors, type Colors } from '../../constants/theme';
 
 const OPTIONS = [
   { name: 'briefcase-outline', label: 'Work' },
@@ -14,6 +14,9 @@ const OPTIONS = [
 ];
 
 export function GoalIconPickerRow({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+  const colors = useColors();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   return (
     <View style={styles.container}>
       <View style={styles.headerRow}>
@@ -34,7 +37,7 @@ export function GoalIconPickerRow({ value, onChange }: { value: string; onChange
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: Colors) => StyleSheet.create({
   container: { marginBottom: spacing.md },
   headerRow: { paddingHorizontal: spacing.md, marginBottom: spacing.sm },
   label: { fontSize: typography.fontSize.sm, fontWeight: typography.fontWeight.medium, color: colors.onSurfaceVariant },

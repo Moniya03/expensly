@@ -15,7 +15,7 @@ import { AmountInput } from '../ui/AmountInput';
 import { CategoryPicker } from '../ui/CategoryPicker';
 import { Input } from '../ui/Input';
 import { DatePicker } from '../ui/DatePicker';
-import { borderRadius, colors, spacing, typography } from '../../constants/theme';
+import { borderRadius, spacing, typography, useColors, type Colors } from '../../constants/theme';
 import type { Category, CreateTransactionInput, VoiceExpenseDraft, VoiceExpenseResponse } from '../../types';
 import { parseLocalDate, toLocalDateString } from '../../utils/date';
 
@@ -50,6 +50,9 @@ export function VoiceExpenseConfirmationSheet({
   onReRecord,
   onCancel,
 }: Props) {
+  const colors = useColors();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState<Category | null>(null);
   const [description, setDescription] = useState('');
@@ -190,7 +193,7 @@ export function VoiceExpenseConfirmationSheet({
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: Colors) => StyleSheet.create({
   overlay: {
     flex: 1,
     justifyContent: 'flex-end',

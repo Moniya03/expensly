@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
   TextInput,
   StyleSheet,
 } from 'react-native';
-import { colors, spacing, borderRadius, typography } from '../../constants/theme';
+import { spacing, borderRadius, typography, useColors, type Colors } from '../../constants/theme';
 
 interface AmountInputProps {
   value: string;
@@ -15,6 +15,9 @@ interface AmountInputProps {
 }
 
 export function AmountInput({ value, onChangeValue, error, integerOnly = false }: AmountInputProps) {
+  const colors = useColors();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   const [isFocused, setIsFocused] = useState(false);
 
   const handleChange = (text: string) => {
@@ -59,7 +62,7 @@ export function AmountInput({ value, onChangeValue, error, integerOnly = false }
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: Colors) => StyleSheet.create({
   container: {
     marginBottom: spacing.md,
   },

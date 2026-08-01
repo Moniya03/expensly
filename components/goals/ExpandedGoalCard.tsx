@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Modal, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withDelay, withTiming, Easing } from 'react-native-reanimated';
 import { Goal } from '../../types';
-import { colors, spacing, borderRadius, typography } from '../../constants/theme';
+import { spacing, borderRadius, typography, useColors, type Colors } from '../../constants/theme';
 import { formatRupees } from '../../utils/currency';
 import { parseLocalDate } from '../../utils/date';
 import { getGoalMeta } from './goalMeta';
@@ -25,6 +25,9 @@ type Props = {
 };
 
 export function ExpandedGoalCard({ visible, goal, origin, isSaving, onClose, onSaveProgress, onEdit, onDelete }: Props) {
+  const colors = useColors();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   const { width: screenW, height: screenH } = useWindowDimensions();
 
   const expandedW = Math.min(screenW - 48, 420);
@@ -193,7 +196,7 @@ export function ExpandedGoalCard({ visible, goal, origin, isSaving, onClose, onS
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: Colors) => StyleSheet.create({
   scrim: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(4, 6, 12, 0.82)' },
   shell: { position: 'absolute', overflow: 'hidden', backgroundColor: colors.surfaceContainerHigh, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', shadowColor: '#000', shadowOffset: { width: 0, height: 20 }, shadowOpacity: 0.5, shadowRadius: 28, elevation: 20 },
   content: { flex: 1 },

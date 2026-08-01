@@ -4,7 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { View, ActivityIndicator, Text } from 'react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useAuthStore } from '../stores/authStore';
-import { colors } from '../constants/theme';
+import { ThemeProvider, useColors, useThemeMode } from '../constants/theme';
 import { configureGoogleSignIn } from '../hooks/useGoogleAuth';
 import { consumeOnboardingReplay, shouldReplayOnboarding } from '../utils/devOnboardingReplay';
 
@@ -40,6 +40,7 @@ const queryClient = new QueryClient();
 function RootLayoutNav() {
   const router = useRouter();
   const segments = useSegments();
+  const colors = useColors();
   const { session, profile, isInitialized, hasResolvedProfile, initialize } = useAuthStore();
   const [error, setError] = useState<string | null>(null);
 
@@ -111,8 +112,20 @@ function RootLayoutNav() {
 export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
-      <StatusBar style="light" />
-      <RootLayoutNav />
+      <ThemeProvider>
+        <ThemedApp />
+      </ThemeProvider>
     </QueryClientProvider>
+  );
+}
+
+function ThemedApp() {
+  const { mode } = useThemeMode();
+
+  return (
+    <>
+      <StatusBar style={mode === 'light' ? 'dark' : 'light'} />
+      <RootLayoutNav />
+    </>
   );
 }

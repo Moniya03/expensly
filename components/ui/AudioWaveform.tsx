@@ -8,7 +8,7 @@ import Animated, {
   withSequence,
   Easing,
 } from 'react-native-reanimated';
-import { theme } from '../../constants/theme';
+import { borderRadius, useColors } from '../../constants/theme';
 
 interface AudioWaveformProps {
   isActive: boolean;
@@ -57,12 +57,14 @@ const AnimatedBar: React.FC<{ isActive: boolean; delay: number; index: number }>
     }
   }, [isActive, delay]);
 
+  const colors = useColors();
+
   const animatedStyle = useAnimatedStyle(() => ({
     height: height.value,
   }));
 
   // Alternate colors to create gradient effect across bars
-  const barColor = index % 2 === 0 ? theme.colors.primary : theme.colors.secondary;
+  const barColor = index % 2 === 0 ? colors.primary : colors.secondary;
 
   return (
     <Animated.View
@@ -101,6 +103,6 @@ const styles = StyleSheet.create({
   },
   bar: {
     width: BAR_WIDTH,
-    borderRadius: theme.borderRadius.sm,
+    borderRadius: borderRadius.sm,
   },
 });

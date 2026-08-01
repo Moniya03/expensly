@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -13,7 +13,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
-import { borderRadius, colors, spacing, typography } from '../../constants/theme';
+import { borderRadius, spacing, typography, useColors, type Colors } from '../../constants/theme';
 import { useAuthStore } from '../../stores/authStore';
 import { useUpdateProfile } from '../../hooks/useProfile';
 import { useAllTransactions } from '../../hooks/useTransactions';
@@ -28,6 +28,8 @@ const appVersion = (require('../../package.json') as { version?: string }).versi
 export default function ProfileScreen() {
   const { profile, session } = useAuthStore();
   const router = useRouter();
+  const colors = useColors();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const { mutateAsync: updateProfile } = useUpdateProfile();
   const { data: transactions = [] } = useAllTransactions();
   const { data: budgets = [] } = useBudgets();
@@ -236,7 +238,8 @@ export default function ProfileScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: Colors) =>
+  StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.surface,

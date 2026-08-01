@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { typography, spacing, borderRadius } from '../../constants/theme';
+import { typography, spacing, borderRadius, useColors, type Colors } from '../../constants/theme';
 import { formatRupees } from '../../utils/currency';
 import { formatDate, getRelativeTime, parseLocalDate } from '../../utils/date';
 import { getCategoryConfig } from '../../constants/categories';
@@ -13,6 +13,8 @@ interface RecentTransactionsProps {
 }
 
 export default function RecentTransactions({ transactions, onSeeAll }: RecentTransactionsProps) {
+  const colors = useColors();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const recentTransactions = transactions.slice(0, 5);
 
   return (
@@ -87,7 +89,8 @@ export default function RecentTransactions({ transactions, onSeeAll }: RecentTra
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: Colors) =>
+  StyleSheet.create({
   container: {
     gap: spacing.md,
   },
@@ -106,17 +109,17 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 999,
-    backgroundColor: '#1DC496',
+    backgroundColor: colors.primary,
   },
   title: {
     fontSize: typography.fontSize.xl,
     fontWeight: typography.fontWeight.bold,
-    color: '#FFFFFF',
+    color: colors.onSurface,
   },
   seeAllText: {
     fontSize: typography.fontSize.sm,
     fontWeight: typography.fontWeight.semiBold,
-    color: '#1DC496',
+    color: colors.primary,
   },
   list: {
     borderTopWidth: 0,
@@ -149,12 +152,12 @@ const styles = StyleSheet.create({
   description: {
     fontSize: typography.fontSize.md,
     fontWeight: typography.fontWeight.medium,
-    color: '#FFFFFF',
+    color: colors.onSurface,
   },
   timeAgo: {
     fontSize: typography.fontSize.xs,
     fontWeight: typography.fontWeight.regular,
-    color: 'rgba(173,186,214,0.7)',
+    color: colors.onSurfaceVariant,
   },
   categoryPill: {
     paddingHorizontal: 8,
@@ -175,7 +178,7 @@ const styles = StyleSheet.create({
   },
   separator: {
     height: 1,
-    backgroundColor: 'rgba(29,196,150,0.07)',
+    backgroundColor: colors.outlineVariant,
     marginLeft: 56,
   },
   emptyContainer: {
@@ -185,6 +188,6 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: typography.fontSize.md,
     fontWeight: typography.fontWeight.medium,
-    color: 'rgba(173,186,214,0.7)',
+    color: colors.onSurfaceVariant,
   },
 });

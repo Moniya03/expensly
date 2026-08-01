@@ -3,7 +3,7 @@ import { StyleSheet, Pressable, View, Animated, Text } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { colors, spacing } from '../constants/theme';
+import { spacing, useColors, type Colors } from '../constants/theme';
 import { AudioWaveform } from './ui/AudioWaveform';
 import { useVoiceRecording } from '../hooks/useVoiceRecording';
 import { useAuthStore } from '../stores/authStore';
@@ -25,6 +25,9 @@ function normalizeDraft(response: VoiceExpenseResponse): {
 }
 
 export default function VoiceFAB() {
+  const colors = useColors();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   const {
     state,
     setState,
@@ -286,7 +289,7 @@ export default function VoiceFAB() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: Colors) => StyleSheet.create({
   container: {
     position: 'absolute',
     left: 0,
