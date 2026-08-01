@@ -105,6 +105,7 @@ function RootLayoutNav() {
       <Stack.Screen name="onboarding" />
       <Stack.Screen name="insights" />
       <Stack.Screen name="settings" />
+      <Stack.Screen name="support" />
     </Stack>
   );
 }

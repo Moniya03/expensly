@@ -172,6 +172,18 @@ export default function SettingsScreen() {
         <Text style={styles.sectionLabel}>About</Text>
         <View style={styles.section}>
           <SettingRow icon="information-circle-outline" label={`Version ${appVersion}`} />
+          <View style={styles.divider} />
+          <SettingRow
+            icon="bug-outline"
+            label="Report a bug"
+            onPress={() => router.push('/support?mode=bug')}
+          />
+          <View style={styles.divider} />
+          <SettingRow
+            icon="star-outline"
+            label="Send feedback"
+            onPress={() => router.push('/support?mode=feedback')}
+          />
         </View>
 
         {feedback ? <Text style={styles.toast}>{feedback}</Text> : null}
