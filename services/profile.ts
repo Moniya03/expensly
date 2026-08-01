@@ -1,7 +1,9 @@
 import { supabase } from './supabase';
 import { Profile } from '../types';
 
-type ProfileUpdateInput = Partial<Pick<Profile, 'name' | 'monthly_budget' | 'onboarding_complete'>>;
+type ProfileUpdateInput = Partial<
+  Pick<Profile, 'name' | 'monthly_budget' | 'onboarding_complete' | 'avatar_url'>
+>;
 
 const isNoRowsError = (error: { code?: string | null } | null | undefined) => error?.code === 'PGRST116';
 
@@ -77,6 +79,10 @@ export const saveProfile = async (userId: string, updates: ProfileUpdateInput): 
 
   if (typeof updates.onboarding_complete === 'boolean') {
     payload.onboarding_complete = updates.onboarding_complete;
+  }
+
+  if (typeof updates.avatar_url === 'string') {
+    payload.avatar_url = updates.avatar_url;
   }
 
   const { data, error } = await supabase

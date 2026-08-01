@@ -1,21 +1,39 @@
 import React from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Image,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { borderRadius, colors, spacing, typography } from '../../constants/theme';
 import { useAuthStore } from '../../stores/authStore';
 import { useUpdateProfile } from '../../hooks/useProfile';
+import { useAllTransactions } from '../../hooks/useTransactions';
+import { getHistoricalBudgetForMonth, useBudgets } from '../../hooks/useBudget';
+import { parseLocalDate } from '../../utils/date';
+import { formatRupees } from '../../utils/currency';
+import { uploadAvatar } from '../../services/avatar';
 import NameEditSheet from '../../components/profile/NameEditSheet';
 
 const appVersion = (require('../../package.json') as { version?: string }).version ?? '1.0.0';
 
 export default function ProfileScreen() {
-  const { profile, signOut } = useAuthStore();
-  const { mutateAsync: updateProfile, isPending: isBudgetSaving } = useUpdateProfile();
+  const { profile, session, signOut } = useAuthStore();
+  const { mutateAsync: updateProfile } = useUpdateProfile();
+  const { data: transactions = [] } = useAllTransactions();
+  const { data: budgets = [] } = useBudgets();
 
   const [nameSheetVisible, setNameSheetVisible] = React.useState(false);
   const [budgetEditing, setBudgetEditing] = React.useState(false);
   const [budgetDraft, setBudgetDraft] = React.useState(profile?.monthly_budget ? String(profile.monthly_budget) : '');
+  const [avatarUploading, setAvatarUploading] = React.useState(false);
   const [feedback, setFeedback] = React.useState<string | null>(null);
 
   React.useEffect(() => {
@@ -29,14 +47,65 @@ export default function ProfileScreen() {
   }, [feedback]);
 
   const displayName = profile?.name || 'User';
-  const budgetValue = profile?.monthly_budget ?? 0;
-  const version = appVersion;
+  const email = session?.user?.email;
+  const fallbackBudget = profile?.monthly_budget ?? 0;
+
+  // "Saved this year": sum of (budget - spent) for each month Jan → now.
+  const savedThisYear = React.useMemo(() => {
+    const now = new Date();
+    let savings = 0;
+
+    for (let month = 1; month <= now.getMonth() + 1; month++) {
+      const year = now.getFullYear();
+      const monthTransactions = transactions.filter((transaction) => {
+        const d = parseLocalDate(transaction.transaction_date);
+        return d.getMonth() + 1 === month && d.getFullYear() === year;
+      });
+      const spent = monthTransactions.reduce((sum, t) => sum + t.amount, 0);
+      const budget = getHistoricalBudgetForMonth({ budgets, fallbackBudget, month, year });
+      savings += budget - spent;
+    }
+
+    return savings;
+  }, [transactions, budgets, fallbackBudget]);
 
   const handleSignOut = async () => {
     try {
       await signOut();
     } catch (error) {
       console.error('Sign out error:', error);
+    }
+  };
+
+  const handlePickAvatar = async () => {
+    try {
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permission.granted) {
+        setFeedback('Photo access is needed to change avatar');
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.7,
+      });
+
+      if (result.canceled || !result.assets?.[0]) return;
+
+      const userId = session?.user?.id;
+      if (!userId) return;
+
+      setAvatarUploading(true);
+      const publicUrl = await uploadAvatar(userId, result.assets[0].uri);
+      await updateProfile({ avatar_url: publicUrl });
+      setFeedback('Avatar updated');
+    } catch (error) {
+      console.error('Avatar update error:', error);
+      setFeedback('Could not update avatar');
+    } finally {
+      setAvatarUploading(false);
     }
   };
 
@@ -61,27 +130,55 @@ export default function ProfileScreen() {
       <View style={styles.content}>
         <Text style={styles.screenTitle}>Profile</Text>
 
-        <Pressable style={styles.headerCard} onPress={() => setNameSheetVisible(true)}>
-          <View style={styles.avatarWrap}>
-            <Ionicons name="person" size={26} color={colors.surface} />
+        <LinearGradient colors={['#123C86', '#0F2F63', '#0B223F', '#0A191D']} style={styles.heroCard}>
+          <View style={styles.heroTopRow}>
+            <Pressable style={styles.avatarWrap} onPress={handlePickAvatar} disabled={avatarUploading}>
+              {avatarUploading ? (
+                <ActivityIndicator size="small" color={colors.surface} />
+              ) : profile?.avatar_url ? (
+                <Image source={{ uri: profile.avatar_url }} style={styles.avatarImage} />
+              ) : (
+                <Ionicons name="person" size={30} color={colors.surface} />
+              )}
+              <View style={styles.avatarBadge}>
+                <Ionicons name="camera" size={12} color={colors.surface} />
+              </View>
+            </Pressable>
+
+            <View style={styles.heroTextWrap}>
+              <Pressable onPress={() => setNameSheetVisible(true)}>
+                <View style={styles.nameRow}>
+                  <Text style={styles.name}>{displayName}</Text>
+                  <Ionicons name="pencil" size={14} color="#cfe0ff" />
+                </View>
+                {email ? <Text style={styles.email}>{email}</Text> : null}
+                <Text style={styles.heroHint}>Tap to edit profile</Text>
+              </Pressable>
+            </View>
           </View>
-          <View style={styles.headerTextWrap}>
-            <Text style={styles.name}>{displayName}</Text>
-            <Text style={styles.headerHint}>Tap to edit name</Text>
+
+          <View style={styles.heroDivider} />
+
+          <View>
+            <Text style={styles.savingsLabel}>Saved this year</Text>
+            <Text style={[styles.savingsValue, savedThisYear < 0 && { color: '#ff9d98' }]}>
+              {formatRupees(Math.abs(savedThisYear), { showSymbol: true })}
+            </Text>
+            <Text style={styles.savingsSub}>
+              {savedThisYear < 0 ? 'Overspent vs your monthly budgets' : 'vs your monthly budgets'}
+            </Text>
           </View>
-          <Ionicons name="chevron-forward" size={18} color={colors.onSurfaceVariant} />
-        </Pressable>
+        </LinearGradient>
 
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Account & settings</Text>
-
+          <Text style={styles.sectionLabel}>Monthly budget</Text>
           <View style={styles.budgetCard}>
             <View style={styles.rowBetween}>
               <View>
-                <Text style={styles.cardTitle}>Monthly budget</Text>
+                <Text style={styles.cardTitle}>Spending limit</Text>
                 {!budgetEditing ? (
                   <Text style={styles.cardValue}>
-                    {budgetValue > 0 ? `₹${budgetValue}` : 'No budget set'}
+                    {profile?.monthly_budget ? formatRupees(profile.monthly_budget) : 'No budget set'}
                   </Text>
                 ) : null}
               </View>
@@ -115,11 +212,7 @@ export default function ProfileScreen() {
                     <Text style={styles.secondaryButtonText}>Cancel</Text>
                   </Pressable>
                   <Pressable style={[styles.actionButton, styles.primaryButton]} onPress={handleSaveBudget}>
-                    {isBudgetSaving ? (
-                      <ActivityIndicator size="small" color={colors.surface} />
-                    ) : (
-                      <Text style={styles.primaryButtonText}>Save</Text>
-                    )}
+                    <Text style={styles.primaryButtonText}>Save</Text>
                   </Pressable>
                 </View>
               </View>
@@ -130,7 +223,7 @@ export default function ProfileScreen() {
         {feedback ? <Text style={styles.toast}>{feedback}</Text> : null}
 
         <View style={styles.footerWrap}>
-          <Text style={styles.version}>v{version}</Text>
+          <Text style={styles.version}>v{appVersion}</Text>
         </View>
 
         <Pressable style={styles.signOutButton} onPress={handleSignOut}>
@@ -165,36 +258,86 @@ const styles = StyleSheet.create({
     fontWeight: typography.fontWeight.bold,
     marginBottom: spacing.lg,
   },
-  headerCard: {
+  heroCard: {
+    borderRadius: borderRadius.xl,
+    padding: spacing.lg,
+  },
+  heroTopRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surfaceContainer,
-    borderRadius: borderRadius.xl,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.outlineVariant,
   },
   avatarWrap: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.35)',
+  },
+  avatarImage: {
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+  },
+  avatarBadge: {
+    position: 'absolute',
+    right: -2,
+    bottom: -2,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: colors.primary,
-    marginRight: spacing.md,
+    borderWidth: 2,
+    borderColor: '#123C86',
   },
-  headerTextWrap: {
+  heroTextWrap: {
     flex: 1,
-    marginRight: spacing.sm,
+    marginLeft: spacing.md,
+  },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
   },
   name: {
-    color: colors.onSurface,
+    color: colors.surface,
     fontSize: typography.fontSize.xl,
-    fontWeight: typography.fontWeight.semiBold,
+    fontWeight: typography.fontWeight.bold,
   },
-  headerHint: {
-    color: colors.onSurfaceVariant,
+  email: {
+    color: '#cfe0ff',
     fontSize: typography.fontSize.sm,
+    marginTop: 2,
+  },
+  heroHint: {
+    color: '#8fb1e8',
+    fontSize: typography.fontSize.xs,
+    marginTop: 4,
+  },
+  heroDivider: {
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.14)',
+    marginVertical: spacing.md,
+  },
+  savingsLabel: {
+    color: '#9db9e8',
+    fontSize: typography.fontSize.sm,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+  },
+  savingsValue: {
+    color: colors.surface,
+    fontSize: typography.fontSize.xxxl,
+    fontWeight: typography.fontWeight.bold,
+    marginTop: 2,
+  },
+  savingsSub: {
+    color: '#8fb1e8',
+    fontSize: typography.fontSize.xs,
     marginTop: 2,
   },
   section: {
