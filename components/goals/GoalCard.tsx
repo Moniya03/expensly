@@ -8,6 +8,7 @@ import { spacing, borderRadius, typography, useColors, type Colors } from '../..
 import { formatRupees } from '../../utils/currency';
 import { parseLocalDate } from '../../utils/date';
 import { getGoalMeta } from './goalMeta';
+import { useGoalIcons } from '../../hooks/useGoalIcons';
 import { ProgressRing } from './ProgressRing';
 
 export type GoalOrigin = { x: number; y: number; width: number; height: number };
@@ -22,7 +23,8 @@ export function GoalCard({ goal, onOpen }: { goal: Goal; onOpen?: (origin: GoalO
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   const ref = useRef<View>(null);
-  const meta = getGoalMeta(goal.icon);
+  const { data: customIcons } = useGoalIcons();
+  const meta = getGoalMeta(goal.icon, customIcons);
   const remaining = Math.max(goal.target_amount - goal.saved_amount, 0);
   const progress = goal.target_amount > 0 ? Math.min(goal.saved_amount / goal.target_amount, 1) : 0;
   const percent = Math.round(progress * 100);

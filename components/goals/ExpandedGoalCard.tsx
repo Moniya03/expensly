@@ -7,6 +7,7 @@ import { spacing, borderRadius, typography, useColors, type Colors } from '../..
 import { formatRupees } from '../../utils/currency';
 import { parseLocalDate } from '../../utils/date';
 import { getGoalMeta } from './goalMeta';
+import { useGoalIcons } from '../../hooks/useGoalIcons';
 import { ProgressRing } from './ProgressRing';
 import { GoalOrigin } from './GoalCard';
 import { AmountInput } from '../ui/AmountInput';
@@ -27,6 +28,7 @@ type Props = {
 export function ExpandedGoalCard({ visible, goal, origin, isSaving, onClose, onSaveProgress, onEdit, onDelete }: Props) {
   const colors = useColors();
   const styles = useMemo(() => createStyles(colors), [colors]);
+  const { data: customIcons } = useGoalIcons();
 
   const { width: screenW, height: screenH } = useWindowDimensions();
 
@@ -79,7 +81,7 @@ export function ExpandedGoalCard({ visible, goal, origin, isSaving, onClose, onS
 
   if (!goal) return null;
 
-  const meta = getGoalMeta(goal.icon);
+  const meta = getGoalMeta(goal.icon, customIcons);
   const remaining = Math.max(goal.target_amount - goal.saved_amount, 0);
   const ringProgress = goal.target_amount > 0 ? Math.min(goal.saved_amount / goal.target_amount, 1) : 0;
   const percent = Math.round(ringProgress * 100);

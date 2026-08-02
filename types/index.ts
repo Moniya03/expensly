@@ -160,6 +160,25 @@ export interface Goal {
 }
 
 /**
+ * Reusable per-user custom goal icon.
+ * Goals reference either a preset icon name or one of these by id.
+ */
+export interface UserGoalIcon {
+  /** Unique icon identifier (stored in goal.icon for custom icons) */
+  id: string;
+  /** User who created this icon */
+  user_id: string;
+  /** Ionicons name, e.g. 'barbell-outline' */
+  icon_name: string;
+  /** Optional short label shown under the icon, e.g. 'Gym' */
+  label?: string | null;
+  /** Hex color, e.g. '#B48CFF' */
+  color: string;
+  /** Timestamp when the icon was created */
+  created_at: string;
+}
+
+/**
  * Friend split for shared expenses
  * Tracks money owed between user and friends
  */
