@@ -30,7 +30,60 @@ const normalizeHex = (value: string) => {
     : `#${trimmed}`;
 };
 
-const ALL_ICONS = Object.keys(Ionicons.glyphMap).filter((name) => name.endsWith('-outline'));
+const ALL_ICONS = [
+  'airplane-outline',
+  'car-sport-outline',
+  'home-outline',
+  'briefcase-outline',
+  'school-outline',
+  'medkit-outline',
+  'heart-outline',
+  'film-outline',
+  'barbell-outline',
+  'fitness-outline',
+  'restaurant-outline',
+  'cafe-outline',
+  'pizza-outline',
+  'ice-cream-outline',
+  'basketball-outline',
+  'football-outline',
+  'tennisball-outline',
+  'bicycle-outline',
+  'bus-outline',
+  'boat-outline',
+  'rocket-outline',
+  'planet-outline',
+  'telescope-outline',
+  'umbrella-outline',
+  'paw-outline',
+  'flower-outline',
+  'leaf-outline',
+  'sunny-outline',
+  'moon-outline',
+  'snow-outline',
+  'water-outline',
+  'gift-outline',
+  'diamond-outline',
+  'camera-outline',
+  'game-controller-outline',
+  'musical-notes-outline',
+  'shirt-outline',
+  'laptop-outline',
+  'phone-portrait-outline',
+  'watch-outline',
+  'wallet-outline',
+  'cash-outline',
+  'card-outline',
+  'storefront-outline',
+  'bag-handle-outline',
+  'sparkles-outline',
+  'flash-outline',
+  'key-outline',
+  'egg-outline',
+  'beer-outline',
+  'happy-outline',
+  'body-outline',
+];
 
 export function GoalIconBuilder({
   visible,
@@ -47,8 +100,6 @@ export function GoalIconBuilder({
   const [iconName, setIconName] = useState(editing?.icon_name ?? 'airplane-outline');
   const [label, setLabel] = useState(editing?.label ?? '');
   const [color, setColor] = useState(editing?.color ?? '#B48CFF');
-  const [search, setSearch] = useState('');
-  const [showAll, setShowAll] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
@@ -58,12 +109,7 @@ export function GoalIconBuilder({
   const { data: goals } = useGoals();
   const usedByCount = editing ? goals?.filter((goal) => goal.icon === editing.id).length ?? 0 : 0;
 
-  const filtered = useMemo(() => {
-    const query = search.trim().toLowerCase();
-    const icons = showAll ? ALL_ICONS : ALL_ICONS.slice(0, 120);
-    if (!query) return icons;
-    return icons.filter((name) => name.includes(query)).slice(0, 80);
-  }, [search, showAll]);
+  const filtered = ALL_ICONS;
 
   const validHex = HEX_REGEX.test(color.trim());
 
@@ -127,17 +173,6 @@ export function GoalIconBuilder({
 
           <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
             <Text style={styles.label}>Icon</Text>
-            <TextInput
-              style={styles.searchInput}
-              value={search}
-              onChangeText={(text) => {
-                setSearch(text);
-                setShowAll(true);
-              }}
-              placeholder="Search icons… (e.g. gym, dog, ring)"
-              placeholderTextColor={colors.onSurfaceVariant}
-              selectionColor={colors.primary}
-            />
             <View style={styles.iconGrid}>
               {filtered.map((name) => {
                 const selected = name === iconName;
@@ -151,9 +186,6 @@ export function GoalIconBuilder({
                   </Pressable>
                 );
               })}
-              {filtered.length === 0 ? (
-                <Text style={styles.emptyText}>No icons match "{search}"</Text>
-              ) : null}
             </View>
 
             <Text style={styles.label}>Label (optional)</Text>
@@ -251,15 +283,6 @@ const createStyles = (colors: Colors) =>
       marginTop: spacing.md,
       marginBottom: spacing.sm,
     },
-    searchInput: {
-      backgroundColor: colors.surfaceContainerHigh,
-      borderWidth: 1,
-      borderColor: colors.outlineVariant,
-      borderRadius: borderRadius.md,
-      padding: spacing.md,
-      color: colors.onSurface,
-      fontSize: typography.fontSize.md,
-    },
     iconGrid: {
       flexDirection: 'row',
       flexWrap: 'wrap',
@@ -275,11 +298,6 @@ const createStyles = (colors: Colors) =>
       justifyContent: 'center',
       borderWidth: 1,
       borderColor: colors.outlineVariant,
-    },
-    emptyText: {
-      color: colors.onSurfaceVariant,
-      fontSize: typography.fontSize.sm,
-      paddingVertical: spacing.md,
     },
     input: {
       backgroundColor: colors.surfaceContainerHigh,
