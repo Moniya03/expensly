@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Modal,
@@ -16,6 +16,7 @@ import { borderRadius, spacing, typography, useColors, useThemeMode, type Colors
 import { useAuthStore } from '../stores/authStore';
 import { useUpdateProfile } from '../hooks/useProfile';
 import { deleteAccount } from '../services/account';
+import { exportUserData } from '../services/export';
 
 const appVersion = (require('../package.json') as { version?: string }).version ?? '1.0.0';
 
@@ -26,16 +27,17 @@ type SettingRowProps = {
   danger?: boolean;
   onPress?: () => void;
   soon?: boolean;
+  disabled?: boolean;
 };
 
-function SettingRow({ icon, label, children, danger, onPress, soon }: SettingRowProps) {
+function SettingRow({ icon, label, children, danger, onPress, soon, disabled }: SettingRowProps) {
   const colors = useColors();
   const styles = useMemo(() => createStyles(colors), [colors]);
   return (
     <Pressable
       style={({ pressed }) => [styles.row, pressed && onPress ? { opacity: 0.6 } : null]}
       onPress={onPress}
-      disabled={!onPress && !children}
+      disabled={disabled || (!onPress && !children)}
     >
       <View style={[styles.rowIcon, danger && styles.rowIconDanger]}>
         <Ionicons name={icon} size={19} color={danger ? colors.error : colors.primary} />
@@ -63,6 +65,28 @@ export default function SettingsScreen() {
   const [deleting, setDeleting] = React.useState(false);
   const [feedback, setFeedback] = React.useState<string | null>(null);
   const [pendingToggle, setPendingToggle] = React.useState<'reminder' | 'alert' | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
+
+  const handleExport = async () => {
+    setExportError(null);
+    setIsExporting(true);
+    try {
+      const paths = await exportUserData();
+      const Sharing = require('expo-sharing');
+      if (paths.length > 0) {
+        await Sharing.shareAsync(paths[0], {
+          mimeType: 'text/csv',
+          dialogTitle: 'Export your Expensly data',
+        });
+      }
+    } catch (err) {
+      console.error('Export error:', err);
+      setExportError(err instanceof Error ? err.message : 'Could not export data');
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   React.useEffect(() => {
     if (!feedback) return;
@@ -159,7 +183,15 @@ export default function SettingsScreen() {
 
         <Text style={styles.sectionLabel}>Data</Text>
         <View style={styles.section}>
-          <SettingRow icon="download-outline" label="Export data" soon />
+          <SettingRow
+            icon="download-outline"
+            label="Export data"
+            onPress={handleExport}
+            disabled={isExporting}
+          >
+            {isExporting ? <ActivityIndicator size="small" color={colors.primary} /> : null}
+          </SettingRow>
+          {exportError ? <Text style={styles.exportError}>{exportError}</Text> : null}
           <View style={styles.divider} />
           <SettingRow
             icon="trash-outline"
@@ -312,6 +344,12 @@ const createStyles = (colors: Colors) =>
     color: colors.primary,
     fontSize: typography.fontSize.xs,
     fontWeight: typography.fontWeight.semiBold,
+  },
+  exportError: {
+    color: colors.error,
+    fontSize: typography.fontSize.sm,
+    paddingHorizontal: spacing.md,
+    paddingBottom: spacing.sm,
   },
   toast: {
     color: colors.secondary,
