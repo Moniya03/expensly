@@ -37,7 +37,10 @@ export default function VoiceFAB() {
     stopRecording,
     reset,
     cancelRecording,
-  } = useVoiceRecording();
+  } = useVoiceRecording(() => {
+    // Auto-stopped by 5s of silence: parse and show the add-expense sheet
+    handleStopAndParse();
+  });
 
   const { session } = useAuthStore();
   const router = useRouter();

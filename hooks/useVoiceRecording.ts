@@ -17,16 +17,28 @@ export interface UseVoiceRecordingReturn {
 
 const MAX_RECORDING_DURATION = 30000; // 30 seconds in milliseconds
 
-export function useVoiceRecording(): UseVoiceRecordingReturn {
+// Silence detection: dBFS ranges -160 (min) to 0 (max). Speech peaks around
+// -20..-40; a quiet room sits below -60. -50 cleanly separates the two.
+const SILENCE_THRESHOLD_DB = -50;
+const SILENCE_TIMEOUT_MS = 5000; // auto-stop after 5s of no speech
+const METERING_POLL_MS = 250;
+
+export function useVoiceRecording(onAutoStop?: () => void): UseVoiceRecordingReturn {
   // State management
   const [state, setState] = useState<RecordingState>('idle');
   const [recording, setRecording] = useState<Audio.Recording | null>(null);
   const [duration, setDuration] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  
+
   // Refs for timers
   const durationIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const maxDurationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const meteringIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Keep the latest auto-stop callback without re-creating the interval
+  const onAutoStopRef = useRef(onAutoStop);
+  onAutoStopRef.current = onAutoStop;
+  const silenceStartRef = useRef<number | null>(null);
+  const hasSpeechRef = useRef(false);
 
   /**
    * Request microphone permissions
@@ -68,19 +80,47 @@ export function useVoiceRecording(): UseVoiceRecordingReturn {
         playThroughEarpieceAndroid: false,
       });
 
-      // Create and start recording
-      const { recording: newRecording } = await Audio.Recording.createAsync(
-        Audio.RecordingOptionsPresets.HIGH_QUALITY
-      );
+      // Create and start recording with metering enabled (needed for
+      // silence detection)
+      const { recording: newRecording } = await Audio.Recording.createAsync({
+        ...Audio.RecordingOptionsPresets.HIGH_QUALITY,
+        isMeteringEnabled: true,
+      });
 
       setRecording(newRecording);
       setState('recording');
       setDuration(0);
+      silenceStartRef.current = null;
+      hasSpeechRef.current = false;
 
       // Start duration tracking (update every 100ms for smooth UI)
       durationIntervalRef.current = setInterval(() => {
         setDuration((prev) => prev + 100);
       }, 100);
+
+      // Poll audio level; auto-stop after 5s of silence once speech is heard
+      meteringIntervalRef.current = setInterval(async () => {
+        try {
+          const status = await newRecording.getStatusAsync();
+          const metering = status.metering;
+          if (typeof metering !== 'number') return;
+
+          if (metering > SILENCE_THRESHOLD_DB) {
+            hasSpeechRef.current = true;
+            silenceStartRef.current = null;
+          } else if (hasSpeechRef.current) {
+            if (silenceStartRef.current === null) {
+              silenceStartRef.current = Date.now();
+            } else if (Date.now() - silenceStartRef.current >= SILENCE_TIMEOUT_MS) {
+              silenceStartRef.current = null;
+              await cleanupTimers();
+              onAutoStopRef.current?.();
+            }
+          }
+        } catch {
+          // Ignore metering read errors; manual stop still works
+        }
+      }, METERING_POLL_MS);
 
       // Auto-stop after max duration
       maxDurationTimeoutRef.current = setTimeout(async () => {
@@ -191,6 +231,11 @@ export function useVoiceRecording(): UseVoiceRecordingReturn {
       clearTimeout(maxDurationTimeoutRef.current);
       maxDurationTimeoutRef.current = null;
     }
+    if (meteringIntervalRef.current) {
+      clearInterval(meteringIntervalRef.current);
+      meteringIntervalRef.current = null;
+    }
+    silenceStartRef.current = null;
   };
 
   /**
