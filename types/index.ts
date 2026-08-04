@@ -96,7 +96,7 @@ export interface VoiceExpenseDraft {
  */
 export interface VoiceExpenseResponse {
   success: boolean;
-  draft?: VoiceExpenseDraft;
+  drafts?: VoiceExpenseDraft[];
   transcription?: {
     text: string;
     confidence?: number;

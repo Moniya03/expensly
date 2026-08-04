@@ -13,14 +13,12 @@ import { VoiceExpenseConfirmationSheet } from './voice/VoiceExpenseConfirmationS
 import type { CreateTransactionInput, VoiceExpenseDraft, VoiceExpenseResponse } from '../types';
 
 function normalizeDraft(response: VoiceExpenseResponse): {
-  draft: VoiceExpenseDraft | null;
+  drafts: VoiceExpenseDraft[];
   transcription: string;
-  parseMeta: VoiceExpenseResponse['parse_meta'];
 } {
   return {
-    draft: response.draft ?? null,
+    drafts: response.drafts ?? [],
     transcription: response.transcription?.text ?? '',
-    parseMeta: response.parse_meta ?? null,
   };
 }
 
@@ -49,9 +47,8 @@ export default function VoiceFAB() {
   const idlePulse = useRef(new Animated.Value(0.3)).current;
   const longPressTriggered = useRef(false);
 
-  const [draft, setDraft] = useState<VoiceExpenseDraft | null>(null);
+  const [drafts, setDrafts] = useState<VoiceExpenseDraft[]>([]);
   const [transcription, setTranscription] = useState('');
-  const [parseMeta, setParseMeta] = useState<VoiceExpenseResponse['parse_meta']>(null);
   const [showSheet, setShowSheet] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -128,16 +125,15 @@ export default function VoiceFAB() {
       const audioBase64 = await audioUriToBase64(audioUri);
       const response = await processVoiceExpense(audioBase64, userId);
 
-      if (!response.success || !response.draft) {
+      if (!response.success || !response.drafts?.length) {
         setErrorMessage(response.error || 'Failed to process voice expense');
         setState('error');
         return;
       }
 
       const normalized = normalizeDraft(response);
-      setDraft(normalized.draft);
+      setDrafts(normalized.drafts);
       setTranscription(normalized.transcription);
-      setParseMeta(normalized.parseMeta);
       setShowSheet(true);
       setErrorMessage(null);
       setState('idle');
@@ -169,14 +165,15 @@ export default function VoiceFAB() {
     }
   };
 
-  const handleSave = async (transaction: CreateTransactionInput) => {
+  const handleSave = async (transactions: CreateTransactionInput[]) => {
     try {
       setIsSaving(true);
-      await createTransaction(transaction);
+      for (const transaction of transactions) {
+        await createTransaction(transaction);
+      }
       setShowSheet(false);
-      setDraft(null);
+      setDrafts([]);
       setTranscription('');
-      setParseMeta(null);
       setErrorMessage(null);
       reset();
     } catch (error) {
@@ -186,20 +183,28 @@ export default function VoiceFAB() {
     }
   };
 
+  const handleRemoveDraft = (index: number) => {
+    const next = drafts.filter((_, i) => i !== index);
+    setDrafts(next);
+    if (next.length === 0) {
+      setShowSheet(false);
+      setTranscription('');
+      reset();
+    }
+  };
+
   const handleReRecord = async () => {
     setShowSheet(false);
-    setDraft(null);
+    setDrafts([]);
     setTranscription('');
-    setParseMeta(null);
     await cancelRecording();
     reset();
   };
 
   const handleCancel = async () => {
     setShowSheet(false);
-    setDraft(null);
+    setDrafts([]);
     setTranscription('');
-    setParseMeta(null);
     await cancelRecording();
     reset();
   };
@@ -279,12 +284,12 @@ export default function VoiceFAB() {
 
       <VoiceExpenseConfirmationSheet
         visible={showSheet}
-        draft={draft}
+        drafts={drafts}
         transcription={transcription}
-        parseMeta={parseMeta}
         isSaving={isSaving}
         errorMessage={errorMessage}
         onSave={handleSave}
+        onRemoveDraft={handleRemoveDraft}
         onReRecord={handleReRecord}
         onCancel={handleCancel}
       />

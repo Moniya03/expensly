@@ -16,20 +16,33 @@ import { CategoryPicker } from '../ui/CategoryPicker';
 import { Input } from '../ui/Input';
 import { DatePicker } from '../ui/DatePicker';
 import { borderRadius, spacing, typography, useColors, type Colors } from '../../constants/theme';
-import type { Category, CreateTransactionInput, VoiceExpenseDraft, VoiceExpenseResponse } from '../../types';
+import type { Category, CreateTransactionInput, VoiceExpenseDraft } from '../../types';
 import { parseLocalDate, toLocalDateString } from '../../utils/date';
 
 type Props = {
   visible: boolean;
-  draft: VoiceExpenseDraft | null;
+  drafts: VoiceExpenseDraft[];
   transcription: string;
-  parseMeta?: VoiceExpenseResponse['parse_meta'];
   isSaving?: boolean;
   errorMessage?: string | null;
-  onSave: (transaction: CreateTransactionInput) => void | Promise<void>;
+  onSave: (transactions: CreateTransactionInput[]) => void | Promise<void>;
+  onRemoveDraft?: (index: number) => void;
   onReRecord: () => void;
   onCancel: () => void;
 };
+
+interface DraftItem {
+  amount: string;
+  category: Category | null;
+  description: string;
+  merchant: string;
+  date: Date;
+}
+
+interface DraftErrors {
+  amount?: string;
+  category?: string;
+}
 
 function toDate(value?: string): Date {
   const fallback = new Date();
@@ -41,75 +54,92 @@ function toDate(value?: string): Date {
 
 export function VoiceExpenseConfirmationSheet({
   visible,
-  draft,
+  drafts,
   transcription,
-  parseMeta,
   isSaving = false,
   errorMessage,
   onSave,
+  onRemoveDraft,
   onReRecord,
   onCancel,
 }: Props) {
   const colors = useColors();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
-  const [amount, setAmount] = useState('');
-  const [category, setCategory] = useState<Category | null>(null);
-  const [description, setDescription] = useState('');
-  const [merchant, setMerchant] = useState('');
-  const [date, setDate] = useState(new Date());
-  const [errors, setErrors] = useState<{ amount?: string; category?: string }>({});
+  const [items, setItems] = useState<DraftItem[]>([]);
+  const [errors, setErrors] = useState<DraftErrors[]>([]);
 
   useEffect(() => {
-    if (!visible || !draft) return;
+    if (!visible || !drafts.length) return;
 
-    setAmount(Number.isFinite(draft.amount) ? String(Math.round(draft.amount)) : '');
-    setCategory(draft.category);
-    setDescription(draft.description || '');
-    setMerchant(draft.merchant || '');
-    setDate(toDate(draft.transaction_date || draft.date));
-    setErrors({});
-  }, [visible, draft]);
+    setItems(
+      drafts.map((draft) => ({
+        amount: Number.isFinite(draft.amount) ? String(Math.round(draft.amount)) : '',
+        category: draft.category,
+        description: draft.description || '',
+        merchant: draft.merchant || '',
+        date: toDate(draft.transaction_date || draft.date),
+      }))
+    );
+    setErrors(drafts.map(() => ({})));
+  }, [visible, drafts]);
+
+  const updateItem = (index: number, patch: Partial<DraftItem>) => {
+    setItems((prev) => prev.map((item, i) => (i === index ? { ...item, ...patch } : item)));
+  };
+
+  const updateError = (index: number, patch: Partial<DraftErrors>) => {
+    setErrors((prev) => prev.map((err, i) => (i === index ? { ...err, ...patch } : err)));
+  };
 
   const transcriptPreview = useMemo(
     () => transcription.trim() || 'No transcript available',
     [transcription]
   );
 
-  const validate = () => {
-    const nextErrors: { amount?: string; category?: string } = {};
-    const parsedAmount = parseInt(amount, 10);
+  const validateAll = (): boolean => {
+    let valid = true;
+    const nextErrors = items.map((item) => {
+      const err: DraftErrors = {};
+      const parsedAmount = parseInt(item.amount, 10);
 
-    if (!Number.isInteger(parsedAmount) || parsedAmount <= 0) {
-      nextErrors.amount = 'Enter a whole-rupee amount';
-    }
+      if (!Number.isInteger(parsedAmount) || parsedAmount <= 0) {
+        err.amount = 'Enter a whole-rupee amount';
+      }
 
-    if (!category) {
-      nextErrors.category = 'Select a category';
-    }
+      if (!item.category) {
+        err.category = 'Select a category';
+      }
 
+      if (Object.keys(err).length > 0) valid = false;
+      return err;
+    });
     setErrors(nextErrors);
-    return Object.keys(nextErrors).length === 0;
+    return valid;
   };
 
   const handleSave = async () => {
-    if (!validate() || !draft) return;
+    if (!validateAll()) return;
 
-    const merchantText = merchant.trim();
-    const descriptionText = description.trim();
+    const transactions: CreateTransactionInput[] = items.map((item) => {
+      const merchantText = item.merchant.trim();
+      const descriptionText = item.description.trim();
 
-    await onSave({
-      amount: parseInt(amount, 10),
-      category: category!,
-      description: descriptionText || merchantText || draft.description || 'Voice expense',
-      merchant: merchantText || null,
-      transaction_date: toLocalDateString(date),
-      source: 'voice',
-      voice_transcript: transcription.trim() || null,
+      return {
+        amount: parseInt(item.amount, 10),
+        category: item.category!,
+        description: descriptionText || merchantText || 'Voice expense',
+        merchant: merchantText || null,
+        transaction_date: toLocalDateString(item.date),
+        source: 'voice',
+        voice_transcript: transcription.trim() || null,
+      };
     });
+
+    await onSave(transactions);
   };
 
-  if (!draft) return null;
+  if (!drafts.length) return null;
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
@@ -122,41 +152,68 @@ export function VoiceExpenseConfirmationSheet({
             <View style={styles.handle} />
 
             <View style={styles.header}>
-              <Text style={styles.title}>Confirm expense</Text>
-              <Text style={styles.subtitle}>Review the parsed draft before saving.</Text>
+              <Text style={styles.title}>
+                {items.length > 1 ? `Confirm ${items.length} expenses` : 'Confirm expense'}
+              </Text>
+              <Text style={styles.subtitle}>
+                {items.length > 1
+                  ? 'Review each expense before saving them all.'
+                  : 'Review the parsed draft before saving.'}
+              </Text>
             </View>
 
             {errorMessage ? <Text style={styles.errorBanner}>{errorMessage}</Text> : null}
 
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
-              <AmountInput value={amount} onChangeValue={setAmount} error={errors.amount} integerOnly />
-              <CategoryPicker selectedCategory={category} onSelectCategory={setCategory} error={errors.category} />
-              <Input
-                label="Description"
-                placeholder="Add a short description"
-                value={description}
-                onChangeText={setDescription}
-                multiline
-              />
-              <Input
-                label="Merchant"
-                placeholder="Merchant (optional)"
-                value={merchant}
-                onChangeText={setMerchant}
-              />
-              <DatePicker value={date} onChange={setDate} />
+              {items.map((item, index) => (
+                <View key={index} style={styles.draftCard}>
+                  <View style={styles.draftHeader}>
+                    <Text style={styles.draftIndex}>Expense {index + 1}</Text>
+                    {items.length > 1 && onRemoveDraft && (
+                      <Pressable onPress={() => onRemoveDraft(index)} hitSlop={8}>
+                        <Text style={styles.removeText}>Remove</Text>
+                      </Pressable>
+                    )}
+                  </View>
+
+                  <AmountInput
+                    value={item.amount}
+                    onChangeValue={(value) => updateItem(index, { amount: value })}
+                    error={errors[index]?.amount}
+                    integerOnly
+                  />
+                  <CategoryPicker
+                    selectedCategory={item.category}
+                    onSelectCategory={(category) => {
+                      updateItem(index, { category });
+                      updateError(index, { category: undefined });
+                    }}
+                    error={errors[index]?.category}
+                  />
+                  <Input
+                    label="Description"
+                    placeholder="Add a short description"
+                    value={item.description}
+                    onChangeText={(value) => updateItem(index, { description: value })}
+                    multiline
+                  />
+                  <Input
+                    label="Merchant"
+                    placeholder="Merchant (optional)"
+                    value={item.merchant}
+                    onChangeText={(value) => updateItem(index, { merchant: value })}
+                  />
+                  <DatePicker
+                    value={item.date}
+                    onChange={(date) => updateItem(index, { date })}
+                  />
+                </View>
+              ))}
 
               <View style={styles.transcriptCard}>
                 <Text style={styles.sectionLabel}>Transcript</Text>
                 <Text style={styles.transcriptText}>{transcriptPreview}</Text>
               </View>
-
-              {parseMeta?.warnings?.length ? (
-                <View style={styles.metaCard}>
-                  <Text style={styles.metaLabel}>Review note</Text>
-                  <Text style={styles.metaText}>{parseMeta.warnings.join(' • ')}</Text>
-                </View>
-              ) : null}
 
               <Pressable onPress={handleSave} disabled={isSaving} style={styles.saveWrapper}>
                 <LinearGradient
@@ -165,7 +222,13 @@ export function VoiceExpenseConfirmationSheet({
                   end={{ x: 1, y: 1 }}
                   style={styles.saveButton}
                 >
-                  {isSaving ? <ActivityIndicator color="#FFF" /> : <Text style={styles.saveText}>Save</Text>}
+                  {isSaving ? (
+                    <ActivityIndicator color="#FFF" />
+                  ) : (
+                    <Text style={styles.saveText}>
+                      {items.length > 1 ? `Save all (${items.length})` : 'Save'}
+                    </Text>
+                  )}
                 </LinearGradient>
               </Pressable>
 
@@ -242,6 +305,31 @@ const createStyles = (colors: Colors) => StyleSheet.create({
   content: {
     paddingBottom: spacing.md,
   },
+  draftCard: {
+    marginBottom: spacing.md,
+    padding: spacing.md,
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.surfaceContainer,
+    borderWidth: 1,
+    borderColor: colors.outlineVariant,
+  },
+  draftHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+  },
+  draftIndex: {
+    fontSize: typography.fontSize.sm,
+    fontWeight: typography.fontWeight.semiBold,
+    color: colors.primary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  removeText: {
+    fontSize: typography.fontSize.sm,
+    color: colors.error,
+  },
   transcriptCard: {
     marginBottom: spacing.md,
     padding: spacing.md,
@@ -260,25 +348,6 @@ const createStyles = (colors: Colors) => StyleSheet.create({
     color: colors.onSurface,
     fontSize: typography.fontSize.sm,
     lineHeight: 20,
-  },
-  metaCard: {
-    marginBottom: spacing.md,
-    padding: spacing.md,
-    borderRadius: borderRadius.md,
-    backgroundColor: colors.surfaceContainer,
-    borderWidth: 1,
-    borderColor: colors.outlineVariant,
-  },
-  metaLabel: {
-    marginBottom: spacing.xs,
-    color: colors.onSurfaceVariant,
-    fontSize: typography.fontSize.xs,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  metaText: {
-    color: colors.onSurfaceVariant,
-    fontSize: typography.fontSize.xs,
   },
   saveWrapper: {
     marginTop: spacing.xs,
