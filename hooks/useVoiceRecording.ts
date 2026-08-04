@@ -1,5 +1,5 @@
 import { Audio } from 'expo-av';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 export type RecordingState = 'idle' | 'recording' | 'processing' | 'success' | 'error';
 
@@ -29,6 +29,10 @@ export function useVoiceRecording(onAutoStop?: () => void): UseVoiceRecordingRet
   const [recording, setRecording] = useState<Audio.Recording | null>(null);
   const [duration, setDuration] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // The current Recording, in a ref so timers and cleanup always see the
+  // live object instead of a stale render closure.
+  const recordingRef = useRef<Audio.Recording | null>(null);
 
   // Refs for timers
   const durationIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -87,6 +91,7 @@ export function useVoiceRecording(onAutoStop?: () => void): UseVoiceRecordingRet
         isMeteringEnabled: true,
       });
 
+      recordingRef.current = newRecording;
       setRecording(newRecording);
       setState('recording');
       setDuration(0);
@@ -147,7 +152,8 @@ export function useVoiceRecording(onAutoStop?: () => void): UseVoiceRecordingRet
    */
   const stopRecording = async (): Promise<string | null> => {
     try {
-      if (!recording) {
+      const activeRecording = recordingRef.current;
+      if (!activeRecording) {
         console.warn('No recording to stop');
         return null;
       }
@@ -156,17 +162,18 @@ export function useVoiceRecording(onAutoStop?: () => void): UseVoiceRecordingRet
       await cleanupTimers();
 
       // Stop recording
-      await recording.stopAndUnloadAsync();
-      
+      await activeRecording.stopAndUnloadAsync();
+
       // Reset audio mode
       await Audio.setAudioModeAsync({
         allowsRecordingIOS: false,
       });
 
       // Get the recording URI
-      const uri = recording.getURI();
-      
+      const uri = activeRecording.getURI();
+
       // Clear recording state
+      recordingRef.current = null;
       setRecording(null);
 
       console.log('Recording stopped, URI:', uri);
@@ -194,8 +201,10 @@ export function useVoiceRecording(onAutoStop?: () => void): UseVoiceRecordingRet
       // Clear timers
       await cleanupTimers();
 
-      if (recording) {
-        await recording.stopAndUnloadAsync();
+      const activeRecording = recordingRef.current;
+      if (activeRecording) {
+        await activeRecording.stopAndUnloadAsync();
+        recordingRef.current = null;
         setRecording(null);
       }
 
@@ -246,6 +255,21 @@ export function useVoiceRecording(onAutoStop?: () => void): UseVoiceRecordingRet
     setErrorMessage(null);
     setDuration(0);
   };
+
+  // Unload the recorder when the component unmounts (tab switch, Fast
+  // Refresh). Without this the Recording object is orphaned and expo-av's
+  // module-level "only one recording at a time" flag stays set, so the next
+  // start fails until a full app reload.
+  useEffect(() => {
+    return () => {
+      const activeRecording = recordingRef.current;
+      if (activeRecording) {
+        activeRecording.stopAndUnloadAsync().catch(() => {});
+      }
+      cleanupTimers();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return {
     state,
