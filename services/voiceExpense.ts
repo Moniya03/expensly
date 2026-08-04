@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
 import { readAsStringAsync, EncodingType } from 'expo-file-system/legacy';
+import { toLocalDateString } from '../utils/date';
 import type { VoiceExpenseResponse } from '../types';
 
 async function extractFunctionError(error: any): Promise<string> {
@@ -59,7 +60,7 @@ export async function processVoiceExpense(
     }
 
     const { data, error } = await supabase.functions.invoke('process-voice', {
-      body: { audioBase64, userId },
+      body: { audioBase64, userId, clientDate: toLocalDateString(new Date()) },
       headers,
     });
 
