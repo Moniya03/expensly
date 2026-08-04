@@ -54,13 +54,41 @@ export default function ProfileScreen() {
   const email = session?.user?.email;
   const fallbackBudget = profile?.monthly_budget ?? 0;
 
-  // "Saved this year": sum of (budget - spent) for each month Jan → now.
-  const savedThisYear = React.useMemo(() => {
+  // "Saved till now": sum of (budget - spent) for each month from the month
+  // the user first logged an expense (or created their account if they have
+  // no transactions yet) up to the current month.
+  const savedTillNow = React.useMemo(() => {
     const now = new Date();
-    let savings = 0;
 
-    for (let month = 1; month <= now.getMonth() + 1; month++) {
-      const year = now.getFullYear();
+    // Start from the month of the first logged expense, else account creation.
+    let startMonth = now.getMonth() + 1;
+    let startYear = now.getFullYear();
+
+    if (transactions.length > 0) {
+      let firstDate: Date | null = null;
+      for (const transaction of transactions) {
+        const d = parseLocalDate(transaction.transaction_date);
+        if (firstDate === null || d < firstDate) {
+          firstDate = d;
+        }
+      }
+      if (firstDate) {
+        startMonth = firstDate.getMonth() + 1;
+        startYear = firstDate.getFullYear();
+      }
+    } else if (profile?.created_at) {
+      const created = new Date(profile.created_at);
+      if (!Number.isNaN(created.getTime())) {
+        startMonth = created.getMonth() + 1;
+        startYear = created.getFullYear();
+      }
+    }
+
+    let savings = 0;
+    let month = startMonth;
+    let year = startYear;
+
+    while (year < now.getFullYear() || (year === now.getFullYear() && month <= now.getMonth() + 1)) {
       const monthTransactions = transactions.filter((transaction) => {
         const d = parseLocalDate(transaction.transaction_date);
         return d.getMonth() + 1 === month && d.getFullYear() === year;
@@ -68,10 +96,16 @@ export default function ProfileScreen() {
       const spent = monthTransactions.reduce((sum, t) => sum + t.amount, 0);
       const budget = getHistoricalBudgetForMonth({ budgets, fallbackBudget, month, year });
       savings += budget - spent;
+
+      month++;
+      if (month > 12) {
+        month = 1;
+        year++;
+      }
     }
 
     return savings;
-  }, [transactions, budgets, fallbackBudget]);
+  }, [transactions, budgets, fallbackBudget, profile?.created_at]);
 
   const handlePickAvatar = async () => {
     try {
@@ -161,12 +195,12 @@ export default function ProfileScreen() {
           <View style={styles.heroDivider} />
 
           <View>
-            <Text style={styles.savingsLabel}>Saved this year</Text>
-            <Text style={[styles.savingsValue, savedThisYear < 0 && { color: '#ff9d98' }]}>
-              {formatRupees(Math.abs(savedThisYear), { showSymbol: true })}
+            <Text style={styles.savingsLabel}>Saved till now</Text>
+            <Text style={[styles.savingsValue, savedTillNow < 0 && { color: '#ff9d98' }]}>
+              {formatRupees(Math.abs(savedTillNow), { showSymbol: true })}
             </Text>
             <Text style={styles.savingsSub}>
-              {savedThisYear < 0 ? 'Overspent vs your monthly budgets' : 'vs your monthly budgets'}
+              {savedTillNow < 0 ? 'Overspent vs your monthly budgets' : 'vs your monthly budgets'}
             </Text>
           </View>
         </LinearGradient>
