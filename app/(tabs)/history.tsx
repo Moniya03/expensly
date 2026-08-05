@@ -246,6 +246,12 @@ export default function HistoryScreen() {
           </View>
         ) : null}
       </ScrollView>
+
+      <TransactionEditCard
+        visible={editingTransaction !== null}
+        transaction={editingTransaction}
+        onClose={() => setEditingTransaction(null)}
+      />
     </SafeAreaView>
   );
 }
