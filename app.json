@@ -3,6 +3,7 @@
     "name": "Expensly",
     "slug": "expensly",
     "version": "1.1.0",
+    "runtimeVersion": { "policy": "fingerprint" },
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
@@ -38,6 +39,12 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "updates": {
+      "enabled": true,
+      "url": "https://u.expo.dev/96abc31b-76f0-42c0-bd57-4dc984730ec3",
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 0
     },
     "extra": {
       "router": {},
