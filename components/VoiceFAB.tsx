@@ -50,7 +50,6 @@ export default function VoiceFAB() {
   const [drafts, setDrafts] = useState<VoiceExpenseDraft[]>([]);
   const [transcription, setTranscription] = useState('');
   const [showSheet, setShowSheet] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     let loop: Animated.CompositeAnimation | undefined;
@@ -165,32 +164,8 @@ export default function VoiceFAB() {
     }
   };
 
-  const handleSave = async (transactions: CreateTransactionInput[]) => {
-    try {
-      setIsSaving(true);
-      for (const transaction of transactions) {
-        await createTransaction(transaction);
-      }
-      setShowSheet(false);
-      setDrafts([]);
-      setTranscription('');
-      setErrorMessage(null);
-      reset();
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'Failed to save expense');
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleRemoveDraft = (index: number) => {
-    const next = drafts.filter((_, i) => i !== index);
-    setDrafts(next);
-    if (next.length === 0) {
-      setShowSheet(false);
-      setTranscription('');
-      reset();
-    }
+  const handleSaveSingle = async (transaction: CreateTransactionInput) => {
+    await createTransaction(transaction);
   };
 
   const handleReRecord = async () => {
@@ -286,10 +261,7 @@ export default function VoiceFAB() {
         visible={showSheet}
         drafts={drafts}
         transcription={transcription}
-        isSaving={isSaving}
-        errorMessage={errorMessage}
-        onSave={handleSave}
-        onRemoveDraft={handleRemoveDraft}
+        onSaveSingle={handleSaveSingle}
         onReRecord={handleReRecord}
         onCancel={handleCancel}
       />
