@@ -79,7 +79,7 @@ export default function GoalsScreen() {
         </View>
         <Animated.View style={pulseStyle}>
           <Pressable style={styles.addButton} onPress={() => openCreate(null)} hitSlop={8}>
-            <Ionicons name="add" size={24} color={colors.surface} />
+            <Ionicons name="add" size={24} color={colors.onAccent} />
           </Pressable>
         </Animated.View>
       </View>

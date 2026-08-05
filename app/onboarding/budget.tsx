@@ -226,7 +226,7 @@ const createStyles = (colors: Colors) =>
       elevation: 4,
     },
     primaryButtonText: {
-      color: colors.surface,
+      color: colors.onAccent,
       fontSize: typography.fontSize.lg,
       fontWeight: typography.fontWeight.semiBold,
     },

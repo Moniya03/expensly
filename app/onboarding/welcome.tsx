@@ -30,7 +30,7 @@ export default function OnboardingWelcomeScreen() {
           <Ionicons
             name="arrow-forward"
             size={20}
-            color={colors.surface}
+            color={colors.onAccent}
             style={styles.buttonIcon}
           />
         </Pressable>
@@ -91,7 +91,7 @@ const createStyles = (colors: Colors) =>
       paddingHorizontal: spacing.xl,
     },
     primaryButtonText: {
-      color: colors.surface,
+      color: colors.onAccent,
       fontSize: typography.fontSize.lg,
       fontWeight: typography.fontWeight.semiBold,
     },

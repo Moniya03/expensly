@@ -103,7 +103,7 @@ export default function SupportScreen() {
         {submitted ? (
           <View style={styles.successWrap}>
             <View style={styles.successIcon}>
-              <Ionicons name="checkmark" size={32} color={colors.surface} />
+              <Ionicons name="checkmark" size={32} color={colors.onAccent} />
             </View>
             <Text style={styles.successTitle}>
               {mode === 'bug' ? 'Report sent, thanks!' : 'Thanks for the feedback!'}
@@ -160,7 +160,7 @@ export default function SupportScreen() {
                         <Image source={{ uri: attachment.uri }} style={styles.attachImage} />
                       ) : (
                         <View style={styles.videoIcon}>
-                          <Ionicons name="videocam" size={22} color={colors.surface} />
+                          <Ionicons name="videocam" size={22} color={colors.onAccent} />
                         </View>
                       )}
                       <Text style={styles.attachFileName}>Attached</Text>
@@ -216,7 +216,7 @@ export default function SupportScreen() {
               disabled={isSubmitting}
             >
               {isSubmitting ? (
-                <ActivityIndicator size="small" color={colors.surface} />
+                <ActivityIndicator size="small" color={colors.onAccent} />
               ) : (
                 <Text style={styles.submitText}>
                   {mode === 'bug' ? 'Send report' : 'Send feedback'}
@@ -376,7 +376,7 @@ const createStyles = (colors: Colors) =>
       marginTop: spacing.lg,
     },
     submitText: {
-      color: colors.surface,
+      color: colors.onAccent,
       fontSize: typography.fontSize.md,
       fontWeight: typography.fontWeight.semiBold,
     },
@@ -416,7 +416,7 @@ const createStyles = (colors: Colors) =>
       justifyContent: 'center',
     },
     doneButtonText: {
-      color: colors.surface,
+      color: colors.onAccent,
       fontSize: typography.fontSize.md,
       fontWeight: typography.fontWeight.semiBold,
     },

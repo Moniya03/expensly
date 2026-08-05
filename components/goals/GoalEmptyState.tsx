@@ -63,7 +63,7 @@ const createStyles = (colors: Colors) =>
       backgroundColor: colors.primary,
     },
     ctaText: {
-      color: colors.surface,
+      color: colors.onAccent,
       fontWeight: typography.fontWeight.semiBold,
     },
   });

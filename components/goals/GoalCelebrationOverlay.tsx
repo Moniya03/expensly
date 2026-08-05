@@ -514,7 +514,7 @@ const createStyles = (colors: Colors) =>
       justifyContent: 'center',
     },
     doneText: {
-      color: colors.surface,
+      color: colors.onAccent,
       fontSize: typography.fontSize.md,
       fontWeight: typography.fontWeight.semiBold,
     },

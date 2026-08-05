@@ -32,6 +32,10 @@ const darkColors = {
 
   // Status colors
   error: '#ff716c',
+
+  // Text/icons on top of a colored surface (primary buttons, blue gradient
+  // hero, dark tint cards, error buttons). Always white in BOTH modes.
+  onAccent: '#FFFFFF',
 } as const;
 
 /**
@@ -59,6 +63,10 @@ const lightColors = {
 
   // Status colors
   error: '#D94343',
+
+  // Text/icons on top of a colored surface (primary buttons, blue gradient
+  // hero, dark tint cards, error buttons). Always white in BOTH modes.
+  onAccent: '#FFFFFF',
 } as const;
 
 export type ColorMode = 'dark' | 'light';
@@ -76,6 +84,7 @@ type Palette = {
   outline: string;
   outlineVariant: string;
   error: string;
+  onAccent: string;
 };
 
 export type Colors = Palette;

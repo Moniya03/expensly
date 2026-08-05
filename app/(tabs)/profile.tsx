@@ -186,14 +186,14 @@ export default function ProfileScreen() {
               disabled={avatarUploading}
             >
               {avatarUploading ? (
-                <ActivityIndicator size="small" color={colors.surface} />
+                <ActivityIndicator size="small" color={colors.onAccent} />
               ) : profile?.avatar_url ? (
                 <Image source={{ uri: profile.avatar_url }} style={styles.avatarImage} />
               ) : (
-                <Ionicons name="person" size={30} color={colors.surface} />
+                <Ionicons name="person" size={30} color={colors.onAccent} />
               )}
               <View style={styles.avatarBadge}>
-                <Ionicons name="camera" size={12} color={colors.surface} />
+                <Ionicons name="camera" size={12} color={colors.onAccent} />
               </View>
             </Pressable>
 
@@ -372,7 +372,7 @@ const createStyles = (colors: Colors) =>
       gap: spacing.xs,
     },
     name: {
-      color: colors.surface,
+      color: colors.onAccent,
       fontSize: typography.fontSize.xl,
       fontWeight: typography.fontWeight.bold,
     },
@@ -398,7 +398,7 @@ const createStyles = (colors: Colors) =>
       letterSpacing: 0.8,
     },
     savingsValue: {
-      color: colors.surface,
+      color: colors.onAccent,
       fontSize: typography.fontSize.xxxl,
       fontWeight: typography.fontWeight.bold,
       marginTop: 2,
@@ -483,7 +483,7 @@ const createStyles = (colors: Colors) =>
       backgroundColor: colors.primary,
     },
     primaryButtonText: {
-      color: colors.surface,
+      color: colors.onAccent,
       fontSize: typography.fontSize.md,
       fontWeight: typography.fontWeight.semiBold,
     },

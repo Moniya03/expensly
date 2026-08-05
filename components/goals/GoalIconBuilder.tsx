@@ -277,7 +277,7 @@ export function GoalIconBuilder({
               disabled={!validHex || saving}
             >
               {saving ? (
-                <ActivityIndicator size="small" color={colors.surface} />
+                <ActivityIndicator size="small" color={colors.onAccent} />
               ) : (
                 <Text style={styles.saveText}>Save icon</Text>
               )}
@@ -412,7 +412,7 @@ const createStyles = (colors: Colors) =>
       justifyContent: 'center',
     },
     saveText: {
-      color: colors.surface,
+      color: colors.onAccent,
       fontSize: typography.fontSize.md,
       fontWeight: typography.fontWeight.semiBold,
     },

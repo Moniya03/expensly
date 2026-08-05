@@ -621,7 +621,7 @@ const createStyles = (colors: Colors) =>
       color: colors.onSurface,
     },
     dayTextSelected: {
-      color: colors.surface,
+      color: colors.onAccent,
       fontWeight: typography.fontWeight.bold,
     },
     dayTextDisabled: {

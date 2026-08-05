@@ -207,7 +207,7 @@ export function ExpandedGoalCard({
                     style={[styles.saveButton, (!validAmount || isSaving) && styles.saveDisabled]}
                   >
                     {isSaving ? (
-                      <ActivityIndicator color={colors.surface} />
+                      <ActivityIndicator color={colors.onAccent} />
                     ) : (
                       <Text style={styles.saveText}>Add</Text>
                     )}
@@ -235,12 +235,12 @@ export function ExpandedGoalCard({
             <View style={styles.actions}>
               {goal.is_completed ? (
                 <View style={[styles.primaryButton, styles.completedButton]}>
-                  <Ionicons name="checkmark-circle" size={18} color={colors.surface} />
+                  <Ionicons name="checkmark-circle" size={18} color={colors.onAccent} />
                   <Text style={styles.primaryText}>Goal completed</Text>
                 </View>
               ) : adding ? null : (
                 <Pressable onPress={() => setAdding(true)} style={styles.primaryButton}>
-                  <Ionicons name="add-circle-outline" size={18} color={colors.surface} />
+                  <Ionicons name="add-circle-outline" size={18} color={colors.onAccent} />
                   <Text style={styles.primaryText}>Update progress</Text>
                 </Pressable>
               )}
@@ -395,7 +395,7 @@ const createStyles = (colors: Colors) =>
     },
     saveDisabled: { opacity: 0.45 },
     saveText: {
-      color: colors.surface,
+      color: colors.onAccent,
       fontSize: typography.fontSize.md,
       fontWeight: typography.fontWeight.semiBold,
     },
@@ -411,7 +411,7 @@ const createStyles = (colors: Colors) =>
     },
     completedButton: { backgroundColor: colors.secondary, opacity: 0.9 },
     primaryText: {
-      color: colors.surface,
+      color: colors.onAccent,
       fontSize: typography.fontSize.md,
       fontWeight: typography.fontWeight.semiBold,
     },

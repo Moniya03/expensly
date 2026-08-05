@@ -52,7 +52,7 @@ export function GoalIconPickerRow({
               <Ionicons
                 name={option.icon}
                 size={18}
-                color={selected ? colors.surface : colors.onSurfaceVariant}
+                color={selected ? colors.onAccent : colors.onSurfaceVariant}
               />
               <Text style={[styles.text, selected && styles.selectedText]}>{option.label}</Text>
             </Pressable>
@@ -77,7 +77,7 @@ export function GoalIconPickerRow({
               <Ionicons
                 name={icon.icon_name as keyof typeof Ionicons.glyphMap}
                 size={18}
-                color={selected ? colors.surface : icon.color}
+                color={selected ? colors.onAccent : icon.color}
               />
               <Text style={[styles.text, selected && styles.selectedText]}>
                 {icon.label ?? 'Custom'}
@@ -141,5 +141,5 @@ const createStyles = (colors: Colors) =>
       fontSize: typography.fontSize.xs,
       fontWeight: typography.fontWeight.medium,
     },
-    selectedText: { color: colors.surface },
+    selectedText: { color: colors.onAccent },
   });

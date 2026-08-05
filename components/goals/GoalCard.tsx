@@ -145,12 +145,12 @@ const createStyles = (colors: Colors) =>
     },
     meta: { flex: 1 },
     name: {
-      color: colors.onSurface,
+      color: colors.onAccent,
       fontSize: typography.fontSize.lg,
       fontWeight: typography.fontWeight.semiBold,
     },
     deadline: {
-      color: colors.onSurfaceVariant,
+      color: 'rgba(237, 243, 255, 0.55)',
       fontSize: typography.fontSize.xs,
       marginTop: 2,
     },
@@ -165,7 +165,7 @@ const createStyles = (colors: Colors) =>
       fontSize: typography.fontSize.xs,
     },
     statValue: {
-      color: colors.onSurface,
+      color: colors.onAccent,
       fontSize: typography.fontSize.sm,
       fontWeight: typography.fontWeight.semiBold,
     },

@@ -96,10 +96,10 @@ export default function NameEditSheet({
               disabled={isPending}
             >
               {isPending ? (
-                <ActivityIndicator size="small" color={colors.surface} />
+                <ActivityIndicator size="small" color={colors.onAccent} />
               ) : (
                 <View style={styles.saveInner}>
-                  <Ionicons name="checkmark" size={16} color={colors.surface} />
+                  <Ionicons name="checkmark" size={16} color={colors.onAccent} />
                   <Text style={styles.saveText}>Save</Text>
                 </View>
               )}
@@ -189,7 +189,7 @@ const createStyles = (colors: Colors) =>
       gap: 6,
     },
     saveText: {
-      color: colors.surface,
+      color: colors.onAccent,
       fontSize: typography.fontSize.md,
       fontWeight: typography.fontWeight.semiBold,
     },

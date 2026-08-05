@@ -44,7 +44,7 @@ export function DeleteGoalConfirmSheet({
               ]}
             >
               {isDeleting ? (
-                <ActivityIndicator color={colors.surface} />
+                <ActivityIndicator color={colors.onAccent} />
               ) : (
                 <Text style={styles.dangerText}>Delete</Text>
               )}
@@ -111,7 +111,7 @@ const createStyles = (colors: Colors) =>
       justifyContent: 'center',
     },
     dangerText: {
-      color: colors.surface,
+      color: colors.onAccent,
       fontSize: typography.fontSize.md,
       fontWeight: typography.fontWeight.semiBold,
     },

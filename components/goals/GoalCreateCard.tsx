@@ -168,7 +168,7 @@ export function GoalCreateCard({ visible, goal, onClose }: Props) {
             style={[styles.saveButton, (!valid || isSaving) && styles.saveDisabled]}
           >
             {isSaving ? (
-              <ActivityIndicator color={colors.surface} />
+              <ActivityIndicator color={colors.onAccent} />
             ) : (
               <Text style={styles.saveText}>{isEditing ? 'Update goal' : 'Create goal'}</Text>
             )}
@@ -259,7 +259,7 @@ const createStyles = (colors: Colors) =>
     },
     saveDisabled: { opacity: 0.45 },
     saveText: {
-      color: colors.surface,
+      color: colors.onAccent,
       fontSize: typography.fontSize.md,
       fontWeight: typography.fontWeight.semiBold,
     },

@@ -168,7 +168,7 @@ export default function SettingsScreen() {
                   false: colors.surfaceContainerHighest,
                   true: colors.primary,
                 }}
-                thumbColor={colors.surface}
+                thumbColor={colors.onAccent}
               />
             )}
           </SettingRow>
@@ -184,7 +184,7 @@ export default function SettingsScreen() {
                   false: colors.surfaceContainerHighest,
                   true: colors.primary,
                 }}
-                thumbColor={colors.surface}
+                thumbColor={colors.onAccent}
               />
             )}
           </SettingRow>
@@ -200,7 +200,7 @@ export default function SettingsScreen() {
                 false: colors.surfaceContainerHighest,
                 true: colors.primary,
               }}
-              thumbColor={colors.surface}
+              thumbColor={colors.onAccent}
             />
           </SettingRow>
         </View>
@@ -280,7 +280,7 @@ export default function SettingsScreen() {
                 disabled={deleting}
               >
                 {deleting ? (
-                  <ActivityIndicator size="small" color={colors.surface} />
+                  <ActivityIndicator size="small" color={colors.onAccent} />
                 ) : (
                   <Text style={styles.sheetDeleteText}>Delete</Text>
                 )}
@@ -471,7 +471,7 @@ const createStyles = (colors: Colors) =>
       backgroundColor: colors.error,
     },
     sheetDeleteText: {
-      color: colors.surface,
+      color: colors.onAccent,
       fontSize: typography.fontSize.md,
       fontWeight: typography.fontWeight.semiBold,
     },
