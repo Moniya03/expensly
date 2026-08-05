@@ -81,7 +81,7 @@ if (!conditional && !plainLine) fail('could not find release buildType signing l
 gradle = conditional
   ? gradle.replace(
       conditional[0],
-      `signingConfig signingConfigs.release\n${conditional[2]}def enableShrinkResources`,
+      `signingConfig signingConfigs.release\n${conditional[3]}def enableShrinkResources`,
     )
   : gradle.replace(
       plainLine[0],
