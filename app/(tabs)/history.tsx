@@ -11,6 +11,7 @@ import { useAuthStore } from '../../stores/authStore';
 import type { Transaction } from '../../types';
 import { formatRupees } from '../../utils/currency';
 import { parseLocalDate } from '../../utils/date';
+import { TransactionEditCard } from '../../components/transactions/TransactionEditCard';
 
 type MonthItem = {
   key: string;
@@ -66,6 +67,7 @@ export default function HistoryScreen() {
   }, [budgets, profile?.monthly_budget, transactions]);
 
   const [selectedKey, setSelectedKey] = React.useState<string | null>(null);
+  const [editingTransaction, setEditingTransaction] = React.useState<Transaction | null>(null);
 
   React.useEffect(() => {
     if (!selectedKey && monthItems.length > 0) {
@@ -183,7 +185,10 @@ export default function HistoryScreen() {
 
                     return (
                       <React.Fragment key={transaction.id}>
-                        <View style={styles.transactionItem}>
+                        <Pressable
+                          style={({ pressed }) => [styles.transactionItem, pressed && styles.transactionItemPressed]}
+                          onPress={() => setEditingTransaction(transaction)}
+                        >
                           <View
                             style={[
                               styles.transactionIcon,
@@ -224,7 +229,7 @@ export default function HistoryScreen() {
                           <Text style={[styles.transactionAmount, { color: categoryColor }]}>
                             {formatRupees(transaction.amount)}
                           </Text>
-                        </View>
+                        </Pressable>
                         {index < selectedMonth.transactions.length - 1 ? (
                           <View style={styles.transactionSeparator} />
                         ) : null}
@@ -398,6 +403,9 @@ const createStyles = (colors: Colors) =>
       flexDirection: 'row',
       alignItems: 'center',
       paddingVertical: spacing.md,
+    },
+    transactionItemPressed: {
+      opacity: 0.6,
     },
     transactionSeparator: {
       height: StyleSheet.hairlineWidth,
