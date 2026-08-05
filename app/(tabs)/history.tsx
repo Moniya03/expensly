@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { getCategoryColor, getCategoryConfig } from '../../constants/categories';
 import { borderRadius, type Colors, spacing, typography, useColors } from '../../constants/theme';
 import { getHistoricalBudgetForMonth, useBudgets } from '../../hooks/useBudget';
+import { sentenceCase } from '../../utils/string';
 import { useAllTransactions } from '../../hooks/useTransactions';
 import { useAuthStore } from '../../stores/authStore';
 import type { Transaction } from '../../types';
@@ -206,7 +207,7 @@ export default function HistoryScreen() {
 
                           <View style={styles.transactionDetails}>
                             <Text style={styles.transactionDescription} numberOfLines={1}>
-                              {transaction.description || categoryConfig.label}
+                              {sentenceCase(transaction.description || categoryConfig.label)}
                             </Text>
                             <Text style={styles.transactionMeta}>
                               {parseLocalDate(transaction.transaction_date).toLocaleDateString(

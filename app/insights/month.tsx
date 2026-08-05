@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { getCategoryColor, getCategoryConfig } from '../../constants/categories';
 import { borderRadius, type Colors, spacing, typography, useColors } from '../../constants/theme';
 import { useMonthlyTransactions } from '../../hooks/useTransactions';
+import { sentenceCase } from '../../utils/string';
 import { useAuthStore } from '../../stores/authStore';
 import type { Category, Transaction } from '../../types';
 import { formatRupees } from '../../utils/currency';
@@ -23,7 +24,7 @@ type GroupedCategory = {
 function getGroupLabel(transaction: Transaction) {
   const merchant = transaction.merchant?.trim();
   const description = transaction.description?.trim();
-  return merchant || description || 'Unknown';
+  return sentenceCase(merchant || description || 'Unknown');
 }
 
 export default function MonthlyInsightsScreen() {

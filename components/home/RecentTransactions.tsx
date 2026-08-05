@@ -6,6 +6,7 @@ import { borderRadius, type Colors, spacing, typography, useColors } from '../..
 import type { Transaction } from '../../types';
 import { formatRupees } from '../../utils/currency';
 import { formatDate, getRelativeTime, parseLocalDate } from '../../utils/date';
+import { sentenceCase } from '../../utils/string';
 
 interface RecentTransactionsProps {
   transactions: Transaction[];
@@ -62,7 +63,7 @@ export default function RecentTransactions({ transactions, onSeeAll }: RecentTra
 
                   <View style={styles.details}>
                     <Text style={styles.description} numberOfLines={1}>
-                      {transaction.description || categoryConfig.label}
+                      {sentenceCase(transaction.description || categoryConfig.label)}
                     </Text>
                     <View style={styles.metaRow}>
                       <View
