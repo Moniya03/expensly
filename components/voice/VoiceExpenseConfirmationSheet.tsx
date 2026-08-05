@@ -10,6 +10,7 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Animated, {
   Easing,
@@ -252,7 +253,10 @@ export function VoiceExpenseConfirmationSheet({
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={() => {}}>
-      <View style={styles.overlay}>
+      {/* RNGH requires GestureHandlerRootView inside Modal content on Android
+          or pan gestures never activate (touches fall through to Pressables). */}
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <View style={styles.overlay}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           style={styles.keyboardAvoidingView}
@@ -480,7 +484,8 @@ export function VoiceExpenseConfirmationSheet({
             </View>
           </View>
         ) : null}
-      </View>
+        </View>
+      </GestureHandlerRootView>
     </Modal>
   );
 }
