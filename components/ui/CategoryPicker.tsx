@@ -51,6 +51,9 @@ export function CategoryPicker({ selectedCategory, onSelectCategory, error }: Ca
               />
             </View>
             <Text
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.8}
               style={[
                 styles.categoryLabel,
                 selectedCategory === category.id && { color: category.color },
@@ -83,14 +86,16 @@ const createStyles = (colors: Colors) =>
       gap: spacing.sm,
     },
     categoryButton: {
-      width: '23%',
-      aspectRatio: 1,
+      flexBasis: '21%',
+      flexGrow: 1,
+      minHeight: 78,
       backgroundColor: colors.surfaceContainer,
       borderRadius: borderRadius.md,
       borderWidth: 1,
       justifyContent: 'center',
       alignItems: 'center',
-      padding: spacing.xs,
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.xs,
     },
     categoryButtonSelected: {
       backgroundColor: colors.surfaceContainerHigh,
