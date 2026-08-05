@@ -2,7 +2,7 @@
   "expo": {
     "name": "Expensly",
     "slug": "expensly",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "runtimeVersion": { "policy": "fingerprint" },
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -24,7 +24,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0b0e14"
       },
-      "versionCode": 2,
+      "versionCode": 3,
       "edgeToEdgeEnabled": true,
       "package": "com.moniya.expensly"
     },
