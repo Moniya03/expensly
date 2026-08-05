@@ -185,14 +185,6 @@ export default function VoiceFAB() {
     await createTransaction(transaction);
   };
 
-  const handleReRecord = async () => {
-    setShowSheet(false);
-    setDrafts([]);
-    setTranscription('');
-    await cancelRecording();
-    reset();
-  };
-
   const handleCancel = async () => {
     setShowSheet(false);
     setDrafts([]);
@@ -279,7 +271,6 @@ export default function VoiceFAB() {
         drafts={drafts}
         transcription={transcription}
         onSaveSingle={handleSaveSingle}
-        onReRecord={handleReRecord}
         onCancel={handleCancel}
       />
     </>

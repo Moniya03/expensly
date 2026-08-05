@@ -1,5 +1,5 @@
 import React, { useImperativeHandle, useMemo } from 'react';
-import { StyleSheet, Text, useWindowDimensions, View, type ViewStyle } from 'react-native';
+import { StyleSheet, Text, useWindowDimensions, View, type StyleProp, type ViewStyle } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
@@ -12,8 +12,9 @@ import Animated, {
 } from 'react-native-reanimated';
 import { borderRadius, type Colors, spacing, typography, useColors } from '../../constants/theme';
 
-const SWIPE_THRESHOLD = 90;
-const FLY_OFF_DURATION = 300;
+const SWIPE_THRESHOLD = 60;
+const VELOCITY_THRESHOLD = 800;
+const FLY_OFF_DURATION = 200;
 const RETRACT_DURATION = 220;
 const SPRING_BACK_DURATION = 250;
 const MAX_VERTICAL = 20;
@@ -31,7 +32,7 @@ type SwipeDeckCardProps = {
   onSwipedRight: () => Promise<boolean>;
   onSwipedLeft: () => void;
   disabled?: boolean;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
 };
 
 export const SwipeDeckCard = React.forwardRef<SwipeDeckCardHandle, SwipeDeckCardProps>(
@@ -93,7 +94,8 @@ export const SwipeDeckCard = React.forwardRef<SwipeDeckCardHandle, SwipeDeckCard
       });
     };
 
-    // JS-thread handler: awaits the save, then chooses fly-off vs retract.
+    // JS-thread handler: the card is already flying off; on save failure
+    // pull it back so the user can retry or reject.
     const handleRightDecision = async () => {
       let ok = false;
       try {
@@ -101,9 +103,7 @@ export const SwipeDeckCard = React.forwardRef<SwipeDeckCardHandle, SwipeDeckCard
       } catch {
         ok = false;
       }
-      if (ok) {
-        flyOffRight();
-      } else {
+      if (!ok) {
         springBack();
       }
     };
@@ -119,16 +119,18 @@ export const SwipeDeckCard = React.forwardRef<SwipeDeckCardHandle, SwipeDeckCard
         translateY.value = Math.max(Math.min(e.translationY, MAX_VERTICAL), -MAX_VERTICAL);
         rotate.value = e.translationX / ROTATE_DIVISOR;
       })
-      .onEnd(() => {
+      .onEnd((e) => {
         'worklet';
         if (disabled) {
           return;
         }
         const tx = translateX.value;
-        if (tx >= SWIPE_THRESHOLD) {
-          // Defer fly-off vs retract until the save resolves.
+        const vx = e.velocityX;
+        if (tx >= SWIPE_THRESHOLD || vx > VELOCITY_THRESHOLD) {
+          // Fly off immediately, save runs in parallel; retract on failure.
+          flyOffRight();
           runOnJS(handleRightDecision)();
-        } else if (tx <= -SWIPE_THRESHOLD) {
+        } else if (tx <= -SWIPE_THRESHOLD || vx < -VELOCITY_THRESHOLD) {
           // Fire-and-forget left fly-off; notify parent.
           flyOffLeft();
           runOnJS(onSwipedLeft)();
