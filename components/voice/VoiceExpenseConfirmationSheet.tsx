@@ -303,7 +303,7 @@ export function VoiceExpenseConfirmationSheet({
                     >
                       <View
                         style={styles.cardBody}
-                        pointerEvents={cardDisabled ? 'none' : 'auto'}
+                        pointerEvents={isSaving ? 'none' : 'auto'}
                       >
                         <View style={styles.cardTopRow}>
                           <Text style={styles.expenseLabel}>
