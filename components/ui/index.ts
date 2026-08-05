@@ -1,4 +1,4 @@
 export { FloatingParticles } from './FloatingParticles';
-export { GradientText } from './GradientText';
 export { GlassmorphicCard } from './GlassmorphicCard';
+export { GradientText } from './GradientText';
 export { SoftDivider } from './SoftDivider';

@@ -1,9 +1,10 @@
-import React, { useMemo } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { spacing, borderRadius, typography, useColors, type Colors } from '../../constants/theme';
-import { Category } from '../../types';
+import type React from 'react';
+import { useMemo } from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { categoryList } from '../../constants/categories';
+import { borderRadius, type Colors, spacing, typography, useColors } from '../../constants/theme';
+import type { Category } from '../../types';
 
 interface CategoryPickerProps {
   selectedCategory: Category | null;
@@ -11,11 +12,7 @@ interface CategoryPickerProps {
   error?: string;
 }
 
-export function CategoryPicker({
-  selectedCategory,
-  onSelectCategory,
-  error,
-}: CategoryPickerProps) {
+export function CategoryPicker({ selectedCategory, onSelectCategory, error }: CategoryPickerProps) {
   const colors = useColors();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
@@ -29,14 +26,26 @@ export function CategoryPicker({
             style={[
               styles.categoryButton,
               selectedCategory === category.id && styles.categoryButtonSelected,
-              { borderColor: selectedCategory === category.id ? category.color : colors.outlineVariant },
+              {
+                borderColor:
+                  selectedCategory === category.id ? category.color : colors.outlineVariant,
+              },
             ]}
             onPress={() => onSelectCategory(category.id)}
             activeOpacity={0.7}
           >
-            <View style={[styles.iconContainer, { backgroundColor: category.iconBackgroundColor ?? `${category.iconColor}18` }]}>
+            <View
+              style={[
+                styles.iconContainer,
+                {
+                  backgroundColor: category.iconBackgroundColor ?? `${category.iconColor}18`,
+                },
+              ]}
+            >
               <MaterialCommunityIcons
-                name={category.iconName as React.ComponentProps<typeof MaterialCommunityIcons>['name']}
+                name={
+                  category.iconName as React.ComponentProps<typeof MaterialCommunityIcons>['name']
+                }
                 size={22}
                 color={category.iconColor}
               />
@@ -57,51 +66,52 @@ export function CategoryPicker({
   );
 }
 
-const createStyles = (colors: Colors) => StyleSheet.create({
-  container: {
-    marginBottom: spacing.md,
-  },
-  label: {
-    fontSize: typography.fontSize.sm,
-    fontWeight: typography.fontWeight.medium,
-    color: colors.onSurfaceVariant,
-    marginBottom: spacing.sm,
-  },
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-  },
-  categoryButton: {
-    width: '23%',
-    aspectRatio: 1,
-    backgroundColor: colors.surfaceContainer,
-    borderRadius: borderRadius.md,
-    borderWidth: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: spacing.xs,
-  },
-  categoryButtonSelected: {
-    backgroundColor: colors.surfaceContainerHigh,
-  },
-  iconContainer: {
-    width: 34,
-    height: 34,
-    borderRadius: borderRadius.full,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.xs,
-  },
-  categoryLabel: {
-    fontSize: typography.fontSize.xs,
-    fontWeight: typography.fontWeight.medium,
-    color: colors.onSurfaceVariant,
-    textAlign: 'center',
-  },
-  error: {
-    fontSize: typography.fontSize.xs,
-    color: colors.error,
-    marginTop: spacing.xs,
-  },
-});
+const createStyles = (colors: Colors) =>
+  StyleSheet.create({
+    container: {
+      marginBottom: spacing.md,
+    },
+    label: {
+      fontSize: typography.fontSize.sm,
+      fontWeight: typography.fontWeight.medium,
+      color: colors.onSurfaceVariant,
+      marginBottom: spacing.sm,
+    },
+    grid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing.sm,
+    },
+    categoryButton: {
+      width: '23%',
+      aspectRatio: 1,
+      backgroundColor: colors.surfaceContainer,
+      borderRadius: borderRadius.md,
+      borderWidth: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: spacing.xs,
+    },
+    categoryButtonSelected: {
+      backgroundColor: colors.surfaceContainerHigh,
+    },
+    iconContainer: {
+      width: 34,
+      height: 34,
+      borderRadius: borderRadius.full,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: spacing.xs,
+    },
+    categoryLabel: {
+      fontSize: typography.fontSize.xs,
+      fontWeight: typography.fontWeight.medium,
+      color: colors.onSurfaceVariant,
+      textAlign: 'center',
+    },
+    error: {
+      fontSize: typography.fontSize.xs,
+      color: colors.error,
+      marginTop: spacing.xs,
+    },
+  });

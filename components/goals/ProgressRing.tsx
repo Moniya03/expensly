@@ -1,7 +1,13 @@
-import React, { useEffect } from 'react';
+import type React from 'react';
+import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
+import Animated, {
+  Easing,
+  useAnimatedProps,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 import Svg, { Circle } from 'react-native-svg';
-import Animated, { useAnimatedProps, useSharedValue, withTiming, Easing } from 'react-native-reanimated';
 import { useColors } from '../../constants/theme';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
@@ -15,7 +21,14 @@ type Props = {
   children?: React.ReactNode;
 };
 
-export function ProgressRing({ size = 72, strokeWidth = 6, progress, color, trackColor, children }: Props) {
+export function ProgressRing({
+  size = 72,
+  strokeWidth = 6,
+  progress,
+  color,
+  trackColor,
+  children,
+}: Props) {
   const colors = useColors();
   const resolvedColor = color ?? colors.primary;
   const resolvedTrackColor = trackColor ?? colors.surfaceContainerHighest;
@@ -37,7 +50,14 @@ export function ProgressRing({ size = 72, strokeWidth = 6, progress, color, trac
   return (
     <View style={{ width: size, height: size }}>
       <Svg width={size} height={size}>
-        <Circle cx={size / 2} cy={size / 2} r={radius} stroke={resolvedTrackColor} strokeWidth={strokeWidth} fill="none" />
+        <Circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke={resolvedTrackColor}
+          strokeWidth={strokeWidth}
+          fill="none"
+        />
         <AnimatedCircle
           cx={size / 2}
           cy={size / 2}
@@ -61,7 +81,15 @@ export function ProgressRing({ size = 72, strokeWidth = 6, progress, color, trac
           }}
           pointerEvents="none"
         >
-          <View style={{ width: size - strokeWidth * 2, height: size - strokeWidth * 2, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+          <View
+            style={{
+              width: size - strokeWidth * 2,
+              height: size - strokeWidth * 2,
+              alignItems: 'center',
+              justifyContent: 'center',
+              overflow: 'hidden',
+            }}
+          >
             {children}
           </View>
         </View>

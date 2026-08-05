@@ -1,8 +1,8 @@
-import { useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMemo } from 'react';
 import { supabase } from '../services/supabase';
-import { Goal } from '../types';
 import { useAuthStore } from '../stores/authStore';
+import type { Goal } from '../types';
 
 type GoalRow = {
   id: string;
@@ -39,7 +39,9 @@ const normalizeGoal = (row: GoalRow): Goal => {
 const fetchGoals = async (userId: string): Promise<Goal[]> => {
   const { data, error } = await supabase
     .from('savings_goals')
-    .select('id,user_id,name,target_amount,saved_amount,deadline,emoji,is_completed,completed_at,created_at')
+    .select(
+      'id,user_id,name,target_amount,saved_amount,deadline,emoji,is_completed,completed_at,created_at',
+    )
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
 
@@ -88,7 +90,9 @@ const createGoal = async (userId: string, input: CreateGoalInput): Promise<Goal>
   const { data, error } = await supabase
     .from('savings_goals')
     .insert(payload)
-    .select('id,user_id,name,target_amount,saved_amount,deadline,emoji,is_completed,completed_at,created_at')
+    .select(
+      'id,user_id,name,target_amount,saved_amount,deadline,emoji,is_completed,completed_at,created_at',
+    )
     .single();
 
   if (error) {
@@ -101,7 +105,9 @@ const createGoal = async (userId: string, input: CreateGoalInput): Promise<Goal>
 const updateGoal = async (userId: string, input: UpdateGoalInput): Promise<Goal> => {
   const { data: current, error: currentError } = await supabase
     .from('savings_goals')
-    .select('id,user_id,name,target_amount,saved_amount,deadline,emoji,is_completed,completed_at,created_at')
+    .select(
+      'id,user_id,name,target_amount,saved_amount,deadline,emoji,is_completed,completed_at,created_at',
+    )
     .eq('id', input.id)
     .eq('user_id', userId)
     .single();
@@ -129,7 +135,9 @@ const updateGoal = async (userId: string, input: UpdateGoalInput): Promise<Goal>
     .update(payload)
     .eq('id', input.id)
     .eq('user_id', userId)
-    .select('id,user_id,name,target_amount,saved_amount,deadline,emoji,is_completed,completed_at,created_at')
+    .select(
+      'id,user_id,name,target_amount,saved_amount,deadline,emoji,is_completed,completed_at,created_at',
+    )
     .single();
 
   if (error) {
@@ -139,10 +147,15 @@ const updateGoal = async (userId: string, input: UpdateGoalInput): Promise<Goal>
   return normalizeGoal(data as GoalRow);
 };
 
-const updateGoalProgress = async (userId: string, input: UpdateGoalProgressInput): Promise<Goal> => {
+const updateGoalProgress = async (
+  userId: string,
+  input: UpdateGoalProgressInput,
+): Promise<Goal> => {
   const { data: current, error: currentError } = await supabase
     .from('savings_goals')
-    .select('id,user_id,name,target_amount,saved_amount,deadline,emoji,is_completed,completed_at,created_at')
+    .select(
+      'id,user_id,name,target_amount,saved_amount,deadline,emoji,is_completed,completed_at,created_at',
+    )
     .eq('id', input.id)
     .eq('user_id', userId)
     .single();
@@ -152,7 +165,10 @@ const updateGoalProgress = async (userId: string, input: UpdateGoalProgressInput
   }
 
   const currentRow = current as GoalRow;
-  const nextSavedAmount = Math.min(currentRow.saved_amount + input.amount, currentRow.target_amount);
+  const nextSavedAmount = Math.min(
+    currentRow.saved_amount + input.amount,
+    currentRow.target_amount,
+  );
   const isCompleted = nextSavedAmount >= currentRow.target_amount;
   const now = new Date().toISOString();
 
@@ -165,7 +181,9 @@ const updateGoalProgress = async (userId: string, input: UpdateGoalProgressInput
     })
     .eq('id', input.id)
     .eq('user_id', userId)
-    .select('id,user_id,name,target_amount,saved_amount,deadline,emoji,is_completed,completed_at,created_at')
+    .select(
+      'id,user_id,name,target_amount,saved_amount,deadline,emoji,is_completed,completed_at,created_at',
+    )
     .single();
 
   if (error) {
@@ -176,7 +194,11 @@ const updateGoalProgress = async (userId: string, input: UpdateGoalProgressInput
 };
 
 const deleteGoal = async (userId: string, goalId: string): Promise<{ id: string }> => {
-  const { error } = await supabase.from('savings_goals').delete().eq('id', goalId).eq('user_id', userId);
+  const { error } = await supabase
+    .from('savings_goals')
+    .delete()
+    .eq('id', goalId)
+    .eq('user_id', userId);
 
   if (error) {
     throw new Error(error.message);
@@ -241,7 +263,8 @@ export const useUpdateGoalProgress = () => {
   return useMutation({
     mutationFn: (input: UpdateGoalProgressInput) => {
       if (!userId) throw new Error('No user session');
-      if (!Number.isFinite(input.amount) || input.amount <= 0) throw new Error('Enter a valid amount');
+      if (!Number.isFinite(input.amount) || input.amount <= 0)
+        throw new Error('Enter a valid amount');
       return updateGoalProgress(userId, input);
     },
     onSuccess: () => {

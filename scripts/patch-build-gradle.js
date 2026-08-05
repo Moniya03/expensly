@@ -6,20 +6,20 @@
  * dev) debug signing is kept, but ABI splits are still applied. Fails loudly on
  * any anchor mismatch so CI never silently ships a debug-signed build.
  */
-const fs = require("node:fs");
-const path = require("node:path");
+const fs = require('node:fs');
+const path = require('node:path');
 
-const androidDir = path.resolve(__dirname, "..", "android");
-const propsFile = path.join(androidDir, "keystore.properties");
-const gradleFile = path.join(androidDir, "app", "build.gradle");
-const indent = "    ";
+const androidDir = path.resolve(__dirname, '..', 'android');
+const propsFile = path.join(androidDir, 'keystore.properties');
+const gradleFile = path.join(androidDir, 'app', 'build.gradle');
+const indent = '    ';
 const splitsMarker = 'include "arm64-v8a", "armeabi-v7a", "x86_64"';
 
 if (!fs.existsSync(gradleFile)) {
-  fail("android/app/build.gradle not found (run expo prebuild first)");
+  fail('android/app/build.gradle not found (run expo prebuild first)');
 }
 
-let gradle = fs.readFileSync(gradleFile, "utf8");
+let gradle = fs.readFileSync(gradleFile, 'utf8');
 
 if (!fs.existsSync(propsFile)) {
   // Local dev: keep debug signing, but ABI splits are wanted in all builds.
@@ -28,14 +28,14 @@ if (!fs.existsSync(propsFile)) {
   fs.writeFileSync(gradleFile, gradle);
   console.log(
     `patch-build-gradle: keystore.properties missing — debug signing kept; ABI splits ${
-      splitsAlready ? "already applied" : "applied"
+      splitsAlready ? 'already applied' : 'applied'
     }.`,
   );
   process.exit(0);
 }
 
-if (gradle.includes("keystorePropertiesFile")) {
-  console.log("patch-build-gradle: already patched, skipping.");
+if (gradle.includes('keystorePropertiesFile')) {
+  console.log('patch-build-gradle: already patched, skipping.');
   process.exit(0);
 }
 
@@ -52,8 +52,10 @@ gradle = gradle.replace(
 //    reads the properties from the wrong dir (app/, not root) — replace it with
 //    one driven by the top-level keystoreProperties. Fall back to appending
 //    after `debug` for older template output.
-const signingBlock = gradle.match(/signingConfigs \{\n(\s+)debug \{[\s\S]*?\n\1\}(\n\1release \{[\s\S]*?\n\1\})?/);
-if (!signingBlock) fail("could not find signingConfigs.debug block");
+const signingBlock = gradle.match(
+  /signingConfigs \{\n(\s+)debug \{[\s\S]*?\n\1\}(\n\1release \{[\s\S]*?\n\1\})?/,
+);
+if (!signingBlock) fail('could not find signingConfigs.debug block');
 const releaseConfig =
   `${signingBlock[1]}release {\n` +
   `${signingBlock[1]}${indent}storeFile file(keystoreProperties['storeFile'])\n` +
@@ -61,7 +63,10 @@ const releaseConfig =
   `${signingBlock[1]}${indent}keyAlias keystoreProperties['keyAlias']\n` +
   `${signingBlock[1]}${indent}keyPassword keystoreProperties['keyPassword']\n` +
   `${signingBlock[1]}}`;
-gradle = gradle.replace(signingBlock[0], signingBlock[0].replace(signingBlock[2] || "", "") + "\n" + releaseConfig);
+gradle = gradle.replace(
+  signingBlock[0],
+  `${signingBlock[0].replace(signingBlock[2] || '', '')}\n${releaseConfig}`,
+);
 
 // 3. Point the release buildType at signingConfigs.release unconditionally —
 //    this script only patches when keystore.properties exists, so the generated
@@ -69,11 +74,19 @@ gradle = gradle.replace(signingBlock[0], signingBlock[0].replace(signingBlock[2]
 const conditional = gradle.match(
   /if \(file\('keystore\.properties'\)\.exists\(\)\) \{\n(\s+)signingConfig signingConfigs\.release\n(\s+)\} else \{\n\1signingConfig signingConfigs\.debug\n\2\}\n(\s+)def enableShrinkResources/,
 );
-const plainLine = gradle.match(/signingConfig signingConfigs\.debug\n(\s+)def enableShrinkResources/);
-if (!conditional && !plainLine) fail("could not find release buildType signing line");
+const plainLine = gradle.match(
+  /signingConfig signingConfigs\.debug\n(\s+)def enableShrinkResources/,
+);
+if (!conditional && !plainLine) fail('could not find release buildType signing line');
 gradle = conditional
-  ? gradle.replace(conditional[0], `signingConfig signingConfigs.release\n${conditional[2]}def enableShrinkResources`)
-  : gradle.replace(plainLine[0], `signingConfig signingConfigs.release\n${plainLine[1]}def enableShrinkResources`);
+  ? gradle.replace(
+      conditional[0],
+      `signingConfig signingConfigs.release\n${conditional[2]}def enableShrinkResources`,
+    )
+  : gradle.replace(
+      plainLine[0],
+      `signingConfig signingConfigs.release\n${plainLine[1]}def enableShrinkResources`,
+    );
 
 // 4. ABI splits (all builds).
 gradle = applySplits(gradle);
@@ -84,7 +97,7 @@ console.log(`patch-build-gradle: release signing + ABI splits configured (${prop
 function applySplits(gradle) {
   if (gradle.includes(splitsMarker)) return gradle;
   const anchor = gradle.match(/(\n)(\s+)buildTypes \{/);
-  if (!anchor) fail("could not find buildTypes block (ABI splits)");
+  if (!anchor) fail('could not find buildTypes block (ABI splits)');
   const i = anchor[2];
   const splits =
     `${anchor[1]}${i}splits {` +

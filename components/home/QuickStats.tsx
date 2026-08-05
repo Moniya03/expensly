@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { borderRadius, spacing, typography, useColors, type Colors } from '../../constants/theme';
+import { StyleSheet, Text, View } from 'react-native';
+import { borderRadius, type Colors, spacing, typography, useColors } from '../../constants/theme';
 import { formatRupees } from '../../utils/currency';
 import { SoftDivider } from '../ui/SoftDivider';
 
@@ -40,43 +40,44 @@ export default function QuickStats({ today, week }: QuickStatsProps) {
   );
 }
 
-const createStyles = (colors: Colors) => StyleSheet.create({
-  container: {
-    borderRadius: borderRadius.xl,
-    backgroundColor: 'rgba(255,255,255,0.03)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)',
-    shadowColor: colors.primary,
-    shadowOpacity: 0.06,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 8 },
-  },
-  frame: {
-    flexDirection: 'row',
-    alignItems: 'stretch',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-  },
-  stat: {
-    flex: 1,
-    gap: 6,
-    paddingVertical: spacing.xs,
-  },
-  divider: {
-    width: 1,
-    marginHorizontal: spacing.sm,
-    opacity: 0.7,
-  },
-  label: {
-    fontSize: typography.fontSize.xs,
-    fontWeight: typography.fontWeight.medium,
-    color: colors.onSurfaceVariant,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-  },
-  value: {
-    fontSize: typography.fontSize.lg,
-    fontWeight: typography.fontWeight.bold,
-    color: colors.onSurface,
-  },
-});
+const createStyles = (colors: Colors) =>
+  StyleSheet.create({
+    container: {
+      borderRadius: borderRadius.xl,
+      backgroundColor: 'rgba(255,255,255,0.03)',
+      borderWidth: 1,
+      borderColor: 'rgba(255,255,255,0.06)',
+      shadowColor: colors.primary,
+      shadowOpacity: 0.06,
+      shadowRadius: 14,
+      shadowOffset: { width: 0, height: 8 },
+    },
+    frame: {
+      flexDirection: 'row',
+      alignItems: 'stretch',
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+    },
+    stat: {
+      flex: 1,
+      gap: 6,
+      paddingVertical: spacing.xs,
+    },
+    divider: {
+      width: 1,
+      marginHorizontal: spacing.sm,
+      opacity: 0.7,
+    },
+    label: {
+      fontSize: typography.fontSize.xs,
+      fontWeight: typography.fontWeight.medium,
+      color: colors.onSurfaceVariant,
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+    },
+    value: {
+      fontSize: typography.fontSize.lg,
+      fontWeight: typography.fontWeight.bold,
+      color: colors.onSurface,
+    },
+  });

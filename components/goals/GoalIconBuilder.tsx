@@ -1,10 +1,20 @@
-import React, { useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { borderRadius, spacing, typography, useColors, type Colors } from '../../constants/theme';
+import { useMemo, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
+import { borderRadius, type Colors, spacing, typography, useColors } from '../../constants/theme';
 import { useCreateGoalIcon, useDeleteGoalIcon, useUpdateGoalIcon } from '../../hooks/useGoalIcons';
 import { useGoals } from '../../hooks/useGoals';
-import { UserGoalIcon } from '../../types';
+import type { UserGoalIcon } from '../../types';
 
 const SWATCHES = [
   '#4D9FFF', // blue
@@ -26,7 +36,10 @@ const HEX_REGEX = /^#?[0-9a-fA-F]{3}([0-9a-fA-F]{3})?$/;
 const normalizeHex = (value: string) => {
   const trimmed = value.trim().replace(/^#/, '');
   return trimmed.length === 3
-    ? `#${trimmed.split('').map((c) => c + c).join('')}`
+    ? `#${trimmed
+        .split('')
+        .map((c) => c + c)
+        .join('')}`
     : `#${trimmed}`;
 };
 
@@ -107,7 +120,7 @@ export function GoalIconBuilder({
   const updateIcon = useUpdateGoalIcon();
   const deleteIcon = useDeleteGoalIcon();
   const { data: goals } = useGoals();
-  const usedByCount = editing ? goals?.filter((goal) => goal.icon === editing.id).length ?? 0 : 0;
+  const usedByCount = editing ? (goals?.filter((goal) => goal.icon === editing.id).length ?? 0) : 0;
 
   const filtered = ALL_ICONS;
 
@@ -117,11 +130,19 @@ export function GoalIconBuilder({
     if (!validHex) return;
     setSaving(true);
     try {
-      const payload = { icon_name: iconName, label: label.trim() || null, color: normalizeHex(color.trim()) };
+      const payload = {
+        icon_name: iconName,
+        label: label.trim() || null,
+        color: normalizeHex(color.trim()),
+      };
       if (editing) {
         await updateIcon.mutateAsync({ id: editing.id, ...payload });
       } else {
-        await createIcon.mutateAsync({ icon_name: payload.icon_name, label: payload.label ?? undefined, color: payload.color });
+        await createIcon.mutateAsync({
+          icon_name: payload.icon_name,
+          label: payload.label ?? undefined,
+          color: payload.color,
+        });
       }
       onClose();
     } catch (err) {
@@ -156,7 +177,7 @@ export function GoalIconBuilder({
             }
           },
         },
-      ]
+      ],
     );
   };
 
@@ -182,7 +203,11 @@ export function GoalIconBuilder({
                     style={[styles.iconCell, selected && { borderColor: color }]}
                     onPress={() => setIconName(name)}
                   >
-                    <Ionicons name={name as keyof typeof Ionicons.glyphMap} size={20} color={selected ? color : colors.onSurfaceVariant} />
+                    <Ionicons
+                      name={name as keyof typeof Ionicons.glyphMap}
+                      size={20}
+                      color={selected ? color : colors.onSurfaceVariant}
+                    />
                   </Pressable>
                 );
               })}
@@ -202,7 +227,11 @@ export function GoalIconBuilder({
             <Text style={styles.label}>Color</Text>
             <View style={styles.swatchRow}>
               {SWATCHES.map((swatch) => (
-                <Pressable key={swatch} style={[styles.swatch, swatch === color && styles.swatchSelected]} onPress={() => setColor(swatch)}>
+                <Pressable
+                  key={swatch}
+                  style={[styles.swatch, swatch === color && styles.swatchSelected]}
+                  onPress={() => setColor(swatch)}
+                >
                   <View style={[styles.swatchCircle, { backgroundColor: swatch }]}>
                     {swatch === color ? <Ionicons name="checkmark" size={14} color="#fff" /> : null}
                   </View>
@@ -222,7 +251,11 @@ export function GoalIconBuilder({
 
             <View style={styles.previewRow}>
               <View style={[styles.previewBadge, { backgroundColor: color }]}>
-                <Ionicons name={iconName as keyof typeof Ionicons.glyphMap} size={18} color="#fff" />
+                <Ionicons
+                  name={iconName as keyof typeof Ionicons.glyphMap}
+                  size={18}
+                  color="#fff"
+                />
               </View>
               <Text style={styles.previewText}>{label.trim() || 'Preview'}</Text>
             </View>
@@ -238,8 +271,16 @@ export function GoalIconBuilder({
                 )}
               </Pressable>
             ) : null}
-            <Pressable style={[styles.saveButton, (!validHex || saving) && { opacity: 0.5 }]} onPress={handleSave} disabled={!validHex || saving}>
-              {saving ? <ActivityIndicator size="small" color={colors.surface} /> : <Text style={styles.saveText}>Save icon</Text>}
+            <Pressable
+              style={[styles.saveButton, (!validHex || saving) && { opacity: 0.5 }]}
+              onPress={handleSave}
+              disabled={!validHex || saving}
+            >
+              {saving ? (
+                <ActivityIndicator size="small" color={colors.surface} />
+              ) : (
+                <Text style={styles.saveText}>Save icon</Text>
+              )}
             </Pressable>
           </View>
         </View>

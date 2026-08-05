@@ -1,8 +1,8 @@
+import type { Session } from '@supabase/supabase-js';
 import { create } from 'zustand';
-import { Session } from '@supabase/supabase-js';
-import { Profile } from '../types';
-import { clearLocalSession, isInvalidRefreshTokenError, supabase } from '../services/supabase';
 import { ensureProfile } from '../services/profile';
+import { clearLocalSession, isInvalidRefreshTokenError, supabase } from '../services/supabase';
+import type { Profile } from '../types';
 
 let authSubscription: { unsubscribe: () => void } | null = null;
 let initializePromise: Promise<void> | null = null;
@@ -56,7 +56,9 @@ const fetchProfileWithTimeout = async (userId: string): Promise<Profile | null> 
       resolveProfile(userId),
       new Promise<Profile | null>((resolve) => {
         timeoutId = setTimeout(() => {
-          console.error(`Profile fetch timed out after ${PROFILE_FETCH_TIMEOUT_MS}ms for user ${userId}`);
+          console.error(
+            `Profile fetch timed out after ${PROFILE_FETCH_TIMEOUT_MS}ms for user ${userId}`,
+          );
           resolve(null);
         }, PROFILE_FETCH_TIMEOUT_MS);
       }),
@@ -149,17 +151,32 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         if (sessionError) {
           if (isInvalidRefreshTokenError(sessionError)) {
             await clearLocalSession();
-            set({ session: null, profile: null, isInitialized: true, hasResolvedProfile: true });
+            set({
+              session: null,
+              profile: null,
+              isInitialized: true,
+              hasResolvedProfile: true,
+            });
             return;
           }
 
           console.error('Error getting initial session:', sessionError.message);
-          set({ session: null, profile: null, isInitialized: true, hasResolvedProfile: true });
+          set({
+            session: null,
+            profile: null,
+            isInitialized: true,
+            hasResolvedProfile: true,
+          });
           return;
         }
 
         if (!session?.user) {
-          set({ session: null, profile: null, isInitialized: true, hasResolvedProfile: true });
+          set({
+            session: null,
+            profile: null,
+            isInitialized: true,
+            hasResolvedProfile: true,
+          });
           return;
         }
 
@@ -172,7 +189,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         set({ isInitialized: true, hasResolvedProfile: true });
       } catch (error) {
         console.error('Unexpected error during auth initialization:', error);
-        set({ session: null, profile: null, isInitialized: true, hasResolvedProfile: true });
+        set({
+          session: null,
+          profile: null,
+          isInitialized: true,
+          hasResolvedProfile: true,
+        });
       } finally {
         set({ isLoading: false });
         initializePromise = null;
@@ -206,7 +228,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       set({ isLoading: true });
 
-      const { data, error } = await supabase.auth.signInWithIdToken({
+      const { error } = await supabase.auth.signInWithIdToken({
         provider: 'google',
         token: idToken,
       });

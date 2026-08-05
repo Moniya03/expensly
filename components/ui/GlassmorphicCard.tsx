@@ -1,5 +1,5 @@
 import { BlurView } from 'expo-blur';
-import { StyleSheet, ViewProps } from 'react-native';
+import { StyleSheet, type ViewProps } from 'react-native';
 import { borderRadius, spacing } from '../../constants/theme';
 
 interface GlassmorphicCardProps extends ViewProps {
@@ -14,12 +14,7 @@ export function GlassmorphicCard({
   ...props
 }: GlassmorphicCardProps) {
   return (
-    <BlurView
-      intensity={intensity}
-      tint="dark"
-      style={[styles.container, style]}
-      {...props}
-    >
+    <BlurView intensity={intensity} tint="dark" style={[styles.container, style]} {...props}>
       {children}
     </BlurView>
   );

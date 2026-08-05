@@ -1,11 +1,6 @@
-import React, { useMemo, useState } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  StyleSheet,
-} from 'react-native';
-import { spacing, borderRadius, typography, useColors, type Colors } from '../../constants/theme';
+import { useMemo, useState } from 'react';
+import { StyleSheet, Text, TextInput, View } from 'react-native';
+import { borderRadius, type Colors, spacing, typography, useColors } from '../../constants/theme';
 
 interface AmountInputProps {
   value: string;
@@ -14,7 +9,12 @@ interface AmountInputProps {
   integerOnly?: boolean;
 }
 
-export function AmountInput({ value, onChangeValue, error, integerOnly = false }: AmountInputProps) {
+export function AmountInput({
+  value,
+  onChangeValue,
+  error,
+  integerOnly = false,
+}: AmountInputProps) {
   const colors = useColors();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
@@ -62,42 +62,43 @@ export function AmountInput({ value, onChangeValue, error, integerOnly = false }
   );
 }
 
-const createStyles = (colors: Colors) => StyleSheet.create({
-  container: {
-    marginBottom: spacing.md,
-  },
-  label: {
-    fontSize: typography.fontSize.sm,
-    fontWeight: typography.fontWeight.medium,
-    color: colors.onSurfaceVariant,
-    marginBottom: spacing.xs,
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.surfaceContainer,
-    borderWidth: 1,
-    borderRadius: borderRadius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-  },
-  currency: {
-    fontSize: typography.fontSize.xxl,
-    fontWeight: typography.fontWeight.semiBold,
-    color: colors.secondary,
-    marginRight: spacing.sm,
-  },
-  input: {
-    flex: 1,
-    fontSize: typography.fontSize.xxl,
-    fontWeight: typography.fontWeight.semiBold,
-    color: colors.onSurface,
-    fontFamily: typography.fontFamily.regular,
-    padding: 0,
-  },
-  error: {
-    fontSize: typography.fontSize.xs,
-    color: colors.error,
-    marginTop: spacing.xs,
-  },
-});
+const createStyles = (colors: Colors) =>
+  StyleSheet.create({
+    container: {
+      marginBottom: spacing.md,
+    },
+    label: {
+      fontSize: typography.fontSize.sm,
+      fontWeight: typography.fontWeight.medium,
+      color: colors.onSurfaceVariant,
+      marginBottom: spacing.xs,
+    },
+    inputContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: colors.surfaceContainer,
+      borderWidth: 1,
+      borderRadius: borderRadius.md,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.md,
+    },
+    currency: {
+      fontSize: typography.fontSize.xxl,
+      fontWeight: typography.fontWeight.semiBold,
+      color: colors.secondary,
+      marginRight: spacing.sm,
+    },
+    input: {
+      flex: 1,
+      fontSize: typography.fontSize.xxl,
+      fontWeight: typography.fontWeight.semiBold,
+      color: colors.onSurface,
+      fontFamily: typography.fontFamily.regular,
+      padding: 0,
+    },
+    error: {
+      fontSize: typography.fontSize.xs,
+      color: colors.error,
+      marginTop: spacing.xs,
+    },
+  });

@@ -11,12 +11,13 @@ interface GreetingWithEmoji {
   emoji: string;
 }
 
-const TIME_OF_DAY_CONFIG: Record<TimeOfDayBucket, { greeting: string; emojis: readonly string[] }> = {
-  morning: { greeting: 'Good morning', emojis: ['☀️', '🌅', '🌤️'] },
-  afternoon: { greeting: 'Good afternoon', emojis: ['✨', '😌', '🌤️'] },
-  evening: { greeting: 'Good evening', emojis: ['🌙', '🌆', '⭐'] },
-  night: { greeting: 'Good night', emojis: ['🌙', '🌌', '💤'] },
-};
+const TIME_OF_DAY_CONFIG: Record<TimeOfDayBucket, { greeting: string; emojis: readonly string[] }> =
+  {
+    morning: { greeting: 'Good morning', emojis: ['☀️', '🌅', '🌤️'] },
+    afternoon: { greeting: 'Good afternoon', emojis: ['✨', '😌', '🌤️'] },
+    evening: { greeting: 'Good evening', emojis: ['🌙', '🌆', '⭐'] },
+    night: { greeting: 'Good night', emojis: ['🌙', '🌌', '💤'] },
+  };
 
 const getTimePartsInTimezone = (date: Date, timeZone: string) => {
   return new Intl.DateTimeFormat('en-US', {
@@ -61,7 +62,7 @@ const getHourInTimezone = (date: Date, timeZone: string): number => {
  */
 export const formatDate = (
   date: string | Date,
-  format: 'full' | 'short' | 'time' | 'relative' = 'short'
+  format: 'full' | 'short' | 'time' | 'relative' = 'short',
 ): string => {
   const d = typeof date === 'string' ? parseLocalDate(date) : date;
 

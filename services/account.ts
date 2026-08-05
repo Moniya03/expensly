@@ -2,8 +2,8 @@
  * Account management (delete account via edge function).
  */
 
-import { supabase } from './supabase';
 import { useAuthStore } from '../stores/authStore';
+import { supabase } from './supabase';
 
 /**
  * Permanently delete the current user's account and all their data.

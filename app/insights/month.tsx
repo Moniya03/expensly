@@ -1,13 +1,13 @@
-import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Pressable } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { borderRadius, spacing, typography, useColors, type Colors } from '../../constants/theme';
+import React, { useMemo } from 'react';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { getCategoryColor, getCategoryConfig } from '../../constants/categories';
+import { borderRadius, type Colors, spacing, typography, useColors } from '../../constants/theme';
 import { useMonthlyTransactions } from '../../hooks/useTransactions';
 import { useAuthStore } from '../../stores/authStore';
-import { Category, Transaction } from '../../types';
-import { getCategoryColor, getCategoryConfig } from '../../constants/categories';
+import type { Category, Transaction } from '../../types';
 import { formatRupees } from '../../utils/currency';
 
 type GroupedCategory = {
@@ -36,44 +36,51 @@ export default function MonthlyInsightsScreen() {
 
   const budget = profile?.monthly_budget ?? 0;
   const monthLabel = React.useMemo(
-    () => new Date().toLocaleDateString('en-IN', { month: 'long', year: 'numeric' }),
-    []
+    () =>
+      new Date().toLocaleDateString('en-IN', {
+        month: 'long',
+        year: 'numeric',
+      }),
+    [],
   );
 
   const totalSpent = React.useMemo(
     () => monthlyTransactions.reduce((sum, transaction) => sum + transaction.amount, 0),
-    [monthlyTransactions]
+    [monthlyTransactions],
   );
 
   const categoryBreakdown = React.useMemo<GroupedCategory[]>(() => {
-    const grouped = monthlyTransactions.reduce<Record<string, GroupedCategory>>((acc, transaction) => {
-      const key = transaction.category;
+    const grouped = monthlyTransactions.reduce<Record<string, GroupedCategory>>(
+      (acc, transaction) => {
+        const key = transaction.category;
 
-      if (!acc[key]) {
-        acc[key] = {
-          category: transaction.category,
-          total: 0,
-          groups: [],
-        };
-      }
+        if (!acc[key]) {
+          acc[key] = {
+            category: transaction.category,
+            total: 0,
+            groups: [],
+          };
+        }
 
-      acc[key].total += transaction.amount;
+        acc[key].total += transaction.amount;
 
-      const label = getGroupLabel(transaction);
-      const existingGroup = acc[key].groups.find((group) => group.key === label);
+        const label = getGroupLabel(transaction);
+        const existingGroup = acc[key].groups.find((group) => group.key === label);
 
-      if (existingGroup) {
-        existingGroup.total += transaction.amount;
-      } else {
-        acc[key].groups.push({
-          key: label,
-          label,
-          total: transaction.amount,
-        });
-      }
+        if (existingGroup) {
+          existingGroup.total += transaction.amount;
+        } else {
+          acc[key].groups.push({
+            key: label,
+            label,
+            total: transaction.amount,
+          });
+        }
 
-      return acc;
-    }, {});
+        return acc;
+      },
+      {},
+    );
 
     return Object.values(grouped)
       .map((item) => ({
@@ -118,7 +125,9 @@ export default function MonthlyInsightsScreen() {
           <Text style={styles.summaryLabel}>Spent this month</Text>
           <Text style={styles.summaryAmount}>{formatRupees(totalSpent)}</Text>
           <Text style={styles.summaryMeta}>
-            {budget > 0 ? `${formatRupees(Math.abs(budget - totalSpent))} ${totalSpent > budget ? 'over' : 'left'} of ${formatRupees(budget)}` : 'No monthly budget set'}
+            {budget > 0
+              ? `${formatRupees(Math.abs(budget - totalSpent))} ${totalSpent > budget ? 'over' : 'left'} of ${formatRupees(budget)}`
+              : 'No monthly budget set'}
           </Text>
         </View>
 
@@ -135,7 +144,12 @@ export default function MonthlyInsightsScreen() {
                     style={({ pressed }) => [styles.categoryRow, pressed && styles.pressed]}
                   >
                     <View style={styles.categoryInfo}>
-                      <View style={[styles.categoryDot, { backgroundColor: getCategoryColor(item.category) }]} />
+                      <View
+                        style={[
+                          styles.categoryDot,
+                          { backgroundColor: getCategoryColor(item.category) },
+                        ]}
+                      />
                       <Text style={styles.categoryLabel}>{config.label}</Text>
                     </View>
 
@@ -167,7 +181,9 @@ export default function MonthlyInsightsScreen() {
           ) : (
             <View style={styles.emptyState}>
               <Text style={styles.emptyTitle}>No spends yet this month</Text>
-              <Text style={styles.emptySubtitle}>Your current-month category breakdown will appear here.</Text>
+              <Text style={styles.emptySubtitle}>
+                Your current-month category breakdown will appear here.
+              </Text>
             </View>
           )}
         </View>
@@ -176,152 +192,153 @@ export default function MonthlyInsightsScreen() {
   );
 }
 
-const createStyles = (colors: Colors) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.surface,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    paddingBottom: spacing.md,
-    gap: spacing.md,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: borderRadius.full,
-    backgroundColor: colors.surfaceContainerHigh,
-    borderWidth: 1,
-    borderColor: colors.outlineVariant,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerTextWrap: {
-    flex: 1,
-  },
-  title: {
-    fontSize: typography.fontSize.xxl,
-    fontWeight: typography.fontWeight.bold,
-    color: colors.onSurface,
-  },
-  subtitle: {
-    marginTop: 2,
-    fontSize: typography.fontSize.sm,
-    color: colors.onSurfaceVariant,
-  },
-  content: {
-    paddingHorizontal: spacing.md,
-    paddingBottom: spacing.xxl,
-    gap: spacing.md,
-  },
-  summaryBlock: {
-    gap: spacing.xs,
-    paddingVertical: spacing.xs,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.outlineVariant,
-    paddingBottom: spacing.md,
-  },
-  summaryLabel: {
-    fontSize: typography.fontSize.sm,
-    color: '#8B9CC7',
-    fontWeight: typography.fontWeight.medium,
-  },
-  summaryAmount: {
-    fontSize: typography.fontSize.xxxl,
-    fontWeight: typography.fontWeight.bold,
-    color: colors.onSurface,
-  },
-  summaryMeta: {
-    fontSize: typography.fontSize.sm,
-    color: colors.onSurfaceVariant,
-  },
-  section: {
-    gap: spacing.sm,
-  },
-  categoryBlock: {
-    paddingVertical: spacing.xs,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.outlineVariant,
-  },
-  categoryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: spacing.md,
-    gap: spacing.md,
-  },
-  categoryInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    flex: 1,
-  },
-  categoryDot: {
-    width: 10,
-    height: 10,
-    borderRadius: borderRadius.full,
-  },
-  categoryLabel: {
-    fontSize: typography.fontSize.md,
-    fontWeight: typography.fontWeight.semiBold,
-    color: colors.onSurface,
-  },
-  categoryAmountWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  categoryAmount: {
-    fontSize: typography.fontSize.md,
-    fontWeight: typography.fontWeight.bold,
-    color: colors.onSurface,
-  },
-  groupList: {
-    paddingBottom: spacing.sm,
-  },
-  groupRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: spacing.sm,
-    gap: spacing.md,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.outlineVariant,
-    marginLeft: 20,
-  },
-  groupLabel: {
-    flex: 1,
-    fontSize: typography.fontSize.sm,
-    color: colors.onSurfaceVariant,
-  },
-  groupAmount: {
-    fontSize: typography.fontSize.sm,
-    fontWeight: typography.fontWeight.semiBold,
-    color: colors.onSurface,
-  },
-  emptyState: {
-    paddingVertical: spacing.lg,
-    gap: spacing.xs,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.outlineVariant,
-  },
-  emptyTitle: {
-    fontSize: typography.fontSize.lg,
-    fontWeight: typography.fontWeight.bold,
-    color: colors.onSurface,
-  },
-  emptySubtitle: {
-    fontSize: typography.fontSize.sm,
-    color: colors.onSurfaceVariant,
-  },
-  pressed: {
-    opacity: 0.72,
-  },
-});
+const createStyles = (colors: Colors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.surface,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: spacing.md,
+      paddingBottom: spacing.md,
+      gap: spacing.md,
+    },
+    backButton: {
+      width: 40,
+      height: 40,
+      borderRadius: borderRadius.full,
+      backgroundColor: colors.surfaceContainerHigh,
+      borderWidth: 1,
+      borderColor: colors.outlineVariant,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    headerTextWrap: {
+      flex: 1,
+    },
+    title: {
+      fontSize: typography.fontSize.xxl,
+      fontWeight: typography.fontWeight.bold,
+      color: colors.onSurface,
+    },
+    subtitle: {
+      marginTop: 2,
+      fontSize: typography.fontSize.sm,
+      color: colors.onSurfaceVariant,
+    },
+    content: {
+      paddingHorizontal: spacing.md,
+      paddingBottom: spacing.xxl,
+      gap: spacing.md,
+    },
+    summaryBlock: {
+      gap: spacing.xs,
+      paddingVertical: spacing.xs,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.outlineVariant,
+      paddingBottom: spacing.md,
+    },
+    summaryLabel: {
+      fontSize: typography.fontSize.sm,
+      color: '#8B9CC7',
+      fontWeight: typography.fontWeight.medium,
+    },
+    summaryAmount: {
+      fontSize: typography.fontSize.xxxl,
+      fontWeight: typography.fontWeight.bold,
+      color: colors.onSurface,
+    },
+    summaryMeta: {
+      fontSize: typography.fontSize.sm,
+      color: colors.onSurfaceVariant,
+    },
+    section: {
+      gap: spacing.sm,
+    },
+    categoryBlock: {
+      paddingVertical: spacing.xs,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.outlineVariant,
+    },
+    categoryRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: spacing.md,
+      gap: spacing.md,
+    },
+    categoryInfo: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      flex: 1,
+    },
+    categoryDot: {
+      width: 10,
+      height: 10,
+      borderRadius: borderRadius.full,
+    },
+    categoryLabel: {
+      fontSize: typography.fontSize.md,
+      fontWeight: typography.fontWeight.semiBold,
+      color: colors.onSurface,
+    },
+    categoryAmountWrap: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
+    categoryAmount: {
+      fontSize: typography.fontSize.md,
+      fontWeight: typography.fontWeight.bold,
+      color: colors.onSurface,
+    },
+    groupList: {
+      paddingBottom: spacing.sm,
+    },
+    groupRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: spacing.sm,
+      gap: spacing.md,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: colors.outlineVariant,
+      marginLeft: 20,
+    },
+    groupLabel: {
+      flex: 1,
+      fontSize: typography.fontSize.sm,
+      color: colors.onSurfaceVariant,
+    },
+    groupAmount: {
+      fontSize: typography.fontSize.sm,
+      fontWeight: typography.fontWeight.semiBold,
+      color: colors.onSurface,
+    },
+    emptyState: {
+      paddingVertical: spacing.lg,
+      gap: spacing.xs,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: colors.outlineVariant,
+    },
+    emptyTitle: {
+      fontSize: typography.fontSize.lg,
+      fontWeight: typography.fontWeight.bold,
+      color: colors.onSurface,
+    },
+    emptySubtitle: {
+      fontSize: typography.fontSize.sm,
+      color: colors.onSurfaceVariant,
+    },
+    pressed: {
+      opacity: 0.72,
+    },
+  });

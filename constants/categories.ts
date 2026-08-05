@@ -3,7 +3,7 @@
  * Used for displaying transaction categories throughout the app
  */
 
-import { Category } from '../types';
+import type { Category } from '../types';
 
 export interface CategoryConfig {
   /** Category identifier */
@@ -22,9 +22,13 @@ export interface CategoryConfig {
 
 const hexToRgba = (hex: string, alpha: number) => {
   const normalized = hex.replace('#', '');
-  const fullHex = normalized.length === 3
-    ? normalized.split('').map((char) => char + char).join('')
-    : normalized;
+  const fullHex =
+    normalized.length === 3
+      ? normalized
+          .split('')
+          .map((char) => char + char)
+          .join('')
+      : normalized;
 
   const value = Number.parseInt(fullHex, 16);
   const red = (value >> 16) & 255;

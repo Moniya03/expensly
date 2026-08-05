@@ -3,8 +3,8 @@
  * Attachments (photo/video) upload to the 'bug-attachments' storage bucket.
  */
 
-import { supabase } from './supabase';
 import { useAuthStore } from '../stores/authStore';
+import { supabase } from './supabase';
 
 /**
  * Upload a picked photo/video to the bug-attachments bucket.
@@ -27,11 +27,9 @@ export const uploadBugAttachment = async (fileUri: string): Promise<string> => {
   const ext = extMatch ? extMatch[1].toLowerCase() : 'jpg';
   const path = `${userId}/attachment-${Date.now()}.${ext}`;
 
-  const { error } = await supabase.storage
-    .from('bug-attachments')
-    .upload(path, base64, {
-      upsert: true,
-    });
+  const { error } = await supabase.storage.from('bug-attachments').upload(path, base64, {
+    upsert: true,
+  });
 
   if (error) {
     throw new Error(error.message);
@@ -44,7 +42,10 @@ export const uploadBugAttachment = async (fileUri: string): Promise<string> => {
 /**
  * Submit a bug report (description + optional attachment URL).
  */
-export const submitBugReport = async (description: string, attachmentUrl?: string): Promise<void> => {
+export const submitBugReport = async (
+  description: string,
+  attachmentUrl?: string,
+): Promise<void> => {
   const userId = useAuthStore.getState().session?.user?.id;
 
   if (!userId) {

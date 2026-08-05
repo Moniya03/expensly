@@ -20,12 +20,10 @@ export const uploadAvatar = async (userId: string, fileUri: string): Promise<str
   const ext = extMatch ? extMatch[1].toLowerCase() : 'jpg';
   const path = `${userId}/avatar-${Date.now()}.${ext}`;
 
-  const { error } = await supabase.storage
-    .from('avatars')
-    .upload(path, base64, {
-      contentType: ext === 'png' ? 'image/png' : 'image/jpeg',
-      upsert: true,
-    });
+  const { error } = await supabase.storage.from('avatars').upload(path, base64, {
+    contentType: ext === 'png' ? 'image/png' : 'image/jpeg',
+    upsert: true,
+  });
 
   if (error) {
     throw new Error(error.message);

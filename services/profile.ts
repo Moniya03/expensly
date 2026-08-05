@@ -1,5 +1,5 @@
+import type { Profile } from '../types';
 import { supabase } from './supabase';
-import { Profile } from '../types';
 
 type ProfileUpdateInput = Partial<
   Pick<
@@ -13,7 +13,8 @@ type ProfileUpdateInput = Partial<
   >
 >;
 
-const isNoRowsError = (error: { code?: string | null } | null | undefined) => error?.code === 'PGRST116';
+const isNoRowsError = (error: { code?: string | null } | null | undefined) =>
+  error?.code === 'PGRST116';
 
 const PROFILE_VISIBILITY_TIMEOUT_MS = 4000;
 const PROFILE_VISIBILITY_POLL_MS = 250;
@@ -24,7 +25,11 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
  * Fetch a profile without throwing for the expected zero-row case.
  */
 export const fetchProfile = async (userId: string): Promise<Profile | null> => {
-  const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle();
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', userId)
+    .maybeSingle();
 
   if (error) {
     if (isNoRowsError(error)) {
@@ -42,7 +47,7 @@ export const fetchProfile = async (userId: string): Promise<Profile | null> => {
  */
 export const ensureProfile = async (
   userId: string,
-  options?: { timeoutMs?: number; pollIntervalMs?: number }
+  options?: { timeoutMs?: number; pollIntervalMs?: number },
 ): Promise<Profile | null> => {
   const timeoutMs = options?.timeoutMs ?? PROFILE_VISIBILITY_TIMEOUT_MS;
   const pollIntervalMs = options?.pollIntervalMs ?? PROFILE_VISIBILITY_POLL_MS;
@@ -68,7 +73,10 @@ export const ensureProfile = async (
 /**
  * Update a profile after its trigger-created row becomes visible.
  */
-export const saveProfile = async (userId: string, updates: ProfileUpdateInput): Promise<Profile> => {
+export const saveProfile = async (
+  userId: string,
+  updates: ProfileUpdateInput,
+): Promise<Profile> => {
   const profile = await ensureProfile(userId);
 
   if (!profile) {

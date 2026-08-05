@@ -1,16 +1,30 @@
-import React, { useEffect, useMemo } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import Animated, { useAnimatedStyle, useSharedValue, withTiming, Easing } from 'react-native-reanimated';
-import { Goal } from '../../types';
-import { spacing, borderRadius, typography, useColors, type Colors } from '../../constants/theme';
-import { Input } from '../ui/Input';
+import React, { useEffect, useMemo } from 'react';
+import {
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
+import { borderRadius, type Colors, spacing, typography, useColors } from '../../constants/theme';
+import { useCreateGoal, useUpdateGoal } from '../../hooks/useGoals';
+import type { Goal } from '../../types';
+import { toLocalDateString } from '../../utils/date';
 import { AmountInput } from '../ui/AmountInput';
 import { DatePicker } from '../ui/DatePicker';
+import { Input } from '../ui/Input';
 import { GoalIconPickerRow } from './GoalIconPickerRow';
-import { useCreateGoal, useUpdateGoal } from '../../hooks/useGoals';
-import { toLocalDateString } from '../../utils/date';
 
 type Props = {
   visible: boolean;
@@ -44,8 +58,14 @@ export function GoalCreateCard({ visible, goal, onClose }: Props) {
       setIcon(goal?.icon ?? 'briefcase-outline');
       setTargetDateEnabled(!!goal?.target_date);
       setTargetDate(goal?.target_date ? new Date(goal.target_date) : new Date());
-      scale.value = withTiming(1, { duration: 220, easing: Easing.out(Easing.cubic) });
-      translateY.value = withTiming(0, { duration: 220, easing: Easing.out(Easing.cubic) });
+      scale.value = withTiming(1, {
+        duration: 220,
+        easing: Easing.out(Easing.cubic),
+      });
+      translateY.value = withTiming(0, {
+        duration: 220,
+        easing: Easing.out(Easing.cubic),
+      });
       opacity.value = withTiming(1, { duration: 150 });
     } else {
       scale.value = 0.7;
@@ -81,38 +101,77 @@ export function GoalCreateCard({ visible, goal, onClose }: Props) {
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <KeyboardAvoidingView style={styles.root} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <KeyboardAvoidingView
+        style={styles.root}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
         <Pressable style={styles.scrim} onPress={onClose} />
 
         <Animated.View style={[styles.card, cardStyle]}>
           <View style={styles.header}>
             <View style={styles.headerIcon}>
-              <Ionicons name={isEditing ? 'create-outline' : 'sparkles'} size={18} color={colors.primary} />
+              <Ionicons
+                name={isEditing ? 'create-outline' : 'sparkles'}
+                size={18}
+                color={colors.primary}
+              />
             </View>
             <View style={styles.headerText}>
               <Text style={styles.title}>{isEditing ? 'Edit goal' : 'New goal'}</Text>
-              <Text style={styles.subtitle}>{isEditing ? 'Refine the details of your goal.' : 'Shape a quiet goal that keeps your progress visible.'}</Text>
+              <Text style={styles.subtitle}>
+                {isEditing
+                  ? 'Refine the details of your goal.'
+                  : 'Shape a quiet goal that keeps your progress visible.'}
+              </Text>
             </View>
             <Pressable onPress={onClose} style={styles.closeButton} hitSlop={8}>
               <Ionicons name="close" size={20} color={colors.onSurfaceVariant} />
             </Pressable>
           </View>
 
-          <ScrollView contentContainerStyle={styles.form} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-            <Input label="Goal name" placeholder="Emergency fund" value={name} onChangeText={setName} />
+          <ScrollView
+            contentContainerStyle={styles.form}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            <Input
+              label="Goal name"
+              placeholder="Emergency fund"
+              value={name}
+              onChangeText={setName}
+            />
             <AmountInput value={amount} onChangeValue={setAmount} integerOnly />
 
             <GoalIconPickerRow value={icon} onChange={setIcon} />
 
             <Pressable style={styles.dateToggle} onPress={() => setTargetDateEnabled((v) => !v)}>
               <Text style={styles.sectionLabel}>Target date</Text>
-              <Ionicons name={targetDateEnabled ? 'toggle' : 'toggle-outline'} size={26} color={targetDateEnabled ? colors.primary : colors.onSurfaceVariant} />
+              <Ionicons
+                name={targetDateEnabled ? 'toggle' : 'toggle-outline'}
+                size={26}
+                color={targetDateEnabled ? colors.primary : colors.onSurfaceVariant}
+              />
             </Pressable>
-            {targetDateEnabled ? <DatePicker value={targetDate} onChange={setTargetDate} allowFutureDates inlineYearScroller /> : null}
+            {targetDateEnabled ? (
+              <DatePicker
+                value={targetDate}
+                onChange={setTargetDate}
+                allowFutureDates
+                inlineYearScroller
+              />
+            ) : null}
           </ScrollView>
 
-          <Pressable onPress={onSave} disabled={!valid || isSaving} style={[styles.saveButton, (!valid || isSaving) && styles.saveDisabled]}>
-            {isSaving ? <ActivityIndicator color={colors.surface} /> : <Text style={styles.saveText}>{isEditing ? 'Update goal' : 'Create goal'}</Text>}
+          <Pressable
+            onPress={onSave}
+            disabled={!valid || isSaving}
+            style={[styles.saveButton, (!valid || isSaving) && styles.saveDisabled]}
+          >
+            {isSaving ? (
+              <ActivityIndicator color={colors.surface} />
+            ) : (
+              <Text style={styles.saveText}>{isEditing ? 'Update goal' : 'Create goal'}</Text>
+            )}
           </Pressable>
         </Animated.View>
       </KeyboardAvoidingView>
@@ -120,61 +179,88 @@ export function GoalCreateCard({ visible, goal, onClose }: Props) {
   );
 }
 
-const createStyles = (colors: Colors) => StyleSheet.create({
-  root: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.lg },
-  scrim: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(4, 6, 12, 0.82)' },
-  card: {
-    width: '100%',
-    maxWidth: 420,
-    maxHeight: '88%',
-    backgroundColor: colors.surfaceContainerHigh,
-    borderRadius: borderRadius.xl,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
-    padding: spacing.lg,
-    gap: spacing.md,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 16 },
-    shadowOpacity: 0.5,
-    shadowRadius: 24,
-    elevation: 16,
-  },
-  header: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
-  headerIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: borderRadius.full,
-    backgroundColor: `${colors.primary}1F`,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 2,
-  },
-  headerText: { flex: 1 },
-  title: { color: colors.onSurface, fontSize: typography.fontSize.xl, fontWeight: typography.fontWeight.bold },
-  subtitle: { color: colors.onSurfaceVariant, fontSize: typography.fontSize.xs, marginTop: 2, lineHeight: 16 },
-  closeButton: {
-    width: 32,
-    height: 32,
-    borderRadius: borderRadius.full,
-    backgroundColor: colors.surfaceContainer,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  form: { gap: spacing.sm, paddingBottom: spacing.sm },
-  sectionLabel: { fontSize: typography.fontSize.sm, fontWeight: typography.fontWeight.medium, color: colors.onSurfaceVariant, marginBottom: spacing.xs },
-  dateToggle: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: spacing.sm,
-  },
-  saveButton: {
-    minHeight: 52,
-    borderRadius: borderRadius.lg,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  saveDisabled: { opacity: 0.45 },
-  saveText: { color: colors.surface, fontSize: typography.fontSize.md, fontWeight: typography.fontWeight.semiBold },
-});
+const createStyles = (colors: Colors) =>
+  StyleSheet.create({
+    root: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: spacing.lg,
+    },
+    scrim: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: 'rgba(4, 6, 12, 0.82)',
+    },
+    card: {
+      width: '100%',
+      maxWidth: 420,
+      maxHeight: '88%',
+      backgroundColor: colors.surfaceContainerHigh,
+      borderRadius: borderRadius.xl,
+      borderWidth: 1,
+      borderColor: 'rgba(255,255,255,0.1)',
+      padding: spacing.lg,
+      gap: spacing.md,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 16 },
+      shadowOpacity: 0.5,
+      shadowRadius: 24,
+      elevation: 16,
+    },
+    header: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
+    headerIcon: {
+      width: 36,
+      height: 36,
+      borderRadius: borderRadius.full,
+      backgroundColor: `${colors.primary}1F`,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginTop: 2,
+    },
+    headerText: { flex: 1 },
+    title: {
+      color: colors.onSurface,
+      fontSize: typography.fontSize.xl,
+      fontWeight: typography.fontWeight.bold,
+    },
+    subtitle: {
+      color: colors.onSurfaceVariant,
+      fontSize: typography.fontSize.xs,
+      marginTop: 2,
+      lineHeight: 16,
+    },
+    closeButton: {
+      width: 32,
+      height: 32,
+      borderRadius: borderRadius.full,
+      backgroundColor: colors.surfaceContainer,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    form: { gap: spacing.sm, paddingBottom: spacing.sm },
+    sectionLabel: {
+      fontSize: typography.fontSize.sm,
+      fontWeight: typography.fontWeight.medium,
+      color: colors.onSurfaceVariant,
+      marginBottom: spacing.xs,
+    },
+    dateToggle: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: spacing.sm,
+    },
+    saveButton: {
+      minHeight: 52,
+      borderRadius: borderRadius.lg,
+      backgroundColor: colors.primary,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    saveDisabled: { opacity: 0.45 },
+    saveText: {
+      color: colors.surface,
+      fontSize: typography.fontSize.md,
+      fontWeight: typography.fontWeight.semiBold,
+    },
+  });

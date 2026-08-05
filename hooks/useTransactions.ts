@@ -1,10 +1,11 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../services/supabase';
-import { CreateTransactionInput, Transaction } from '../types';
 import { useAuthStore } from '../stores/authStore';
+import type { CreateTransactionInput, Transaction } from '../types';
 import { toLocalDateString } from '../utils/date';
 
-const TRANSACTION_COLUMNS = 'id, user_id, amount, category, note, input_method, voice_transcript, date, created_at';
+const TRANSACTION_COLUMNS =
+  'id, user_id, amount, category, note, input_method, voice_transcript, date, created_at';
 
 type TransactionRow = {
   id: string;
@@ -61,7 +62,7 @@ function mapRowToTransaction(row: TransactionRow): Transaction {
 }
 
 function mapTransactionToInsertRow(
-  transaction: CreateTransactionInput & { user_id: string }
+  transaction: CreateTransactionInput & { user_id: string },
 ): Omit<TransactionRow, 'id' | 'created_at'> {
   const note = transaction.merchant
     ? `${transaction.description}${transaction.description ? ' · ' : ''}${transaction.merchant}`
@@ -79,7 +80,7 @@ function mapTransactionToInsertRow(
 }
 
 function mapTransactionToUpdateRow(
-  transaction: CreateTransactionInput
+  transaction: CreateTransactionInput,
 ): Partial<Omit<TransactionRow, 'id' | 'user_id' | 'created_at' | 'voice_transcript'>> {
   const note = transaction.merchant
     ? `${transaction.description}${transaction.description ? ' · ' : ''}${transaction.merchant}`
@@ -184,7 +185,7 @@ async function fetchTransactionById(userId: string, id: string): Promise<Transac
  * Create a new transaction
  */
 async function createTransaction(
-  transaction: CreateTransactionInput & { user_id: string }
+  transaction: CreateTransactionInput & { user_id: string },
 ): Promise<Transaction> {
   const { data, error } = await supabase
     .from('transactions')
@@ -202,7 +203,7 @@ async function createTransaction(
 async function updateTransaction(
   userId: string,
   id: string,
-  transaction: CreateTransactionInput
+  transaction: CreateTransactionInput,
 ): Promise<Transaction> {
   const { data, error } = await supabase
     .from('transactions')
@@ -220,11 +221,7 @@ async function updateTransaction(
 }
 
 async function deleteTransaction(userId: string, id: string): Promise<void> {
-  const { error } = await supabase
-    .from('transactions')
-    .delete()
-    .eq('user_id', userId)
-    .eq('id', id);
+  const { error } = await supabase.from('transactions').delete().eq('user_id', userId).eq('id', id);
 
   if (error) {
     throw new Error(error.message);
@@ -349,13 +346,14 @@ export function useMonthlySpent() {
 export function useCategorySpending() {
   const { data: transactions, isLoading, error } = useMonthlyTransactions();
 
-  const byCategory = transactions?.reduce(
-    (acc, t) => {
-      acc[t.category] = (acc[t.category] || 0) + t.amount;
-      return acc;
-    },
-    {} as Record<string, number>
-  ) ?? {};
+  const byCategory =
+    transactions?.reduce(
+      (acc, t) => {
+        acc[t.category] = (acc[t.category] || 0) + t.amount;
+        return acc;
+      },
+      {} as Record<string, number>,
+    ) ?? {};
 
   return {
     byCategory,

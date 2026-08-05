@@ -3,10 +3,10 @@
  * Fetches and caches user profile data from Supabase
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Profile } from '../types';
-import { useAuthStore } from '../stores/authStore';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { fetchProfile, saveProfile } from '../services/profile';
+import { useAuthStore } from '../stores/authStore';
+import type { Profile } from '../types';
 
 const PROFILE_KEY = ['profile'];
 
@@ -40,7 +40,19 @@ export const useUpdateProfile = () => {
   const userId = session?.user?.id;
 
   return useMutation({
-    mutationFn: (updates: Partial<Pick<Profile, 'name' | 'monthly_budget' | 'onboarding_complete' | 'avatar_url' | 'daily_reminder_enabled' | 'budget_alert_enabled'>>) => {
+    mutationFn: (
+      updates: Partial<
+        Pick<
+          Profile,
+          | 'name'
+          | 'monthly_budget'
+          | 'onboarding_complete'
+          | 'avatar_url'
+          | 'daily_reminder_enabled'
+          | 'budget_alert_enabled'
+        >
+      >,
+    ) => {
       if (!userId) {
         throw new Error('No user session');
       }
@@ -60,7 +72,6 @@ export const useUpdateProfile = () => {
  * Useful when you need profile data without triggering a fetch
  */
 export const useProfileData = (): Profile | null => {
-  const session = useAuthStore((state) => state.session);
   const profile = useAuthStore((state) => state.profile);
   return profile;
 };

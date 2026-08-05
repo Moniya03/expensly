@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../services/supabase';
-import { Budget } from '../types';
 import { useAuthStore } from '../stores/authStore';
+import type { Budget } from '../types';
 import { useMonthlySpent } from './useTransactions';
 
 export function getHistoricalBudgetForMonth({

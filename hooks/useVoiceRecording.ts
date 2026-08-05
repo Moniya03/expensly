@@ -1,5 +1,5 @@
 import { Audio } from 'expo-av';
-import { useState, useRef, useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 export type RecordingState = 'idle' | 'recording' | 'processing' | 'success' | 'error';
 
@@ -26,7 +26,7 @@ const METERING_POLL_MS = 250;
 export function useVoiceRecording(onAutoStop?: () => void): UseVoiceRecordingReturn {
   // State management
   const [state, setState] = useState<RecordingState>('idle');
-  const [recording, setRecording] = useState<Audio.Recording | null>(null);
+  const [, setRecording] = useState<Audio.Recording | null>(null);
   const [duration, setDuration] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -137,11 +137,9 @@ export function useVoiceRecording(onAutoStop?: () => void): UseVoiceRecordingRet
       console.log('Recording started');
     } catch (error) {
       console.error('Failed to start recording:', error);
-      setErrorMessage(
-        error instanceof Error ? error.message : 'Failed to start recording'
-      );
+      setErrorMessage(error instanceof Error ? error.message : 'Failed to start recording');
       setState('error');
-      
+
       // Clean up on error
       await cleanupTimers();
     }
@@ -180,15 +178,13 @@ export function useVoiceRecording(onAutoStop?: () => void): UseVoiceRecordingRet
       return uri;
     } catch (error) {
       console.error('Failed to stop recording:', error);
-      setErrorMessage(
-        error instanceof Error ? error.message : 'Failed to stop recording'
-      );
+      setErrorMessage(error instanceof Error ? error.message : 'Failed to stop recording');
       setState('error');
-      
+
       // Clean up on error
       await cleanupTimers();
       setRecording(null);
-      
+
       return null;
     }
   };

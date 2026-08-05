@@ -1,7 +1,7 @@
-import { supabase } from './supabase';
-import { readAsStringAsync, EncodingType } from 'expo-file-system/legacy';
-import { toLocalDateString } from '../utils/date';
+import { EncodingType, readAsStringAsync } from 'expo-file-system/legacy';
 import type { VoiceExpenseResponse } from '../types';
+import { toLocalDateString } from '../utils/date';
+import { supabase } from './supabase';
 
 async function extractFunctionError(error: any): Promise<string> {
   let details: string | undefined = error?.details;
@@ -37,7 +37,7 @@ async function extractFunctionError(error: any): Promise<string> {
  */
 export async function processVoiceExpense(
   audioBase64: string,
-  userId: string
+  userId: string,
 ): Promise<VoiceExpenseResponse> {
   try {
     console.log('Processing voice expense for user:', userId);
@@ -50,13 +50,13 @@ export async function processVoiceExpense(
     const headers: Record<string, string> = {};
 
     if (anonKey) {
-      headers['apikey'] = anonKey;
+      headers.apikey = anonKey;
     }
 
     if (accessToken) {
-      headers['Authorization'] = `Bearer ${accessToken}`;
+      headers.Authorization = `Bearer ${accessToken}`;
     } else if (anonKey) {
-      headers['Authorization'] = `Bearer ${anonKey}`;
+      headers.Authorization = `Bearer ${anonKey}`;
     }
 
     const { data, error } = await supabase.functions.invoke('process-voice', {
@@ -116,7 +116,7 @@ export async function audioUriToBase64(uri: string): Promise<string> {
     throw new Error(
       error instanceof Error
         ? `Failed to convert audio: ${error.message}`
-        : 'Failed to convert audio to base64'
+        : 'Failed to convert audio to base64',
     );
   }
 }

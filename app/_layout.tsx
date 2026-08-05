@@ -1,12 +1,12 @@
-import { useEffect, useState } from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { View, ActivityIndicator, Text } from 'react-native';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, Text, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useAuthStore } from '../stores/authStore';
 import { ThemeProvider, useColors, useThemeMode } from '../constants/theme';
 import { configureGoogleSignIn } from '../hooks/useGoogleAuth';
+import { useAuthStore } from '../stores/authStore';
 import { consumeOnboardingReplay, shouldReplayOnboarding } from '../utils/devOnboardingReplay';
 
 // Configure Google Sign-In on app startup
@@ -61,10 +61,11 @@ function RootLayoutNav() {
     const hasConfirmedUsername = Boolean(
       profile?.created_at &&
         profile?.updated_at &&
-        new Date(profile.updated_at).getTime() > new Date(profile.created_at).getTime()
+        new Date(profile.updated_at).getTime() > new Date(profile.created_at).getTime(),
     );
     const needsBudgetOnboarding = !!session && hasResolvedProfile && !profile?.onboarding_complete;
-    const needsNameOnboarding = !!session && hasResolvedProfile && needsBudgetOnboarding && !hasConfirmedUsername;
+    const needsNameOnboarding =
+      !!session && hasResolvedProfile && needsBudgetOnboarding && !hasConfirmedUsername;
 
     if (!session && !inAuthGroup) {
       router.replace('/(auth)/welcome');
@@ -77,15 +78,37 @@ function RootLayoutNav() {
       router.replace('/onboarding/welcome');
     } else if (needsBudgetOnboarding && !needsNameOnboarding && !inOnboarding) {
       router.replace('/onboarding/budget');
-    } else if (session && !needsNameOnboarding && !needsBudgetOnboarding && (inAuthGroup || inOnboarding)) {
+    } else if (
+      session &&
+      !needsNameOnboarding &&
+      !needsBudgetOnboarding &&
+      (inAuthGroup || inOnboarding)
+    ) {
       router.replace('/(tabs)/home');
     }
   }, [session, profile, isInitialized, hasResolvedProfile, segments]);
 
   if (error) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.surface, padding: 20 }}>
-        <Text style={{ color: colors.error, fontSize: 16, fontWeight: 'bold', marginBottom: 10 }}>Error</Text>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: colors.surface,
+          padding: 20,
+        }}
+      >
+        <Text
+          style={{
+            color: colors.error,
+            fontSize: 16,
+            fontWeight: 'bold',
+            marginBottom: 10,
+          }}
+        >
+          Error
+        </Text>
         <Text style={{ color: colors.onSurface, fontSize: 14, textAlign: 'center' }}>{error}</Text>
       </View>
     );
@@ -93,7 +116,14 @@ function RootLayoutNav() {
 
   if (!isInitialized) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.surface }}>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: colors.surface,
+        }}
+      >
         <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );

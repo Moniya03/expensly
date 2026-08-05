@@ -6,7 +6,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../services/supabase';
 import { useAuthStore } from '../stores/authStore';
-import { UserGoalIcon } from '../types';
+import type { UserGoalIcon } from '../types';
 
 const queryKey = (userId: string) => ['goal-icons', userId];
 
@@ -47,7 +47,15 @@ export const useUpdateGoalIcon = () => {
   const queryClient = useQueryClient();
   const userId = useAuthStore((s) => s.session?.user?.id);
   return useMutation({
-    mutationFn: async ({ id, ...patch }: { id: string; label?: string | null; color?: string; icon_name?: string }) => {
+    mutationFn: async ({
+      id,
+      ...patch
+    }: {
+      id: string;
+      label?: string | null;
+      color?: string;
+      icon_name?: string;
+    }) => {
       const { error } = await supabase.from('user_goal_icons').update(patch).eq('id', id);
       if (error) throw new Error(error.message);
     },

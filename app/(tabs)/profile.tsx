@@ -1,3 +1,7 @@
+import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
 import React, { useMemo } from 'react';
 import {
   ActivityIndicator,
@@ -9,19 +13,15 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import * as ImagePicker from 'expo-image-picker';
-import { borderRadius, spacing, typography, useColors, type Colors } from '../../constants/theme';
-import { useAuthStore } from '../../stores/authStore';
+import NameEditSheet from '../../components/profile/NameEditSheet';
+import { borderRadius, type Colors, spacing, typography, useColors } from '../../constants/theme';
+import { getHistoricalBudgetForMonth, useBudgets } from '../../hooks/useBudget';
 import { useUpdateProfile } from '../../hooks/useProfile';
 import { useAllTransactions } from '../../hooks/useTransactions';
-import { getHistoricalBudgetForMonth, useBudgets } from '../../hooks/useBudget';
-import { parseLocalDate } from '../../utils/date';
-import { formatRupees } from '../../utils/currency';
 import { uploadAvatar } from '../../services/avatar';
-import NameEditSheet from '../../components/profile/NameEditSheet';
+import { useAuthStore } from '../../stores/authStore';
+import { formatRupees } from '../../utils/currency';
+import { parseLocalDate } from '../../utils/date';
 
 const appVersion = (require('../../package.json') as { version?: string }).version ?? '1.0.0';
 
@@ -36,7 +36,9 @@ export default function ProfileScreen() {
 
   const [nameSheetVisible, setNameSheetVisible] = React.useState(false);
   const [budgetEditing, setBudgetEditing] = React.useState(false);
-  const [budgetDraft, setBudgetDraft] = React.useState(profile?.monthly_budget ? String(profile.monthly_budget) : '');
+  const [budgetDraft, setBudgetDraft] = React.useState(
+    profile?.monthly_budget ? String(profile.monthly_budget) : '',
+  );
   const [avatarUploading, setAvatarUploading] = React.useState(false);
   const [feedback, setFeedback] = React.useState<string | null>(null);
 
@@ -88,13 +90,21 @@ export default function ProfileScreen() {
     let month = startMonth;
     let year = startYear;
 
-    while (year < now.getFullYear() || (year === now.getFullYear() && month <= now.getMonth() + 1)) {
+    while (
+      year < now.getFullYear() ||
+      (year === now.getFullYear() && month <= now.getMonth() + 1)
+    ) {
       const monthTransactions = transactions.filter((transaction) => {
         const d = parseLocalDate(transaction.transaction_date);
         return d.getMonth() + 1 === month && d.getFullYear() === year;
       });
       const spent = monthTransactions.reduce((sum, t) => sum + t.amount, 0);
-      const budget = getHistoricalBudgetForMonth({ budgets, fallbackBudget, month, year });
+      const budget = getHistoricalBudgetForMonth({
+        budgets,
+        fallbackBudget,
+        month,
+        year,
+      });
       savings += budget - spent;
 
       month++;
@@ -165,9 +175,16 @@ export default function ProfileScreen() {
           </Pressable>
         </View>
 
-        <LinearGradient colors={['#123C86', '#0F2F63', '#0B223F', '#0A191D']} style={styles.heroCard}>
+        <LinearGradient
+          colors={['#123C86', '#0F2F63', '#0B223F', '#0A191D']}
+          style={styles.heroCard}
+        >
           <View style={styles.heroTopRow}>
-            <Pressable style={styles.avatarWrap} onPress={handlePickAvatar} disabled={avatarUploading}>
+            <Pressable
+              style={styles.avatarWrap}
+              onPress={handlePickAvatar}
+              disabled={avatarUploading}
+            >
               {avatarUploading ? (
                 <ActivityIndicator size="small" color={colors.surface} />
               ) : profile?.avatar_url ? (
@@ -213,7 +230,9 @@ export default function ProfileScreen() {
                 <Text style={styles.cardTitle}>Spending limit</Text>
                 {!budgetEditing ? (
                   <Text style={styles.cardValue}>
-                    {profile?.monthly_budget ? formatRupees(profile.monthly_budget) : 'No budget set'}
+                    {profile?.monthly_budget
+                      ? formatRupees(profile.monthly_budget)
+                      : 'No budget set'}
                   </Text>
                 ) : null}
               </View>
@@ -246,7 +265,10 @@ export default function ProfileScreen() {
                   >
                     <Text style={styles.secondaryButtonText}>Cancel</Text>
                   </Pressable>
-                  <Pressable style={[styles.actionButton, styles.primaryButton]} onPress={handleSaveBudget}>
+                  <Pressable
+                    style={[styles.actionButton, styles.primaryButton]}
+                    onPress={handleSaveBudget}
+                  >
                     <Text style={styles.primaryButtonText}>Save</Text>
                   </Pressable>
                 </View>
@@ -274,221 +296,221 @@ export default function ProfileScreen() {
 
 const createStyles = (colors: Colors) =>
   StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.surface,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
-  },
-  screenTitle: {
-    color: colors.onSurface,
-    fontSize: typography.fontSize.xxxl,
-    fontWeight: typography.fontWeight.bold,
-  },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: spacing.lg,
-  },
-  gearButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.surfaceContainer,
-    borderWidth: 1,
-    borderColor: colors.outlineVariant,
-  },
-  heroCard: {
-    borderRadius: borderRadius.xl,
-    padding: spacing.lg,
-  },
-  heroTopRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  avatarWrap: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.18)',
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.35)',
-  },
-  avatarImage: {
-    width: 68,
-    height: 68,
-    borderRadius: 34,
-  },
-  avatarBadge: {
-    position: 'absolute',
-    right: -2,
-    bottom: -2,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.primary,
-    borderWidth: 2,
-    borderColor: '#123C86',
-  },
-  heroTextWrap: {
-    flex: 1,
-    marginLeft: spacing.md,
-  },
-  nameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-  },
-  name: {
-    color: colors.surface,
-    fontSize: typography.fontSize.xl,
-    fontWeight: typography.fontWeight.bold,
-  },
-  email: {
-    color: '#cfe0ff',
-    fontSize: typography.fontSize.sm,
-    marginTop: 2,
-  },
-  heroHint: {
-    color: '#8fb1e8',
-    fontSize: typography.fontSize.xs,
-    marginTop: 4,
-  },
-  heroDivider: {
-    height: 1,
-    backgroundColor: 'rgba(255,255,255,0.14)',
-    marginVertical: spacing.md,
-  },
-  savingsLabel: {
-    color: '#9db9e8',
-    fontSize: typography.fontSize.sm,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-  },
-  savingsValue: {
-    color: colors.surface,
-    fontSize: typography.fontSize.xxxl,
-    fontWeight: typography.fontWeight.bold,
-    marginTop: 2,
-  },
-  savingsSub: {
-    color: '#8fb1e8',
-    fontSize: typography.fontSize.xs,
-    marginTop: 2,
-  },
-  section: {
-    marginTop: spacing.xl,
-  },
-  sectionLabel: {
-    color: colors.onSurfaceVariant,
-    fontSize: typography.fontSize.sm,
-    fontWeight: typography.fontWeight.medium,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-    marginBottom: spacing.sm,
-  },
-  budgetCard: {
-    backgroundColor: colors.surfaceContainer,
-    borderRadius: borderRadius.xl,
-    borderWidth: 1,
-    borderColor: colors.outlineVariant,
-    padding: spacing.md,
-  },
-  rowBetween: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  cardTitle: {
-    color: colors.onSurfaceVariant,
-    fontSize: typography.fontSize.sm,
-    marginBottom: 4,
-  },
-  cardValue: {
-    color: colors.onSurface,
-    fontSize: typography.fontSize.lg,
-    fontWeight: typography.fontWeight.semiBold,
-  },
-  editPill: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    borderRadius: 999,
-    backgroundColor: colors.surfaceContainerHigh,
-    borderWidth: 1,
-    borderColor: colors.outlineVariant,
-  },
-  editPillText: {
-    color: colors.onSurface,
-    fontSize: typography.fontSize.sm,
-    fontWeight: typography.fontWeight.medium,
-  },
-  budgetEditWrap: {
-    marginTop: spacing.md,
-  },
-  budgetInput: {
-    backgroundColor: colors.surfaceContainerHigh,
-    borderWidth: 1,
-    borderColor: colors.outlineVariant,
-    borderRadius: borderRadius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-    color: colors.onSurface,
-    fontSize: typography.fontSize.md,
-  },
-  actionsRow: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    marginTop: spacing.md,
-  },
-  actionButton: {
-    flex: 1,
-    minHeight: 46,
-    borderRadius: borderRadius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  primaryButton: {
-    backgroundColor: colors.primary,
-  },
-  primaryButtonText: {
-    color: colors.surface,
-    fontSize: typography.fontSize.md,
-    fontWeight: typography.fontWeight.semiBold,
-  },
-  secondaryButton: {
-    backgroundColor: colors.surfaceContainerHigh,
-    borderWidth: 1,
-    borderColor: colors.outlineVariant,
-  },
-  secondaryButtonText: {
-    color: colors.onSurface,
-    fontSize: typography.fontSize.md,
-    fontWeight: typography.fontWeight.medium,
-  },
-  toast: {
-    color: colors.secondary,
-    fontSize: typography.fontSize.sm,
-    marginTop: spacing.md,
-  },
-  footerWrap: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.md,
-  },
-  version: {
-    color: colors.onSurfaceVariant,
-    fontSize: typography.fontSize.xs,
-    textAlign: 'center',
-  },
-});
+    container: {
+      flex: 1,
+      backgroundColor: colors.surface,
+    },
+    content: {
+      flex: 1,
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.md,
+    },
+    screenTitle: {
+      color: colors.onSurface,
+      fontSize: typography.fontSize.xxxl,
+      fontWeight: typography.fontWeight.bold,
+    },
+    titleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: spacing.lg,
+    },
+    gearButton: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.surfaceContainer,
+      borderWidth: 1,
+      borderColor: colors.outlineVariant,
+    },
+    heroCard: {
+      borderRadius: borderRadius.xl,
+      padding: spacing.lg,
+    },
+    heroTopRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    avatarWrap: {
+      width: 72,
+      height: 72,
+      borderRadius: 36,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: 'rgba(255,255,255,0.18)',
+      borderWidth: 2,
+      borderColor: 'rgba(255,255,255,0.35)',
+    },
+    avatarImage: {
+      width: 68,
+      height: 68,
+      borderRadius: 34,
+    },
+    avatarBadge: {
+      position: 'absolute',
+      right: -2,
+      bottom: -2,
+      width: 24,
+      height: 24,
+      borderRadius: 12,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.primary,
+      borderWidth: 2,
+      borderColor: '#123C86',
+    },
+    heroTextWrap: {
+      flex: 1,
+      marginLeft: spacing.md,
+    },
+    nameRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.xs,
+    },
+    name: {
+      color: colors.surface,
+      fontSize: typography.fontSize.xl,
+      fontWeight: typography.fontWeight.bold,
+    },
+    email: {
+      color: '#cfe0ff',
+      fontSize: typography.fontSize.sm,
+      marginTop: 2,
+    },
+    heroHint: {
+      color: '#8fb1e8',
+      fontSize: typography.fontSize.xs,
+      marginTop: 4,
+    },
+    heroDivider: {
+      height: 1,
+      backgroundColor: 'rgba(255,255,255,0.14)',
+      marginVertical: spacing.md,
+    },
+    savingsLabel: {
+      color: '#9db9e8',
+      fontSize: typography.fontSize.sm,
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+    },
+    savingsValue: {
+      color: colors.surface,
+      fontSize: typography.fontSize.xxxl,
+      fontWeight: typography.fontWeight.bold,
+      marginTop: 2,
+    },
+    savingsSub: {
+      color: '#8fb1e8',
+      fontSize: typography.fontSize.xs,
+      marginTop: 2,
+    },
+    section: {
+      marginTop: spacing.xl,
+    },
+    sectionLabel: {
+      color: colors.onSurfaceVariant,
+      fontSize: typography.fontSize.sm,
+      fontWeight: typography.fontWeight.medium,
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+      marginBottom: spacing.sm,
+    },
+    budgetCard: {
+      backgroundColor: colors.surfaceContainer,
+      borderRadius: borderRadius.xl,
+      borderWidth: 1,
+      borderColor: colors.outlineVariant,
+      padding: spacing.md,
+    },
+    rowBetween: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    cardTitle: {
+      color: colors.onSurfaceVariant,
+      fontSize: typography.fontSize.sm,
+      marginBottom: 4,
+    },
+    cardValue: {
+      color: colors.onSurface,
+      fontSize: typography.fontSize.lg,
+      fontWeight: typography.fontWeight.semiBold,
+    },
+    editPill: {
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.xs,
+      borderRadius: 999,
+      backgroundColor: colors.surfaceContainerHigh,
+      borderWidth: 1,
+      borderColor: colors.outlineVariant,
+    },
+    editPillText: {
+      color: colors.onSurface,
+      fontSize: typography.fontSize.sm,
+      fontWeight: typography.fontWeight.medium,
+    },
+    budgetEditWrap: {
+      marginTop: spacing.md,
+    },
+    budgetInput: {
+      backgroundColor: colors.surfaceContainerHigh,
+      borderWidth: 1,
+      borderColor: colors.outlineVariant,
+      borderRadius: borderRadius.md,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.md,
+      color: colors.onSurface,
+      fontSize: typography.fontSize.md,
+    },
+    actionsRow: {
+      flexDirection: 'row',
+      gap: spacing.sm,
+      marginTop: spacing.md,
+    },
+    actionButton: {
+      flex: 1,
+      minHeight: 46,
+      borderRadius: borderRadius.md,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    primaryButton: {
+      backgroundColor: colors.primary,
+    },
+    primaryButtonText: {
+      color: colors.surface,
+      fontSize: typography.fontSize.md,
+      fontWeight: typography.fontWeight.semiBold,
+    },
+    secondaryButton: {
+      backgroundColor: colors.surfaceContainerHigh,
+      borderWidth: 1,
+      borderColor: colors.outlineVariant,
+    },
+    secondaryButtonText: {
+      color: colors.onSurface,
+      fontSize: typography.fontSize.md,
+      fontWeight: typography.fontWeight.medium,
+    },
+    toast: {
+      color: colors.secondary,
+      fontSize: typography.fontSize.sm,
+      marginTop: spacing.md,
+    },
+    footerWrap: {
+      flex: 1,
+      justifyContent: 'flex-end',
+      paddingTop: spacing.lg,
+      paddingBottom: spacing.md,
+    },
+    version: {
+      color: colors.onSurfaceVariant,
+      fontSize: typography.fontSize.xs,
+      textAlign: 'center',
+    },
+  });

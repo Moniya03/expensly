@@ -1,9 +1,11 @@
-import React, { useMemo } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import type React from 'react';
+import { useMemo } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, G } from 'react-native-svg';
-import { formatRupees } from '../../utils/currency';
 import { getCategoryColor } from '../../constants/categories';
-import { typography, useColors, type Colors } from '../../constants/theme';
+import { type Colors, typography, useColors } from '../../constants/theme';
+import type { Category } from '../../types';
+import { formatRupees } from '../../utils/currency';
 
 interface SpendingRingProps {
   budget: number;
@@ -17,19 +19,15 @@ const CENTER = RING_SIZE / 2;
 const RADIUS = CENTER - STROKE_WIDTH / 2;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
-export const SpendingRing: React.FC<SpendingRingProps> = ({
-  budget,
-  spent,
-  categoryBreakdown,
-}) => {
+export const SpendingRing: React.FC<SpendingRingProps> = ({ budget, spent, categoryBreakdown }) => {
   const colors = useColors();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   const isOverBudget = spent > budget;
   const remaining = isOverBudget ? spent - budget : budget - spent;
-  
+
   // Use the larger of the two to scale the ring, ensuring over-budget doesn't break the circle
-  const totalScale = Math.max(budget, spent) || 1; 
+  const totalScale = Math.max(budget, spent) || 1;
 
   const segments = useMemo(() => {
     // Sort categories from largest spending to smallest for visual appeal
@@ -44,12 +42,12 @@ export const SpendingRing: React.FC<SpendingRingProps> = ({
       const percentage = amount / totalScale;
       const strokeLength = percentage * CIRCUMFERENCE;
       const strokeDashoffset = -cumulativeOffset;
-      
+
       cumulativeOffset += strokeLength;
 
       return {
         key: category,
-        color: getCategoryColor(category as any),
+        color: getCategoryColor(category as Category),
         strokeDasharray: `${strokeLength} ${CIRCUMFERENCE}`,
         strokeDashoffset,
       };
@@ -86,7 +84,7 @@ export const SpendingRing: React.FC<SpendingRingProps> = ({
           ))}
         </G>
       </Svg>
-      
+
       <View style={styles.centerContent}>
         <Text style={[styles.amountText, isOverBudget && styles.overBudgetText]}>
           {formatRupees(remaining)}
@@ -99,39 +97,40 @@ export const SpendingRing: React.FC<SpendingRingProps> = ({
   );
 };
 
-const createStyles = (colors: Colors) => StyleSheet.create({
-  container: {
-    width: RING_SIZE,
-    height: RING_SIZE,
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'relative',
-  },
-  centerContent: {
-    position: 'absolute',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  amountText: {
-    fontSize: typography.fontSize.xxl,
-    fontWeight: typography.fontWeight.bold,
-    color: colors.onSurface,
-    marginBottom: 4,
-  },
-  labelText: {
-    fontSize: typography.fontSize.sm,
-    fontWeight: typography.fontWeight.medium,
-    color: colors.onSurfaceVariant,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  overBudgetText: {
-    color: colors.error,
-  },
-  overBudgetLabel: {
-    color: colors.error,
-    opacity: 0.8,
-  },
-});
+const createStyles = (colors: Colors) =>
+  StyleSheet.create({
+    container: {
+      width: RING_SIZE,
+      height: RING_SIZE,
+      justifyContent: 'center',
+      alignItems: 'center',
+      position: 'relative',
+    },
+    centerContent: {
+      position: 'absolute',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    amountText: {
+      fontSize: typography.fontSize.xxl,
+      fontWeight: typography.fontWeight.bold,
+      color: colors.onSurface,
+      marginBottom: 4,
+    },
+    labelText: {
+      fontSize: typography.fontSize.sm,
+      fontWeight: typography.fontWeight.medium,
+      color: colors.onSurfaceVariant,
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+    },
+    overBudgetText: {
+      color: colors.error,
+    },
+    overBudgetLabel: {
+      color: colors.error,
+      opacity: 0.8,
+    },
+  });
 
 export default SpendingRing;

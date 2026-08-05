@@ -1,8 +1,8 @@
-import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { Tabs } from 'expo-router';
 import { View } from 'react-native';
-import { useColors } from '../../constants/theme';
 import VoiceFAB from '../../components/VoiceFAB';
+import { useColors } from '../../constants/theme';
 
 export default function TabsLayout() {
   const colors = useColors();

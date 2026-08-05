@@ -1,7 +1,7 @@
-import React from 'react';
-import { View, Text, StyleSheet, Pressable, Animated, Easing } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import Svg, { Circle, Defs, Pattern, Path, Rect } from 'react-native-svg';
+import React from 'react';
+import { Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
+import Svg, { Circle, Defs, Path, Pattern, Rect } from 'react-native-svg';
 import { typography } from '../../constants/theme';
 import { formatRupees } from '../../utils/currency';
 
@@ -35,9 +35,19 @@ export default function HeroBudgetCard({
   React.useEffect(() => {
     const glow = Animated.loop(
       Animated.sequence([
-        Animated.timing(glowAnim, { toValue: 1, duration: 4000, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
-        Animated.timing(glowAnim, { toValue: 0, duration: 4000, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
-      ])
+        Animated.timing(glowAnim, {
+          toValue: 1,
+          duration: 4000,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+        Animated.timing(glowAnim, {
+          toValue: 0,
+          duration: 4000,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+      ]),
     );
     glow.start();
     return () => {
@@ -52,14 +62,22 @@ export default function HeroBudgetCard({
         style={[
           styles.glowLayer,
           {
-            opacity: glowAnim.interpolate({ inputRange: [0, 1], outputRange: [0.06, 0.12] }),
+            opacity: glowAnim.interpolate({
+              inputRange: [0, 1],
+              outputRange: [0.06, 0.12],
+            }),
           },
         ]}
       />
       <Svg pointerEvents="none" style={styles.gridOverlay} width="100%" height="100%">
         <Defs>
           <Pattern id="grid" width={30} height={30} patternUnits="userSpaceOnUse">
-            <Path d="M 30 0 L 0 0 0 30" fill="none" stroke="rgba(90,140,255,0.06)" strokeWidth={1} />
+            <Path
+              d="M 30 0 L 0 0 0 30"
+              fill="none"
+              stroke="rgba(90,140,255,0.06)"
+              strokeWidth={1}
+            />
           </Pattern>
         </Defs>
         <Rect x="0" y="0" width="100%" height="100%" fill="url(#grid)" />
@@ -70,7 +88,9 @@ export default function HeroBudgetCard({
           <Text style={styles.spentAmount}>{formatRupees(spent)}</Text>
           <View style={styles.remainingRow}>
             <View style={styles.greenDot} />
-            <Text style={styles.remainingText}>{formatRupees(Math.abs(remaining))} {remaining >= 0 ? 'left' : 'over'}</Text>
+            <Text style={styles.remainingText}>
+              {formatRupees(Math.abs(remaining))} {remaining >= 0 ? 'left' : 'over'}
+            </Text>
             <Text style={styles.ofText}>of {formatRupees(budget)}</Text>
           </View>
         </View>

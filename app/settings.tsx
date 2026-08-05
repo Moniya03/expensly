@@ -1,3 +1,5 @@
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -10,13 +12,18 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import { borderRadius, spacing, typography, useColors, useThemeMode, type Colors } from '../constants/theme';
-import { useAuthStore } from '../stores/authStore';
+import {
+  borderRadius,
+  type Colors,
+  spacing,
+  typography,
+  useColors,
+  useThemeMode,
+} from '../constants/theme';
 import { useUpdateProfile } from '../hooks/useProfile';
 import { deleteAccount } from '../services/account';
 import { exportUserData } from '../services/export';
+import { useAuthStore } from '../stores/authStore';
 
 const appVersion = (require('../package.json') as { version?: string }).version ?? '1.0.0';
 
@@ -48,7 +55,10 @@ function SettingRow({ icon, label, children, danger, onPress, soon, disabled }: 
           <Text style={styles.soonPillText}>Soon</Text>
         </View>
       ) : null}
-      {children ?? (onPress ? <Ionicons name="chevron-forward" size={18} color={colors.onSurfaceVariant} /> : null)}
+      {children ??
+        (onPress ? (
+          <Ionicons name="chevron-forward" size={18} color={colors.onSurfaceVariant} />
+        ) : null)}
     </Pressable>
   );
 }
@@ -94,11 +104,16 @@ export default function SettingsScreen() {
     return () => clearTimeout(timer);
   }, [feedback]);
 
-  const togglePreference = async (key: 'daily_reminder_enabled' | 'budget_alert_enabled', next: boolean) => {
+  const togglePreference = async (
+    key: 'daily_reminder_enabled' | 'budget_alert_enabled',
+    next: boolean,
+  ) => {
     setPendingToggle(key === 'daily_reminder_enabled' ? 'reminder' : 'alert');
     try {
       await updateProfile({ [key]: next });
-      setFeedback(key === 'daily_reminder_enabled' ? 'Daily reminder updated' : 'Budget alert updated');
+      setFeedback(
+        key === 'daily_reminder_enabled' ? 'Daily reminder updated' : 'Budget alert updated',
+      );
     } catch (error) {
       console.error('Toggle update error:', error);
     } finally {
@@ -149,7 +164,10 @@ export default function SettingsScreen() {
               <Switch
                 value={reminderOn}
                 onValueChange={(value) => togglePreference('daily_reminder_enabled', value)}
-                trackColor={{ false: colors.surfaceContainerHighest, true: colors.primary }}
+                trackColor={{
+                  false: colors.surfaceContainerHighest,
+                  true: colors.primary,
+                }}
                 thumbColor={colors.surface}
               />
             )}
@@ -162,7 +180,10 @@ export default function SettingsScreen() {
               <Switch
                 value={alertOn}
                 onValueChange={(value) => togglePreference('budget_alert_enabled', value)}
-                trackColor={{ false: colors.surfaceContainerHighest, true: colors.primary }}
+                trackColor={{
+                  false: colors.surfaceContainerHighest,
+                  true: colors.primary,
+                }}
                 thumbColor={colors.surface}
               />
             )}
@@ -175,7 +196,10 @@ export default function SettingsScreen() {
             <Switch
               value={mode === 'dark'}
               onValueChange={(dark) => setMode(dark ? 'dark' : 'light')}
-              trackColor={{ false: colors.surfaceContainerHighest, true: colors.primary }}
+              trackColor={{
+                false: colors.surfaceContainerHighest,
+                true: colors.primary,
+              }}
               thumbColor={colors.surface}
             />
           </SettingRow>
@@ -226,7 +250,12 @@ export default function SettingsScreen() {
         </Pressable>
       </ScrollView>
 
-      <Modal visible={deleteSheetVisible} transparent animationType="fade" onRequestClose={() => setDeleteSheetVisible(false)}>
+      <Modal
+        visible={deleteSheetVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setDeleteSheetVisible(false)}
+      >
         <Pressable style={styles.overlay} onPress={() => !deleting && setDeleteSheetVisible(false)}>
           <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
             <View style={styles.sheetIconWrap}>
@@ -234,7 +263,8 @@ export default function SettingsScreen() {
             </View>
             <Text style={styles.sheetTitle}>Delete account?</Text>
             <Text style={styles.sheetBody}>
-              This permanently removes your account and all your transactions, budgets and goals. This cannot be undone.
+              This permanently removes your account and all your transactions, budgets and goals.
+              This cannot be undone.
             </Text>
             <View style={styles.sheetActions}>
               <Pressable
@@ -244,7 +274,11 @@ export default function SettingsScreen() {
               >
                 <Text style={styles.sheetCancelText}>Cancel</Text>
               </Pressable>
-              <Pressable style={[styles.sheetButton, styles.sheetDelete]} onPress={handleDelete} disabled={deleting}>
+              <Pressable
+                style={[styles.sheetButton, styles.sheetDelete]}
+                onPress={handleDelete}
+                disabled={deleting}
+              >
                 {deleting ? (
                   <ActivityIndicator size="small" color={colors.surface} />
                 ) : (
@@ -261,184 +295,184 @@ export default function SettingsScreen() {
 
 const createStyles = (colors: Colors) =>
   StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.surface,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-  },
-  backButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.surfaceContainer,
-    marginRight: spacing.sm,
-  },
-  title: {
-    color: colors.onSurface,
-    fontSize: typography.fontSize.xl,
-    fontWeight: typography.fontWeight.bold,
-  },
-  content: {
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.xl,
-  },
-  sectionLabel: {
-    color: colors.onSurfaceVariant,
-    fontSize: typography.fontSize.sm,
-    fontWeight: typography.fontWeight.medium,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-    marginTop: spacing.lg,
-    marginBottom: spacing.sm,
-  },
-  section: {
-    backgroundColor: colors.surfaceContainer,
-    borderRadius: borderRadius.xl,
-    borderWidth: 1,
-    borderColor: colors.outlineVariant,
-    overflow: 'hidden',
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    minHeight: 56,
-  },
-  rowIcon: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(26,107,255,0.10)',
-    marginRight: spacing.md,
-  },
-  rowIconDanger: {
-    backgroundColor: 'rgba(255,113,108,0.10)',
-  },
-  rowLabel: {
-    flex: 1,
-    color: colors.onSurface,
-    fontSize: typography.fontSize.md,
-    fontWeight: typography.fontWeight.medium,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: colors.outlineVariant,
-    marginLeft: spacing.md + 34 + spacing.md,
-  },
-  soonPill: {
-    backgroundColor: 'rgba(26,107,255,0.12)',
-    borderRadius: 999,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 3,
-  },
-  soonPillText: {
-    color: colors.primary,
-    fontSize: typography.fontSize.xs,
-    fontWeight: typography.fontWeight.semiBold,
-  },
-  exportError: {
-    color: colors.error,
-    fontSize: typography.fontSize.sm,
-    paddingHorizontal: spacing.md,
-    paddingBottom: spacing.sm,
-  },
-  toast: {
-    color: colors.secondary,
-    fontSize: typography.fontSize.sm,
-    marginTop: spacing.md,
-  },
-  signOutButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 52,
-    borderRadius: borderRadius.md,
-    borderWidth: 1,
-    borderColor: colors.error,
-    marginTop: spacing.xl,
-  },
-  signOutText: {
-    color: colors.error,
-    fontSize: typography.fontSize.md,
-    fontWeight: typography.fontWeight.semiBold,
-    marginLeft: spacing.sm,
-  },
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(4,6,12,0.82)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: spacing.lg,
-  },
-  sheet: {
-    width: '100%',
-    maxWidth: 380,
-    backgroundColor: colors.surfaceContainer,
-    borderRadius: borderRadius.xl,
-    borderWidth: 1,
-    borderColor: colors.outlineVariant,
-    padding: spacing.lg,
-    alignItems: 'center',
-  },
-  sheetIconWrap: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(255,113,108,0.10)',
-    marginBottom: spacing.md,
-  },
-  sheetTitle: {
-    color: colors.onSurface,
-    fontSize: typography.fontSize.lg,
-    fontWeight: typography.fontWeight.bold,
-  },
-  sheetBody: {
-    color: colors.onSurfaceVariant,
-    fontSize: typography.fontSize.sm,
-    textAlign: 'center',
-    lineHeight: 20,
-    marginTop: spacing.sm,
-  },
-  sheetActions: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    marginTop: spacing.lg,
-    alignSelf: 'stretch',
-  },
-  sheetButton: {
-    flex: 1,
-    minHeight: 48,
-    borderRadius: borderRadius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  sheetCancel: {
-    backgroundColor: colors.surfaceContainerHigh,
-    borderWidth: 1,
-    borderColor: colors.outlineVariant,
-  },
-  sheetCancelText: {
-    color: colors.onSurface,
-    fontSize: typography.fontSize.md,
-    fontWeight: typography.fontWeight.semiBold,
-  },
-  sheetDelete: {
-    backgroundColor: colors.error,
-  },
-  sheetDeleteText: {
-    color: colors.surface,
-    fontSize: typography.fontSize.md,
-    fontWeight: typography.fontWeight.semiBold,
-  },
-});
+    container: {
+      flex: 1,
+      backgroundColor: colors.surface,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.md,
+    },
+    backButton: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.surfaceContainer,
+      marginRight: spacing.sm,
+    },
+    title: {
+      color: colors.onSurface,
+      fontSize: typography.fontSize.xl,
+      fontWeight: typography.fontWeight.bold,
+    },
+    content: {
+      paddingHorizontal: spacing.lg,
+      paddingBottom: spacing.xl,
+    },
+    sectionLabel: {
+      color: colors.onSurfaceVariant,
+      fontSize: typography.fontSize.sm,
+      fontWeight: typography.fontWeight.medium,
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+      marginTop: spacing.lg,
+      marginBottom: spacing.sm,
+    },
+    section: {
+      backgroundColor: colors.surfaceContainer,
+      borderRadius: borderRadius.xl,
+      borderWidth: 1,
+      borderColor: colors.outlineVariant,
+      overflow: 'hidden',
+    },
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: spacing.md,
+      minHeight: 56,
+    },
+    rowIcon: {
+      width: 34,
+      height: 34,
+      borderRadius: 17,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: 'rgba(26,107,255,0.10)',
+      marginRight: spacing.md,
+    },
+    rowIconDanger: {
+      backgroundColor: 'rgba(255,113,108,0.10)',
+    },
+    rowLabel: {
+      flex: 1,
+      color: colors.onSurface,
+      fontSize: typography.fontSize.md,
+      fontWeight: typography.fontWeight.medium,
+    },
+    divider: {
+      height: 1,
+      backgroundColor: colors.outlineVariant,
+      marginLeft: spacing.md + 34 + spacing.md,
+    },
+    soonPill: {
+      backgroundColor: 'rgba(26,107,255,0.12)',
+      borderRadius: 999,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: 3,
+    },
+    soonPillText: {
+      color: colors.primary,
+      fontSize: typography.fontSize.xs,
+      fontWeight: typography.fontWeight.semiBold,
+    },
+    exportError: {
+      color: colors.error,
+      fontSize: typography.fontSize.sm,
+      paddingHorizontal: spacing.md,
+      paddingBottom: spacing.sm,
+    },
+    toast: {
+      color: colors.secondary,
+      fontSize: typography.fontSize.sm,
+      marginTop: spacing.md,
+    },
+    signOutButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: 52,
+      borderRadius: borderRadius.md,
+      borderWidth: 1,
+      borderColor: colors.error,
+      marginTop: spacing.xl,
+    },
+    signOutText: {
+      color: colors.error,
+      fontSize: typography.fontSize.md,
+      fontWeight: typography.fontWeight.semiBold,
+      marginLeft: spacing.sm,
+    },
+    overlay: {
+      flex: 1,
+      backgroundColor: 'rgba(4,6,12,0.82)',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: spacing.lg,
+    },
+    sheet: {
+      width: '100%',
+      maxWidth: 380,
+      backgroundColor: colors.surfaceContainer,
+      borderRadius: borderRadius.xl,
+      borderWidth: 1,
+      borderColor: colors.outlineVariant,
+      padding: spacing.lg,
+      alignItems: 'center',
+    },
+    sheetIconWrap: {
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: 'rgba(255,113,108,0.10)',
+      marginBottom: spacing.md,
+    },
+    sheetTitle: {
+      color: colors.onSurface,
+      fontSize: typography.fontSize.lg,
+      fontWeight: typography.fontWeight.bold,
+    },
+    sheetBody: {
+      color: colors.onSurfaceVariant,
+      fontSize: typography.fontSize.sm,
+      textAlign: 'center',
+      lineHeight: 20,
+      marginTop: spacing.sm,
+    },
+    sheetActions: {
+      flexDirection: 'row',
+      gap: spacing.sm,
+      marginTop: spacing.lg,
+      alignSelf: 'stretch',
+    },
+    sheetButton: {
+      flex: 1,
+      minHeight: 48,
+      borderRadius: borderRadius.md,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    sheetCancel: {
+      backgroundColor: colors.surfaceContainerHigh,
+      borderWidth: 1,
+      borderColor: colors.outlineVariant,
+    },
+    sheetCancelText: {
+      color: colors.onSurface,
+      fontSize: typography.fontSize.md,
+      fontWeight: typography.fontWeight.semiBold,
+    },
+    sheetDelete: {
+      backgroundColor: colors.error,
+    },
+    sheetDeleteText: {
+      color: colors.surface,
+      fontSize: typography.fontSize.md,
+      fontWeight: typography.fontWeight.semiBold,
+    },
+  });

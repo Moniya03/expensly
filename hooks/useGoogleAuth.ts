@@ -1,5 +1,5 @@
-import { useRef, useState } from 'react';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { useRef, useState } from 'react';
 import { clearLocalSession, supabase } from '../services/supabase';
 
 /**
@@ -41,19 +41,19 @@ interface UseGoogleAuthReturn {
 
 /**
  * Custom hook for Google OAuth authentication using native Google Sign-In and Supabase
- * 
+ *
  * @example
  * ```tsx
  * const { signInWithGoogle, isLoading, error } = useGoogleAuth();
- * 
- * <Button 
- *   onPress={signInWithGoogle} 
+ *
+ * <Button
+ *   onPress={signInWithGoogle}
  *   disabled={isLoading}
  *   title={isLoading ? 'Signing in...' : 'Sign in with Google'}
  * />
  * {error && <Text>{error}</Text>}
  * ```
- * 
+ *
  * @returns Object containing signInWithGoogle function, loading state, and error state
  */
 export function useGoogleAuth(): UseGoogleAuthReturn {
@@ -78,11 +78,15 @@ export function useGoogleAuth(): UseGoogleAuthReturn {
 
       // Validate that we have a Google Client ID configured
       if (!process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID) {
-        throw new Error('Google Client ID is not configured. Please set EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID in your environment variables.');
+        throw new Error(
+          'Google Client ID is not configured. Please set EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID in your environment variables.',
+        );
       }
 
       // Check if Google Play Services are available (Android only)
-      await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+      await GoogleSignin.hasPlayServices({
+        showPlayServicesUpdateDialog: true,
+      });
 
       // Sign in with Google
       const userInfo = await GoogleSignin.signIn();
@@ -119,7 +123,7 @@ export function useGoogleAuth(): UseGoogleAuthReturn {
       if (!isInProgressError) {
         console.error('Google auth error:', err);
       }
-      
+
       // Handle specific Google Sign-In errors
       if (err.code === 'SIGN_IN_CANCELLED') {
         // User cancelled the sign-in flow - don't show error

@@ -3,8 +3,8 @@
  * Covers transactions, savings goals, budgets, and profile basics.
  */
 
-import { supabase } from './supabase';
 import { useAuthStore } from '../stores/authStore';
+import { supabase } from './supabase';
 
 const csvEscape = (value: string | number | null | undefined): string => {
   const str = value === null || value === undefined ? '' : String(value);
@@ -41,21 +41,32 @@ const exportTransactionsCsv = async (userId: string): Promise<string> => {
       row.merchant ?? '',
       row.input_method ?? '',
       row.created_at,
-    ])
+    ]),
   );
 };
 
 const exportGoalsCsv = async (userId: string): Promise<string> => {
   const { data, error } = await supabase
     .from('savings_goals')
-    .select('name, target_amount, saved_amount, target_date, icon, is_completed, completed_at, created_at')
+    .select(
+      'name, target_amount, saved_amount, target_date, icon, is_completed, completed_at, created_at',
+    )
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
 
   if (error) throw new Error(error.message);
 
   return toCsv(
-    ['Name', 'Target amount', 'Saved amount', 'Target date', 'Icon', 'Completed', 'Completed at', 'Created at'],
+    [
+      'Name',
+      'Target amount',
+      'Saved amount',
+      'Target date',
+      'Icon',
+      'Completed',
+      'Completed at',
+      'Created at',
+    ],
     (data ?? []).map((row) => [
       row.name,
       row.target_amount,
@@ -65,7 +76,7 @@ const exportGoalsCsv = async (userId: string): Promise<string> => {
       row.is_completed ? 'Yes' : 'No',
       row.completed_at ?? '',
       row.created_at,
-    ])
+    ]),
   );
 };
 
@@ -81,7 +92,7 @@ const exportBudgetsCsv = async (userId: string): Promise<string> => {
 
   return toCsv(
     ['Month', 'Year', 'Amount', 'Created at'],
-    (data ?? []).map((row) => [row.month, row.year, row.amount, row.created_at])
+    (data ?? []).map((row) => [row.month, row.year, row.amount, row.created_at]),
   );
 };
 
@@ -103,7 +114,10 @@ export const exportUserData = async (): Promise<string[]> => {
   const { cacheDirectory } = require('expo-file-system');
 
   const files: { path: string; data: string }[] = [
-    { path: `${cacheDirectory}expensly-transactions.csv`, data: transactionsCsv },
+    {
+      path: `${cacheDirectory}expensly-transactions.csv`,
+      data: transactionsCsv,
+    },
     { path: `${cacheDirectory}expensly-goals.csv`, data: goalsCsv },
     { path: `${cacheDirectory}expensly-budgets.csv`, data: budgetsCsv },
   ];

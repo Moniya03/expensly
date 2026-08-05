@@ -1,12 +1,13 @@
 import React, { useMemo } from 'react';
-import { View, StyleSheet, Dimensions, Platform } from 'react-native';
+import { Dimensions, Platform, StyleSheet, View } from 'react-native';
 import Animated, {
-  useSharedValue,
+  Easing,
   useAnimatedStyle,
+  useSharedValue,
   withRepeat,
   withTiming,
-  Easing,
 } from 'react-native-reanimated';
+
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 interface FloatingParticlesProps {
@@ -36,7 +37,7 @@ const Particle: React.FC<{ config: ParticleConfig }> = ({ config }) => {
         easing: Easing.inOut(Easing.ease),
       }),
       -1,
-      false
+      false,
     );
   }, [config.duration, config.range, translateY]);
 
@@ -65,9 +66,7 @@ const Particle: React.FC<{ config: ParticleConfig }> = ({ config }) => {
   );
 };
 
-export const FloatingParticles: React.FC<FloatingParticlesProps> = ({
-  count = MAX_PARTICLES,
-}) => {
+export const FloatingParticles: React.FC<FloatingParticlesProps> = ({ count = MAX_PARTICLES }) => {
   const particles = useMemo<ParticleConfig[]>(() => {
     const palette = ['#2E86FF', '#6FB4FF'];
     const actualCount = Math.min(count, MAX_PARTICLES);

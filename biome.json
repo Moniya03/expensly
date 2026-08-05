@@ -2,7 +2,28 @@
   "$schema": "https://biomejs.dev/schemas/2.5.7/schema.json",
   "formatter": { "indentStyle": "space", "indentWidth": 2, "lineWidth": 100 },
   "javascript": { "formatter": { "quoteStyle": "single", "semicolons": "always" } },
-  "linter": { "enabled": true },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "correctness": { "useExhaustiveDependencies": "off" },
+      "suspicious": { "noArrayIndexKey": "off" }
+    }
+  },
   "assist": { "actions": { "source": { "organizeImports": "on" } } },
-  "files": { "includes": ["**", "!android", "!dist", "!.expo", "!node_modules", "!bun.lock", "!package-lock.json", "!*.apk"] }
+  "files": {
+    "includes": [
+      "**",
+      "!android",
+      "!dist",
+      "!.expo",
+      "!node_modules",
+      "!bun.lock",
+      "!package-lock.json",
+      "!app.json",
+      "!*.apk",
+      "!**/.worktrees",
+      "!**/.pi",
+      "!**/.stitch"
+    ]
+  }
 }

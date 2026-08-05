@@ -1,13 +1,13 @@
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
-  View,
+  StyleSheet,
   Text,
   TextInput,
-  StyleSheet,
-  TextInputProps,
-  ViewStyle,
+  type TextInputProps,
+  View,
+  type ViewStyle,
 } from 'react-native';
-import { spacing, borderRadius, typography, useColors, type Colors } from '../../constants/theme';
+import { borderRadius, type Colors, spacing, typography, useColors } from '../../constants/theme';
 
 interface InputProps extends Omit<TextInputProps, 'style'> {
   label?: string;
@@ -60,33 +60,34 @@ export function Input({
   );
 }
 
-const createStyles = (colors: Colors) => StyleSheet.create({
-  container: {
-    marginBottom: spacing.md,
-  },
-  label: {
-    fontSize: typography.fontSize.sm,
-    fontWeight: typography.fontWeight.medium,
-    color: colors.onSurfaceVariant,
-    marginBottom: spacing.xs,
-  },
-  input: {
-    backgroundColor: colors.surfaceContainer,
-    borderWidth: 1,
-    borderRadius: borderRadius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-    fontSize: typography.fontSize.md,
-    color: colors.onSurface,
-    fontFamily: typography.fontFamily.regular,
-  },
-  multilineInput: {
-    minHeight: 80,
-    textAlignVertical: 'top',
-  },
-  error: {
-    fontSize: typography.fontSize.xs,
-    color: colors.error,
-    marginTop: spacing.xs,
-  },
-});
+const createStyles = (colors: Colors) =>
+  StyleSheet.create({
+    container: {
+      marginBottom: spacing.md,
+    },
+    label: {
+      fontSize: typography.fontSize.sm,
+      fontWeight: typography.fontWeight.medium,
+      color: colors.onSurfaceVariant,
+      marginBottom: spacing.xs,
+    },
+    input: {
+      backgroundColor: colors.surfaceContainer,
+      borderWidth: 1,
+      borderRadius: borderRadius.md,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.md,
+      fontSize: typography.fontSize.md,
+      color: colors.onSurface,
+      fontFamily: typography.fontFamily.regular,
+    },
+    multilineInput: {
+      minHeight: 80,
+      textAlignVertical: 'top',
+    },
+    error: {
+      fontSize: typography.fontSize.xs,
+      color: colors.error,
+      marginTop: spacing.xs,
+    },
+  });

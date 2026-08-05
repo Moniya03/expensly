@@ -1,19 +1,24 @@
-import React, { useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import Animated, { useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
-import { spacing, borderRadius, typography, useColors, type Colors } from '../../constants/theme';
-import { useGoalGroups } from '../../hooks/useGoals';
-import { GoalCard, GoalOrigin } from '../../components/goals/GoalCard';
+import React, { useMemo } from 'react';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withSequence,
+  withTiming,
+} from 'react-native-reanimated';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { CompletedGoalsAccordion } from '../../components/goals/CompletedGoalsAccordion';
-import { GoalEmptyState } from '../../components/goals/GoalEmptyState';
-import { GoalCreateCard } from '../../components/goals/GoalCreateCard';
-import { ExpandedGoalCard } from '../../components/goals/ExpandedGoalCard';
 import { DeleteGoalConfirmSheet } from '../../components/goals/DeleteGoalConfirmSheet';
+import { ExpandedGoalCard } from '../../components/goals/ExpandedGoalCard';
+import { GoalCard, type GoalOrigin } from '../../components/goals/GoalCard';
 import { GoalCelebrationOverlay } from '../../components/goals/GoalCelebrationOverlay';
-import { useDeleteGoal, useUpdateGoalProgress } from '../../hooks/useGoals';
-import { Goal } from '../../types';
+import { GoalCreateCard } from '../../components/goals/GoalCreateCard';
+import { GoalEmptyState } from '../../components/goals/GoalEmptyState';
+import { borderRadius, type Colors, spacing, typography, useColors } from '../../constants/theme';
+import { useDeleteGoal, useGoalGroups, useUpdateGoalProgress } from '../../hooks/useGoals';
+import type { Goal } from '../../types';
 
 export default function GoalsScreen() {
   const colors = useColors();
@@ -31,7 +36,7 @@ export default function GoalsScreen() {
 
   const selectedGoal = React.useMemo(
     () => [...active, ...completed].find((goal) => goal.id === selectedGoalId) ?? null,
-    [active, completed, selectedGoalId]
+    [active, completed, selectedGoalId],
   );
 
   const openGoal = (goal: Goal, goalOrigin: GoalOrigin) => {
@@ -55,14 +60,13 @@ export default function GoalsScreen() {
 
   // Pulsing add button
   const pulse = useSharedValue(1);
-  const pulseStyle = useAnimatedStyle(() => ({ transform: [{ scale: pulse.value }] }));
+  const pulseStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: pulse.value }],
+  }));
   React.useEffect(() => {
     pulse.value = withRepeat(
-      withSequence(
-        withTiming(1.06, { duration: 800 }),
-        withTiming(1, { duration: 800 })
-      ),
-      -1
+      withSequence(withTiming(1.06, { duration: 800 }), withTiming(1, { duration: 800 })),
+      -1,
     );
   }, [pulse]);
 
@@ -81,18 +85,26 @@ export default function GoalsScreen() {
       </View>
 
       {isLoading ? (
-        <View style={styles.loading}><ActivityIndicator color={colors.primary} /></View>
+        <View style={styles.loading}>
+          <ActivityIndicator color={colors.primary} />
+        </View>
       ) : (
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           {!active.length && !completed.length ? (
             <GoalEmptyState onCreate={() => openCreate(null)} />
           ) : (
             <View style={styles.stack}>
-              {active.map((goal) => <GoalCard key={goal.id} goal={goal} onOpen={(origin) => openGoal(goal, origin)} />)}
+              {active.map((goal) => (
+                <GoalCard key={goal.id} goal={goal} onOpen={(origin) => openGoal(goal, origin)} />
+              ))}
             </View>
           )}
 
-          <CompletedGoalsAccordion goals={completed} onOpen={openGoal} defaultOpen={completedAccordionOpen} />
+          <CompletedGoalsAccordion
+            goals={completed}
+            onOpen={openGoal}
+            defaultOpen={completedAccordionOpen}
+          />
         </ScrollView>
       )}
 
@@ -105,7 +117,10 @@ export default function GoalsScreen() {
         onSaveProgress={async (amount) => {
           if (!selectedGoal) return;
           const beforeCompleted = selectedGoal.is_completed;
-          const updatedGoal = await updateProgress({ id: selectedGoal.id, amount });
+          const updatedGoal = await updateProgress({
+            id: selectedGoal.id,
+            amount,
+          });
           closeDetails();
           if (!beforeCompleted && updatedGoal.is_completed) {
             setShouldOpenCompleted(true);
@@ -116,7 +131,11 @@ export default function GoalsScreen() {
         onDelete={() => setShowDelete(true)}
       />
 
-      <GoalCreateCard visible={createOpen} goal={editingGoal} onClose={() => setCreateOpen(false)} />
+      <GoalCreateCard
+        visible={createOpen}
+        goal={editingGoal}
+        onClose={() => setCreateOpen(false)}
+      />
 
       <GoalCelebrationOverlay
         visible={showCelebration}
@@ -140,25 +159,45 @@ export default function GoalsScreen() {
   );
 }
 
-const createStyles = (colors: Colors) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.surface },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.md, paddingTop: spacing.md, paddingBottom: spacing.sm },
-  title: { color: colors.onSurface, fontSize: typography.fontSize.xxxl, fontWeight: typography.fontWeight.bold },
-  subtitle: { color: colors.onSurfaceVariant, fontSize: typography.fontSize.sm, marginTop: 2 },
-  addButton: {
-    width: 48,
-    height: 48,
-    borderRadius: borderRadius.full,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 10,
-    elevation: 6,
-  },
-  loading: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  content: { paddingHorizontal: spacing.md, paddingBottom: 140, gap: spacing.lg },
-  stack: { gap: spacing.md },
-});
+const createStyles = (colors: Colors) =>
+  StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.surface },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: spacing.md,
+      paddingTop: spacing.md,
+      paddingBottom: spacing.sm,
+    },
+    title: {
+      color: colors.onSurface,
+      fontSize: typography.fontSize.xxxl,
+      fontWeight: typography.fontWeight.bold,
+    },
+    subtitle: {
+      color: colors.onSurfaceVariant,
+      fontSize: typography.fontSize.sm,
+      marginTop: 2,
+    },
+    addButton: {
+      width: 48,
+      height: 48,
+      borderRadius: borderRadius.full,
+      backgroundColor: colors.primary,
+      alignItems: 'center',
+      justifyContent: 'center',
+      shadowColor: colors.primary,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.4,
+      shadowRadius: 10,
+      elevation: 6,
+    },
+    loading: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+    content: {
+      paddingHorizontal: spacing.md,
+      paddingBottom: 140,
+      gap: spacing.lg,
+    },
+    stack: { gap: spacing.md },
+  });

@@ -1,9 +1,10 @@
-import React, { useMemo } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { getCategoryConfig, getCategoryColor } from '../../constants/categories';
-import { borderRadius, spacing, typography, useColors, type Colors } from '../../constants/theme';
-import { Category } from '../../types';
+import type React from 'react';
+import { useMemo } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
+import { getCategoryColor, getCategoryConfig } from '../../constants/categories';
+import { borderRadius, type Colors, spacing, typography, useColors } from '../../constants/theme';
+import type { Category } from '../../types';
 import { formatRupees } from '../../utils/currency';
 
 interface CategorySpendingBarsProps {
@@ -31,7 +32,7 @@ export default function CategorySpendingBars({ byCategory }: CategorySpendingBar
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Where it's going</Text>
+      <Text style={styles.title}>Where it&apos;s going</Text>
 
       {items.length > 0 ? (
         <View style={styles.list}>
@@ -46,11 +47,17 @@ export default function CategorySpendingBars({ byCategory }: CategorySpendingBar
                     <View
                       style={[
                         styles.iconBubble,
-                        { backgroundColor: config.iconBackgroundColor ?? `${config.iconColor}18` },
+                        {
+                          backgroundColor: config.iconBackgroundColor ?? `${config.iconColor}18`,
+                        },
                       ]}
                     >
                       <MaterialCommunityIcons
-                        name={config.iconName as React.ComponentProps<typeof MaterialCommunityIcons>['name']}
+                        name={
+                          config.iconName as React.ComponentProps<
+                            typeof MaterialCommunityIcons
+                          >['name']
+                        }
                         size={14}
                         color={config.iconColor}
                       />
@@ -65,7 +72,9 @@ export default function CategorySpendingBars({ byCategory }: CategorySpendingBar
                 </View>
 
                 <View style={styles.track}>
-                  <View style={[styles.fill, { width: `${item.percentage}%`, backgroundColor: color }]} />
+                  <View
+                    style={[styles.fill, { width: `${item.percentage}%`, backgroundColor: color }]}
+                  />
                 </View>
               </View>
             );
@@ -80,77 +89,78 @@ export default function CategorySpendingBars({ byCategory }: CategorySpendingBar
   );
 }
 
-const createStyles = (colors: Colors) => StyleSheet.create({
-  container: {
-    gap: spacing.md,
-  },
-  title: {
-    fontSize: typography.fontSize.xl,
-    fontWeight: typography.fontWeight.bold,
-    color: colors.onSurface,
-  },
-  list: {
-    gap: spacing.md,
-  },
-  item: {
-    gap: spacing.sm,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  labelGroup: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  iconBubble: {
-    width: 24,
-    height: 24,
-    borderRadius: borderRadius.full,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  label: {
-    fontSize: typography.fontSize.sm,
-    fontWeight: typography.fontWeight.semiBold,
-    color: colors.onSurface,
-  },
-  amountGroup: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: spacing.sm,
-  },
-  amount: {
-    fontSize: typography.fontSize.sm,
-    fontWeight: typography.fontWeight.bold,
-    color: colors.onSurface,
-  },
-  percentage: {
-    fontSize: typography.fontSize.xs,
-    color: colors.onSurfaceVariant,
-  },
-  track: {
-    width: '100%',
-    height: 6,
-    borderRadius: borderRadius.full,
-    backgroundColor: colors.surfaceContainer,
-    overflow: 'hidden',
-  },
-  fill: {
-    height: '100%',
-    borderRadius: borderRadius.full,
-  },
-  emptyState: {
-    backgroundColor: colors.surfaceContainerHigh,
-    borderRadius: borderRadius.md,
-    borderWidth: 1,
-    borderColor: colors.outlineVariant,
-    padding: spacing.md,
-  },
-  emptyText: {
-    fontSize: typography.fontSize.sm,
-    color: colors.onSurfaceVariant,
-  },
-});
+const createStyles = (colors: Colors) =>
+  StyleSheet.create({
+    container: {
+      gap: spacing.md,
+    },
+    title: {
+      fontSize: typography.fontSize.xl,
+      fontWeight: typography.fontWeight.bold,
+      color: colors.onSurface,
+    },
+    list: {
+      gap: spacing.md,
+    },
+    item: {
+      gap: spacing.sm,
+    },
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    labelGroup: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
+    iconBubble: {
+      width: 24,
+      height: 24,
+      borderRadius: borderRadius.full,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    label: {
+      fontSize: typography.fontSize.sm,
+      fontWeight: typography.fontWeight.semiBold,
+      color: colors.onSurface,
+    },
+    amountGroup: {
+      flexDirection: 'row',
+      alignItems: 'baseline',
+      gap: spacing.sm,
+    },
+    amount: {
+      fontSize: typography.fontSize.sm,
+      fontWeight: typography.fontWeight.bold,
+      color: colors.onSurface,
+    },
+    percentage: {
+      fontSize: typography.fontSize.xs,
+      color: colors.onSurfaceVariant,
+    },
+    track: {
+      width: '100%',
+      height: 6,
+      borderRadius: borderRadius.full,
+      backgroundColor: colors.surfaceContainer,
+      overflow: 'hidden',
+    },
+    fill: {
+      height: '100%',
+      borderRadius: borderRadius.full,
+    },
+    emptyState: {
+      backgroundColor: colors.surfaceContainerHigh,
+      borderRadius: borderRadius.md,
+      borderWidth: 1,
+      borderColor: colors.outlineVariant,
+      padding: spacing.md,
+    },
+    emptyText: {
+      fontSize: typography.fontSize.sm,
+      color: colors.onSurfaceVariant,
+    },
+  });

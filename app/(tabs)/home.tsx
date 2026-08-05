@@ -1,12 +1,12 @@
-import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Pressable } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { borderRadius, spacing, typography, useColors, type Colors } from '../../constants/theme';
-import { useAuthStore } from '../../stores/authStore';
-import { useMonthlyTransactions, useRecentTransactions } from '../../hooks/useTransactions';
+import React, { useMemo } from 'react';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { HeroBudgetCard, RecentTransactions } from '../../components/home';
 import { FloatingParticles } from '../../components/ui/FloatingParticles';
+import { borderRadius, type Colors, spacing, typography, useColors } from '../../constants/theme';
+import { useMonthlyTransactions, useRecentTransactions } from '../../hooks/useTransactions';
+import { useAuthStore } from '../../stores/authStore';
 import { getGreetingWithEmoji, parseLocalDate } from '../../utils/date';
 
 const HOME_DIAGNOSTIC_MODE = false;
@@ -16,7 +16,8 @@ export default function HomeScreen() {
   const styles = useMemo(() => createStyles(colors), [colors]);
   const router = useRouter();
   const { profile, session } = useAuthStore();
-  const { data: recentTransactions = [], isLoading: transactionsLoading } = useRecentTransactions(5);
+  const { data: recentTransactions = [], isLoading: transactionsLoading } =
+    useRecentTransactions(5);
   const { data: monthlyTransactions = [], isLoading: monthlyTransactionsLoading } =
     useMonthlyTransactions();
 
@@ -28,7 +29,7 @@ export default function HomeScreen() {
 
   const spent = React.useMemo(
     () => monthlyTransactions.reduce((sum, transaction) => sum + transaction.amount, 0),
-    [monthlyTransactions]
+    [monthlyTransactions],
   );
 
   const remaining = budget - spent;
@@ -167,150 +168,151 @@ export default function HomeScreen() {
   );
 }
 
-const createStyles = (colors: Colors) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.surface,
-  },
-  atmosphere: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: 50,
-    paddingBottom: 154,
-    gap: 28,
-  },
-  greetingWrap: {
-    marginTop: -2,
-    marginBottom: -6,
-  },
-  greetingText: {
-    color: colors.onSurface,
-    fontSize: typography.fontSize.xl,
-    fontWeight: typography.fontWeight.semiBold,
-    letterSpacing: -0.3,
-  },
-  heroWrap: {
-    marginTop: -2,
-  },
-  diagnosticCard: {
-    marginTop: 8,
-    borderRadius: borderRadius.xl,
-    borderWidth: 1,
-    borderColor: 'rgba(120, 160, 255, 0.18)',
-    backgroundColor: 'rgba(15, 22, 40, 0.94)',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.lg,
-    gap: 10,
-  },
-  diagnosticEyebrow: {
-    color: 'rgba(120,170,255,0.7)',
-    fontSize: 11,
-    fontWeight: typography.fontWeight.bold,
-    letterSpacing: 1,
-  },
-  diagnosticTitle: {
-    color: colors.onSurface,
-    fontSize: typography.fontSize.xl,
-    fontWeight: typography.fontWeight.bold,
-  },
-  diagnosticBody: {
-    color: 'rgba(219, 228, 255, 0.82)',
-    fontSize: typography.fontSize.sm,
-  },
-  diagnosticStats: {
-    gap: 6,
-    marginTop: 4,
-  },
-  diagnosticStat: {
-    color: '#DDE8FF',
-    fontSize: typography.fontSize.sm,
-    fontWeight: typography.fontWeight.medium,
-  },
-  diagnosticHint: {
-    color: "#4D9FFF",
-    fontSize: typography.fontSize.xs,
-    lineHeight: typography.lineHeight.relaxed * typography.fontSize.xs,
-    marginTop: 4,
-  },
-  recentWrap: {
-    marginTop: 48,
-  },
-  tipOverlay: {
-    position: 'absolute',
-    right: spacing.md,
-    bottom: 92,
-    alignItems: 'flex-end',
-  },
-  tipCard: {
-    maxWidth: 230,
-    backgroundColor: 'rgba(15, 22, 40, 0.94)',
-    borderWidth: 1,
-    borderColor: 'rgba(120, 160, 255, 0.20)',
-    borderRadius: borderRadius.xl,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    gap: 4,
-    position: 'relative',
-    shadowColor: colors.primary,
-    shadowOpacity: 0.18,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 8 },
-  },
-  tipTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  tipDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 999,
-    backgroundColor: colors.primary,
-  },
-  tipTitle: {
-    color: colors.onSurface,
-    fontSize: typography.fontSize.sm,
-    fontWeight: typography.fontWeight.semiBold,
-  },
-  tipBody: {
-    color: 'rgba(219, 228, 255, 0.82)',
-    fontSize: typography.fontSize.xs,
-    lineHeight: typography.lineHeight.relaxed * typography.fontSize.xs,
-  },
-  tipButton: {
-    alignSelf: 'flex-start',
-    marginTop: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 999,
-    backgroundColor: 'rgba(26,107,255,0.12)',
-  },
-  tipButtonText: {
-    color: '#DDE8FF',
-    fontSize: typography.fontSize.xs,
-    fontWeight: typography.fontWeight.semiBold,
-  },
-  tipPointer: {
-    position: 'absolute',
-    right: 24,
-    bottom: -11,
-    width: 0,
-    height: 0,
-    borderLeftWidth: 9,
-    borderRightWidth: 9,
-    borderTopWidth: 12,
-    borderLeftColor: 'transparent',
-    borderRightColor: 'transparent',
-    borderTopColor: 'rgba(15, 22, 40, 0.94)',
-  },
-});
+const createStyles = (colors: Colors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.surface,
+    },
+    atmosphere: {
+      ...StyleSheet.absoluteFillObject,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    scrollView: {
+      flex: 1,
+    },
+    scrollContent: {
+      paddingHorizontal: spacing.lg,
+      paddingTop: 50,
+      paddingBottom: 154,
+      gap: 28,
+    },
+    greetingWrap: {
+      marginTop: -2,
+      marginBottom: -6,
+    },
+    greetingText: {
+      color: colors.onSurface,
+      fontSize: typography.fontSize.xl,
+      fontWeight: typography.fontWeight.semiBold,
+      letterSpacing: -0.3,
+    },
+    heroWrap: {
+      marginTop: -2,
+    },
+    diagnosticCard: {
+      marginTop: 8,
+      borderRadius: borderRadius.xl,
+      borderWidth: 1,
+      borderColor: 'rgba(120, 160, 255, 0.18)',
+      backgroundColor: 'rgba(15, 22, 40, 0.94)',
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.lg,
+      gap: 10,
+    },
+    diagnosticEyebrow: {
+      color: 'rgba(120,170,255,0.7)',
+      fontSize: 11,
+      fontWeight: typography.fontWeight.bold,
+      letterSpacing: 1,
+    },
+    diagnosticTitle: {
+      color: colors.onSurface,
+      fontSize: typography.fontSize.xl,
+      fontWeight: typography.fontWeight.bold,
+    },
+    diagnosticBody: {
+      color: 'rgba(219, 228, 255, 0.82)',
+      fontSize: typography.fontSize.sm,
+    },
+    diagnosticStats: {
+      gap: 6,
+      marginTop: 4,
+    },
+    diagnosticStat: {
+      color: '#DDE8FF',
+      fontSize: typography.fontSize.sm,
+      fontWeight: typography.fontWeight.medium,
+    },
+    diagnosticHint: {
+      color: '#4D9FFF',
+      fontSize: typography.fontSize.xs,
+      lineHeight: typography.lineHeight.relaxed * typography.fontSize.xs,
+      marginTop: 4,
+    },
+    recentWrap: {
+      marginTop: 48,
+    },
+    tipOverlay: {
+      position: 'absolute',
+      right: spacing.md,
+      bottom: 92,
+      alignItems: 'flex-end',
+    },
+    tipCard: {
+      maxWidth: 230,
+      backgroundColor: 'rgba(15, 22, 40, 0.94)',
+      borderWidth: 1,
+      borderColor: 'rgba(120, 160, 255, 0.20)',
+      borderRadius: borderRadius.xl,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      gap: 4,
+      position: 'relative',
+      shadowColor: colors.primary,
+      shadowOpacity: 0.18,
+      shadowRadius: 16,
+      shadowOffset: { width: 0, height: 8 },
+    },
+    tipTitleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    tipDot: {
+      width: 7,
+      height: 7,
+      borderRadius: 999,
+      backgroundColor: colors.primary,
+    },
+    tipTitle: {
+      color: colors.onSurface,
+      fontSize: typography.fontSize.sm,
+      fontWeight: typography.fontWeight.semiBold,
+    },
+    tipBody: {
+      color: 'rgba(219, 228, 255, 0.82)',
+      fontSize: typography.fontSize.xs,
+      lineHeight: typography.lineHeight.relaxed * typography.fontSize.xs,
+    },
+    tipButton: {
+      alignSelf: 'flex-start',
+      marginTop: 4,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 999,
+      backgroundColor: 'rgba(26,107,255,0.12)',
+    },
+    tipButtonText: {
+      color: '#DDE8FF',
+      fontSize: typography.fontSize.xs,
+      fontWeight: typography.fontWeight.semiBold,
+    },
+    tipPointer: {
+      position: 'absolute',
+      right: 24,
+      bottom: -11,
+      width: 0,
+      height: 0,
+      borderLeftWidth: 9,
+      borderRightWidth: 9,
+      borderTopWidth: 12,
+      borderLeftColor: 'transparent',
+      borderRightColor: 'transparent',
+      borderTopColor: 'rgba(15, 22, 40, 0.94)',
+    },
+  });

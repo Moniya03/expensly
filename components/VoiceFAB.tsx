@@ -1,16 +1,16 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { StyleSheet, Pressable, View, Animated, Text } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { spacing, useColors, type Colors } from '../constants/theme';
-import { AudioWaveform } from './ui/AudioWaveform';
-import { useVoiceRecording } from '../hooks/useVoiceRecording';
-import { useAuthStore } from '../stores/authStore';
-import { processVoiceExpense, audioUriToBase64 } from '../services/voiceExpense';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
+import { type Colors, useColors } from '../constants/theme';
 import { useCreateTransaction } from '../hooks/useTransactions';
-import { VoiceExpenseConfirmationSheet } from './voice/VoiceExpenseConfirmationSheet';
+import { useVoiceRecording } from '../hooks/useVoiceRecording';
+import { audioUriToBase64, processVoiceExpense } from '../services/voiceExpense';
+import { useAuthStore } from '../stores/authStore';
 import type { CreateTransactionInput, VoiceExpenseDraft, VoiceExpenseResponse } from '../types';
+import { AudioWaveform } from './ui/AudioWaveform';
+import { VoiceExpenseConfirmationSheet } from './voice/VoiceExpenseConfirmationSheet';
 
 function normalizeDraft(response: VoiceExpenseResponse): {
   drafts: VoiceExpenseDraft[];
@@ -57,18 +57,34 @@ export default function VoiceFAB() {
 
     idleLoop = Animated.loop(
       Animated.sequence([
-        Animated.timing(idlePulse, { toValue: 0.48, duration: 3000, useNativeDriver: true }),
-        Animated.timing(idlePulse, { toValue: 0.3, duration: 3000, useNativeDriver: true }),
-      ])
+        Animated.timing(idlePulse, {
+          toValue: 0.48,
+          duration: 3000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(idlePulse, {
+          toValue: 0.3,
+          duration: 3000,
+          useNativeDriver: true,
+        }),
+      ]),
     );
     idleLoop.start();
 
     if (state === 'recording') {
       loop = Animated.loop(
         Animated.sequence([
-          Animated.timing(pulseAnim, { toValue: 1.15, duration: 800, useNativeDriver: true }),
-          Animated.timing(pulseAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
-        ])
+          Animated.timing(pulseAnim, {
+            toValue: 1.15,
+            duration: 800,
+            useNativeDriver: true,
+          }),
+          Animated.timing(pulseAnim, {
+            toValue: 1,
+            duration: 800,
+            useNativeDriver: true,
+          }),
+        ]),
       );
       loop.start();
     } else {
@@ -82,8 +98,9 @@ export default function VoiceFAB() {
   }, [idlePulse, pulseAnim, state]);
 
   const inlineErrorMessage = useMemo(
-    () => (state === 'error' && errorMessage ? "Couldn't understand that. Please re-record." : null),
-    [errorMessage, state]
+    () =>
+      state === 'error' && errorMessage ? "Couldn't understand that. Please re-record." : null,
+    [errorMessage, state],
   );
 
   const handleLongPress = () => {
@@ -269,66 +286,67 @@ export default function VoiceFAB() {
   );
 }
 
-const createStyles = (colors: Colors) => StyleSheet.create({
-  container: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 12,
-    alignItems: 'center',
-    zIndex: 1000,
-  },
-  hint: {
-    marginBottom: 8,
-    color: colors.onSurfaceVariant,
-    fontSize: 12,
-  },
-  errorBanner: {
-    marginBottom: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 999,
-    backgroundColor: 'rgba(0, 0, 0, 0.35)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.12)',
-    maxWidth: 260,
-    alignSelf: 'center',
-  },
-  errorText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    textAlign: 'center',
-  },
-  button: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#1A6BFF',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.22,
-    shadowRadius: 10,
-    elevation: 8,
-  },
-  idleAura: {
-    position: 'absolute',
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    alignSelf: 'center',
-    top: -8,
-    backgroundColor: 'rgba(29,196,150,0.08)',
-    borderWidth: 1,
-    borderColor: 'rgba(29,196,150,0.12)',
-  },
-  contentWrapper: {
-    alignItems: 'center',
-    gap: 0,
-  },
-  processingText: {
-    color: '#FFFFFF',
-    fontSize: 28,
-    lineHeight: 28,
-  },
-});
+const createStyles = (colors: Colors) =>
+  StyleSheet.create({
+    container: {
+      position: 'absolute',
+      left: 0,
+      right: 0,
+      bottom: 12,
+      alignItems: 'center',
+      zIndex: 1000,
+    },
+    hint: {
+      marginBottom: 8,
+      color: colors.onSurfaceVariant,
+      fontSize: 12,
+    },
+    errorBanner: {
+      marginBottom: 8,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 999,
+      backgroundColor: 'rgba(0, 0, 0, 0.35)',
+      borderWidth: 1,
+      borderColor: 'rgba(255, 255, 255, 0.12)',
+      maxWidth: 260,
+      alignSelf: 'center',
+    },
+    errorText: {
+      color: '#FFFFFF',
+      fontSize: 12,
+      textAlign: 'center',
+    },
+    button: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      justifyContent: 'center',
+      alignItems: 'center',
+      shadowColor: '#1A6BFF',
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.22,
+      shadowRadius: 10,
+      elevation: 8,
+    },
+    idleAura: {
+      position: 'absolute',
+      width: 64,
+      height: 64,
+      borderRadius: 32,
+      alignSelf: 'center',
+      top: -8,
+      backgroundColor: 'rgba(29,196,150,0.08)',
+      borderWidth: 1,
+      borderColor: 'rgba(29,196,150,0.12)',
+    },
+    contentWrapper: {
+      alignItems: 'center',
+      gap: 0,
+    },
+    processingText: {
+      color: '#FFFFFF',
+      fontSize: 28,
+      lineHeight: 28,
+    },
+  });

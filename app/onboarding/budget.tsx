@@ -1,9 +1,9 @@
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import React, { useMemo } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { borderRadius, spacing, typography, useColors, type Colors } from '../../constants/theme';
+import { borderRadius, type Colors, spacing, typography, useColors } from '../../constants/theme';
 import { useUpdateProfile } from '../../hooks/useProfile';
 
 function formatBudgetInput(value: string) {
@@ -120,133 +120,134 @@ export default function BudgetOnboardingScreen() {
   );
 }
 
-const createStyles = (colors: Colors) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.surface,
-  },
-  ambientGlow: {
-    position: 'absolute',
-    top: '10%',
-    right: '-20%',
-    width: 300,
-    height: 300,
-    borderRadius: 150,
-    backgroundColor: `${colors.primary}0D`,
-    transform: [{ scale: 1.2 }],
-  },
-  content: {
-    flex: 1,
-    paddingTop: spacing.xl,
-    paddingHorizontal: spacing.xl,
-  },
-  header: {
-    marginBottom: spacing.xxl,
-    marginTop: spacing.xl,
-  },
-  eyebrow: {
-    color: colors.primary,
-    fontSize: typography.fontSize.sm,
-    fontWeight: typography.fontWeight.semiBold,
-    textTransform: 'lowercase',
-    letterSpacing: 0.5,
-    marginBottom: spacing.sm,
-  },
-  title: {
-    color: colors.onSurface,
-    fontSize: typography.fontSize.xxl + 4,
-    fontWeight: typography.fontWeight.bold,
-    marginBottom: spacing.xs,
-    letterSpacing: -0.5,
-  },
-  subtitle: {
-    color: colors.onSurfaceVariant,
-    fontSize: typography.fontSize.md,
-    lineHeight: 24,
-  },
-  inputWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderBottomWidth: 1.5,
-    borderBottomColor: `${colors.primary}4D`,
-    paddingVertical: spacing.md,
-    marginTop: spacing.sm,
-  },
-  inputWrapError: {
-    borderBottomColor: colors.error,
-  },
-  currency: {
-    color: colors.secondary,
-    fontSize: typography.fontSize.xxl,
-    fontWeight: typography.fontWeight.semiBold,
-    marginRight: spacing.sm,
-    marginTop: 2, // Slight alignment tweak for large numbers
-  },
-  input: {
-    flex: 1,
-    color: colors.onSurface,
-    fontSize: typography.fontSize.xxxl,
-    fontWeight: typography.fontWeight.medium,
-    padding: 0,
-    letterSpacing: -0.5,
-  },
-  errorContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: `${colors.error}15`,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.sm,
-    marginTop: spacing.lg,
-    borderWidth: 1,
-    borderColor: `${colors.error}30`,
-  },
-  errorText: {
-    color: colors.error,
-    fontSize: typography.fontSize.sm,
-    marginLeft: spacing.xs,
-  },
-  footer: {
-    paddingHorizontal: spacing.xl,
-    paddingBottom: spacing.xl,
-  },
-  primaryButton: {
-    minHeight: 56,
-    borderRadius: borderRadius.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.primary,
-    paddingHorizontal: spacing.xl,
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  primaryButtonText: {
-    color: colors.surface,
-    fontSize: typography.fontSize.lg,
-    fontWeight: typography.fontWeight.semiBold,
-  },
-  buttonIcon: {
-    marginLeft: spacing.sm,
-  },
-  buttonDisabled: {
-    opacity: 0.5,
-    shadowOpacity: 0,
-    elevation: 0,
-  },
-  skipButton: {
-    alignSelf: 'center',
-    marginTop: spacing.lg,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-  },
-  skipButtonText: {
-    color: colors.onSurfaceVariant,
-    fontSize: typography.fontSize.sm,
-    fontWeight: typography.fontWeight.medium,
-    textDecorationLine: 'underline',
-  },
-});
+const createStyles = (colors: Colors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.surface,
+    },
+    ambientGlow: {
+      position: 'absolute',
+      top: '10%',
+      right: '-20%',
+      width: 300,
+      height: 300,
+      borderRadius: 150,
+      backgroundColor: `${colors.primary}0D`,
+      transform: [{ scale: 1.2 }],
+    },
+    content: {
+      flex: 1,
+      paddingTop: spacing.xl,
+      paddingHorizontal: spacing.xl,
+    },
+    header: {
+      marginBottom: spacing.xxl,
+      marginTop: spacing.xl,
+    },
+    eyebrow: {
+      color: colors.primary,
+      fontSize: typography.fontSize.sm,
+      fontWeight: typography.fontWeight.semiBold,
+      textTransform: 'lowercase',
+      letterSpacing: 0.5,
+      marginBottom: spacing.sm,
+    },
+    title: {
+      color: colors.onSurface,
+      fontSize: typography.fontSize.xxl + 4,
+      fontWeight: typography.fontWeight.bold,
+      marginBottom: spacing.xs,
+      letterSpacing: -0.5,
+    },
+    subtitle: {
+      color: colors.onSurfaceVariant,
+      fontSize: typography.fontSize.md,
+      lineHeight: 24,
+    },
+    inputWrap: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      borderBottomWidth: 1.5,
+      borderBottomColor: `${colors.primary}4D`,
+      paddingVertical: spacing.md,
+      marginTop: spacing.sm,
+    },
+    inputWrapError: {
+      borderBottomColor: colors.error,
+    },
+    currency: {
+      color: colors.secondary,
+      fontSize: typography.fontSize.xxl,
+      fontWeight: typography.fontWeight.semiBold,
+      marginRight: spacing.sm,
+      marginTop: 2, // Slight alignment tweak for large numbers
+    },
+    input: {
+      flex: 1,
+      color: colors.onSurface,
+      fontSize: typography.fontSize.xxxl,
+      fontWeight: typography.fontWeight.medium,
+      padding: 0,
+      letterSpacing: -0.5,
+    },
+    errorContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: `${colors.error}15`,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderRadius: borderRadius.sm,
+      marginTop: spacing.lg,
+      borderWidth: 1,
+      borderColor: `${colors.error}30`,
+    },
+    errorText: {
+      color: colors.error,
+      fontSize: typography.fontSize.sm,
+      marginLeft: spacing.xs,
+    },
+    footer: {
+      paddingHorizontal: spacing.xl,
+      paddingBottom: spacing.xl,
+    },
+    primaryButton: {
+      minHeight: 56,
+      borderRadius: borderRadius.md,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.primary,
+      paddingHorizontal: spacing.xl,
+      shadowColor: colors.primary,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.2,
+      shadowRadius: 8,
+      elevation: 4,
+    },
+    primaryButtonText: {
+      color: colors.surface,
+      fontSize: typography.fontSize.lg,
+      fontWeight: typography.fontWeight.semiBold,
+    },
+    buttonIcon: {
+      marginLeft: spacing.sm,
+    },
+    buttonDisabled: {
+      opacity: 0.5,
+      shadowOpacity: 0,
+      elevation: 0,
+    },
+    skipButton: {
+      alignSelf: 'center',
+      marginTop: spacing.lg,
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.md,
+    },
+    skipButtonText: {
+      color: colors.onSurfaceVariant,
+      fontSize: typography.fontSize.sm,
+      fontWeight: typography.fontWeight.medium,
+      textDecorationLine: 'underline',
+    },
+  });

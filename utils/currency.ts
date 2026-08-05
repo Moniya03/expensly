@@ -3,7 +3,6 @@
  * All amounts are stored in rupees (whole numbers only)
  */
 
-
 /**
  * Format rupees amount as string with Indian formatting
  * @param amount - Amount in rupees
@@ -19,7 +18,7 @@ export const formatRupees = (
     showSymbol?: boolean;
     /** Compact format for large numbers (e.g., 1.2K, 12L) */
     compact?: boolean;
-  } = {}
+  } = {},
 ): string => {
   const { showSymbol = true, compact = false, showDecimals = false } = options;
 
@@ -80,7 +79,7 @@ export const parseRupees = (value: string): number | null => {
   const rupees = parseFloat(cleaned);
 
   // Validate
-  if (isNaN(rupees) || rupees < 0) {
+  if (Number.isNaN(rupees) || rupees < 0) {
     return null;
   }
 
@@ -93,10 +92,7 @@ export const parseRupees = (value: string): number | null => {
  * @param budget - Budget limit in rupees
  * @returns Percentage as a number (0-100+)
  */
-export const calculateBudgetPercentage = (
-  spent: number,
-  budget: number
-): number => {
+export const calculateBudgetPercentage = (spent: number, budget: number): number => {
   if (budget <= 0) {
     return 0;
   }
@@ -108,9 +104,7 @@ export const calculateBudgetPercentage = (
  * @param percentage - Percentage of budget spent
  * @returns Status color indicator
  */
-export const getBudgetStatus = (
-  percentage: number
-): 'safe' | 'warning' | 'danger' => {
+export const getBudgetStatus = (percentage: number): 'safe' | 'warning' | 'danger' => {
   if (percentage >= 100) {
     return 'danger';
   } else if (percentage >= 80) {

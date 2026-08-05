@@ -1,6 +1,5 @@
-import React from 'react';
-import { StyleSheet, View, ViewProps } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { StyleSheet, View, type ViewProps } from 'react-native';
 
 interface SoftDividerProps extends ViewProps {
   vertical?: boolean;

@@ -1,4 +1,6 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import type React from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -9,27 +11,16 @@ import {
   Text,
   View,
 } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { categories } from '../../constants/categories';
+import { borderRadius, type Colors, spacing, typography, useColors } from '../../constants/theme';
+import type { Category, CreateTransactionInput, VoiceExpenseDraft } from '../../types';
+import { formatRupees } from '../../utils/currency';
+import { formatDate, parseLocalDate, toLocalDateString } from '../../utils/date';
 import { AmountInput } from '../ui/AmountInput';
 import { CategoryPicker } from '../ui/CategoryPicker';
-import { Input } from '../ui/Input';
 import { DatePicker } from '../ui/DatePicker';
+import { Input } from '../ui/Input';
 import { SwipeDeckCard, type SwipeDeckCardHandle } from './SwipeDeckCard';
-import {
-  borderRadius,
-  spacing,
-  typography,
-  useColors,
-  type Colors,
-} from '../../constants/theme';
-import { categories } from '../../constants/categories';
-import type {
-  Category,
-  CreateTransactionInput,
-  VoiceExpenseDraft,
-} from '../../types';
-import { formatDate, parseLocalDate, toLocalDateString } from '../../utils/date';
-import { formatRupees } from '../../utils/currency';
 
 type Props = {
   visible: boolean;
@@ -61,10 +52,7 @@ function toDate(value?: string): Date {
   return Number.isNaN(parsed.getTime()) ? fallback : parsed;
 }
 
-function buildTransaction(
-  item: DraftItem,
-  transcription: string
-): CreateTransactionInput | null {
+function buildTransaction(item: DraftItem, transcription: string): CreateTransactionInput | null {
   const parsed = parseInt(item.amount, 10);
   if (!Number.isInteger(parsed) || parsed <= 0) return null;
   if (!item.category) return null;
@@ -128,7 +116,7 @@ export function VoiceExpenseConfirmationSheet({
         description: d.description || '',
         merchant: d.merchant || '',
         date: toDate(d.transaction_date || d.date),
-      }))
+      })),
     );
     setCurrentIndex(0);
     setAcceptedCount(0);
@@ -151,13 +139,13 @@ export function VoiceExpenseConfirmationSheet({
 
   const topItem = items[currentIndex];
   const peekItem = items[currentIndex + 1];
-  const allDecided = (items.length === 0 && acceptedCount + rejectedCount > 0) || (items.length > 0 && currentIndex >= items.length);
+  const allDecided =
+    (items.length === 0 && acceptedCount + rejectedCount > 0) ||
+    (items.length > 0 && currentIndex >= items.length);
   const cardDisabled = isSaving || confirmingReject || editingField !== null;
 
   const updateTopItem = (patch: Partial<DraftItem>) => {
-    setItems((prev) =>
-      prev.map((it, i) => (i === currentIndex ? { ...it, ...patch } : it))
-    );
+    setItems((prev) => prev.map((it, i) => (i === currentIndex ? { ...it, ...patch } : it)));
   };
 
   const flashError = (message: string) => {
@@ -301,7 +289,10 @@ export function VoiceExpenseConfirmationSheet({
                           ) : (
                             <Pressable
                               onPress={() => setEditingField('amount')}
-                              style={({ pressed }) => [styles.bigAmountRow, pressed && styles.pressed]}
+                              style={({ pressed }) => [
+                                styles.bigAmountRow,
+                                pressed && styles.pressed,
+                              ]}
                             >
                               <Text style={styles.bigAmount}>
                                 {topItem.amount
@@ -332,9 +323,7 @@ export function VoiceExpenseConfirmationSheet({
                               {topItem.category ? (
                                 <CategoryChip category={topItem.category} styles={styles} />
                               ) : (
-                                <Text style={styles.fieldPlaceholder}>
-                                  Tap to pick a category
-                                </Text>
+                                <Text style={styles.fieldPlaceholder}>Tap to pick a category</Text>
                               )}
                             </Pressable>
                           )}
@@ -358,7 +347,9 @@ export function VoiceExpenseConfirmationSheet({
                                 color={colors.onSurfaceVariant}
                               />
                               <Text
-                                style={topItem.description ? styles.fieldText : styles.fieldPlaceholder}
+                                style={
+                                  topItem.description ? styles.fieldText : styles.fieldPlaceholder
+                                }
                                 numberOfLines={1}
                               >
                                 {topItem.description || 'Add a description'}
@@ -406,7 +397,9 @@ export function VoiceExpenseConfirmationSheet({
                                 color={colors.onSurfaceVariant}
                               />
                               <Text
-                                style={topItem.merchant ? styles.fieldText : styles.fieldPlaceholder}
+                                style={
+                                  topItem.merchant ? styles.fieldText : styles.fieldPlaceholder
+                                }
                                 numberOfLines={1}
                               >
                                 {topItem.merchant || 'Add merchant (optional)'}
@@ -417,7 +410,10 @@ export function VoiceExpenseConfirmationSheet({
                           {editingField !== null ? (
                             <Pressable
                               onPress={() => setEditingField(null)}
-                              style={({ pressed }) => [styles.doneButton, pressed && styles.pressed]}
+                              style={({ pressed }) => [
+                                styles.doneButton,
+                                pressed && styles.pressed,
+                              ]}
                             >
                               <Text style={styles.doneButtonText}>Done</Text>
                             </Pressable>
@@ -475,29 +471,20 @@ export function VoiceExpenseConfirmationSheet({
 
                 {confirmingReject ? (
                   <View style={styles.confirmOverlay}>
-                    <Pressable
-                      style={styles.confirmBackdrop}
-                      onPress={handleCancelReject}
-                    />
+                    <Pressable style={styles.confirmBackdrop} onPress={handleCancelReject} />
                     <View style={styles.confirmCard}>
                       <Text style={styles.confirmTitle}>Reject this expense?</Text>
-                      <Text style={styles.confirmBody}>It won't be saved.</Text>
+                      <Text style={styles.confirmBody}>It won&apos;t be saved.</Text>
                       <View style={styles.confirmActions}>
                         <Pressable
                           onPress={handleCancelReject}
-                          style={({ pressed }) => [
-                            styles.confirmCancel,
-                            pressed && styles.pressed,
-                          ]}
+                          style={({ pressed }) => [styles.confirmCancel, pressed && styles.pressed]}
                         >
                           <Text style={styles.confirmCancelText}>Cancel</Text>
                         </Pressable>
                         <Pressable
                           onPress={handleConfirmReject}
-                          style={({ pressed }) => [
-                            styles.confirmReject,
-                            pressed && styles.pressed,
-                          ]}
+                          style={({ pressed }) => [styles.confirmReject, pressed && styles.pressed]}
                         >
                           <Text style={styles.confirmRejectText}>Reject</Text>
                         </Pressable>
@@ -546,11 +533,7 @@ function PeekCard({
           )}
         </View>
         <View style={styles.fieldRow}>
-          <MaterialCommunityIcons
-            name="text-short"
-            size={16}
-            color={styles.fieldIcon.color}
-          />
+          <MaterialCommunityIcons name="text-short" size={16} color={styles.fieldIcon.color} />
           <Text
             style={item.description ? styles.fieldText : styles.fieldPlaceholder}
             numberOfLines={1}
@@ -585,7 +568,9 @@ function CategoryChip({
       <View
         style={[
           styles.chipIconContainer,
-          { backgroundColor: config.iconBackgroundColor || `${config.color}22` },
+          {
+            backgroundColor: config.iconBackgroundColor || `${config.color}22`,
+          },
         ]}
       >
         <MaterialCommunityIcons
@@ -614,15 +599,9 @@ function SummaryView({
 }) {
   return (
     <View style={styles.summaryContainer}>
-      <MaterialCommunityIcons
-        name="check-decagram"
-        size={56}
-        color={styles.summaryTitle.color}
-      />
+      <MaterialCommunityIcons name="check-decagram" size={56} color={styles.summaryTitle.color} />
       <Text style={styles.summaryTitle}>
-        {accepted > 0
-          ? `${accepted} expense${accepted === 1 ? '' : 's'} saved`
-          : 'Nothing saved'}
+        {accepted > 0 ? `${accepted} expense${accepted === 1 ? '' : 's'} saved` : 'Nothing saved'}
       </Text>
       {rejected > 0 ? (
         <Text style={styles.summarySubtitle}>

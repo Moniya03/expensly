@@ -1,4 +1,7 @@
-import React, { useMemo, useState } from 'react';
+import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -10,10 +13,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import * as ImagePicker from 'expo-image-picker';
-import { borderRadius, spacing, typography, useColors, type Colors } from '../constants/theme';
+import { borderRadius, type Colors, spacing, typography, useColors } from '../constants/theme';
 import { submitBugReport, submitFeedback, uploadBugAttachment } from '../services/support';
 
 type Mode = 'bug' | 'feedback';
@@ -124,13 +124,17 @@ export default function SupportScreen() {
                 style={[styles.segmentButton, mode === 'bug' && styles.segmentActive]}
                 onPress={() => switchMode('bug')}
               >
-                <Text style={[styles.segmentText, mode === 'bug' && styles.segmentTextActive]}>Report a bug</Text>
+                <Text style={[styles.segmentText, mode === 'bug' && styles.segmentTextActive]}>
+                  Report a bug
+                </Text>
               </Pressable>
               <Pressable
                 style={[styles.segmentButton, mode === 'feedback' && styles.segmentActive]}
                 onPress={() => switchMode('feedback')}
               >
-                <Text style={[styles.segmentText, mode === 'feedback' && styles.segmentTextActive]}>Feedback</Text>
+                <Text style={[styles.segmentText, mode === 'feedback' && styles.segmentTextActive]}>
+                  Feedback
+                </Text>
               </Pressable>
             </View>
 
@@ -214,7 +218,9 @@ export default function SupportScreen() {
               {isSubmitting ? (
                 <ActivityIndicator size="small" color={colors.surface} />
               ) : (
-                <Text style={styles.submitText}>{mode === 'bug' ? 'Send report' : 'Send feedback'}</Text>
+                <Text style={styles.submitText}>
+                  {mode === 'bug' ? 'Send report' : 'Send feedback'}
+                </Text>
               )}
             </Pressable>
           </>

@@ -1,14 +1,14 @@
-import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, ActivityIndicator } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import React, { useMemo } from 'react';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { borderRadius, spacing, typography, useColors, type Colors } from '../../constants/theme';
-import { useAuthStore } from '../../stores/authStore';
-import { useAllTransactions } from '../../hooks/useTransactions';
-import { getHistoricalBudgetForMonth, useBudgets } from '../../hooks/useBudget';
-import { Transaction } from '../../types';
-import { formatRupees } from '../../utils/currency';
 import { getCategoryColor, getCategoryConfig } from '../../constants/categories';
+import { borderRadius, type Colors, spacing, typography, useColors } from '../../constants/theme';
+import { getHistoricalBudgetForMonth, useBudgets } from '../../hooks/useBudget';
+import { useAllTransactions } from '../../hooks/useTransactions';
+import { useAuthStore } from '../../stores/authStore';
+import type { Transaction } from '../../types';
+import { formatRupees } from '../../utils/currency';
 import { parseLocalDate } from '../../utils/date';
 
 type MonthItem = {
@@ -56,7 +56,9 @@ export default function HistoryScreen() {
         spent,
         budget,
         transactions: monthTransactions.sort(
-          (a, b) => parseLocalDate(b.transaction_date).getTime() - parseLocalDate(a.transaction_date).getTime()
+          (a, b) =>
+            parseLocalDate(b.transaction_date).getTime() -
+            parseLocalDate(a.transaction_date).getTime(),
         ),
       };
     });
@@ -70,10 +72,11 @@ export default function HistoryScreen() {
     }
   }, [monthItems, selectedKey]);
 
-  const selectedMonth = monthItems.find((item) => item.key === selectedKey) ?? monthItems[monthItems.length - 1];
+  const selectedMonth =
+    monthItems.find((item) => item.key === selectedKey) ?? monthItems[monthItems.length - 1];
   const maxValue = React.useMemo(
     () => Math.max(...monthItems.flatMap((item) => [item.spent, item.budget]), 1),
-    [monthItems]
+    [monthItems],
   );
 
   if (transactionsLoading || budgetsLoading) {
@@ -113,7 +116,10 @@ export default function HistoryScreen() {
               const selected = item.key === selectedMonth?.key;
               const spentHeight = Math.max((item.spent / maxValue) * 140, item.spent > 0 ? 10 : 4);
 
-              const budgetHeight = Math.max((item.budget / maxValue) * 140, item.budget > 0 ? 10 : 4);
+              const budgetHeight = Math.max(
+                (item.budget / maxValue) * 140,
+                item.budget > 0 ? 10 : 4,
+              );
 
               return (
                 <Pressable
@@ -125,7 +131,9 @@ export default function HistoryScreen() {
                     <View style={[styles.bar, styles.budgetBar, { height: budgetHeight }]} />
                     <View style={[styles.bar, styles.spentBar, { height: spentHeight }]} />
                   </View>
-                  <Text style={[styles.monthLabel, selected && styles.monthLabelSelected]}>{item.label}</Text>
+                  <Text style={[styles.monthLabel, selected && styles.monthLabelSelected]}>
+                    {item.label}
+                  </Text>
                 </Pressable>
               );
             })}
@@ -136,10 +144,13 @@ export default function HistoryScreen() {
           <View style={styles.monthSection}>
             <View style={styles.summaryCard}>
               <Text style={styles.summaryTitle}>
-                {new Date(selectedMonth.year, selectedMonth.month - 1, 1).toLocaleDateString('en-IN', {
-                  month: 'long',
-                  year: 'numeric',
-                })}
+                {new Date(selectedMonth.year, selectedMonth.month - 1, 1).toLocaleDateString(
+                  'en-IN',
+                  {
+                    month: 'long',
+                    year: 'numeric',
+                  },
+                )}
               </Text>
 
               <View style={styles.summaryGrid}>
@@ -156,8 +167,8 @@ export default function HistoryScreen() {
                   <Text style={[styles.summaryValue, delta < 0 && styles.overValue]}>
                     {formatRupees(Math.abs(delta))}
                   </Text>
-                  </View>
                 </View>
+              </View>
             </View>
 
             <View style={styles.transactionsSection}>
@@ -171,15 +182,23 @@ export default function HistoryScreen() {
 
                     return (
                       <React.Fragment key={transaction.id}>
-                          <View style={styles.transactionItem}>
-                            <View
-                              style={[
-                                styles.transactionIcon,
-                                { backgroundColor: categoryConfig.iconBackgroundColor ?? `${categoryConfig.iconColor}18` },
-                              ]}
-                            >
+                        <View style={styles.transactionItem}>
+                          <View
+                            style={[
+                              styles.transactionIcon,
+                              {
+                                backgroundColor:
+                                  categoryConfig.iconBackgroundColor ??
+                                  `${categoryConfig.iconColor}18`,
+                              },
+                            ]}
+                          >
                             <MaterialCommunityIcons
-                              name={categoryConfig.iconName as React.ComponentProps<typeof MaterialCommunityIcons>['name']}
+                              name={
+                                categoryConfig.iconName as React.ComponentProps<
+                                  typeof MaterialCommunityIcons
+                                >['name']
+                              }
                               size={20}
                               color={categoryConfig.iconColor}
                             />
@@ -190,19 +209,24 @@ export default function HistoryScreen() {
                               {transaction.description || categoryConfig.label}
                             </Text>
                             <Text style={styles.transactionMeta}>
-                              {parseLocalDate(transaction.transaction_date).toLocaleDateString('en-IN', {
-                                day: 'numeric',
-                                month: 'short',
-                              })}
+                              {parseLocalDate(transaction.transaction_date).toLocaleDateString(
+                                'en-IN',
+                                {
+                                  day: 'numeric',
+                                  month: 'short',
+                                },
+                              )}
                               {transaction.merchant ? ` • ${transaction.merchant}` : ''}
                             </Text>
                           </View>
 
-                          <Text style={[styles.transactionAmount, { color: categoryColor }]}> 
+                          <Text style={[styles.transactionAmount, { color: categoryColor }]}>
                             {formatRupees(transaction.amount)}
                           </Text>
                         </View>
-                        {index < selectedMonth.transactions.length - 1 ? <View style={styles.transactionSeparator} /> : null}
+                        {index < selectedMonth.transactions.length - 1 ? (
+                          <View style={styles.transactionSeparator} />
+                        ) : null}
                       </React.Fragment>
                     );
                   })}
@@ -220,201 +244,202 @@ export default function HistoryScreen() {
   );
 }
 
-const createStyles = (colors: Colors) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.surface,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  content: {
-    padding: spacing.md,
-    paddingBottom: 156,
-    gap: spacing.lg,
-  },
-  header: {
-    gap: 6,
-  },
-  title: {
-    fontSize: typography.fontSize.xxxl,
-    fontWeight: typography.fontWeight.bold,
-    color: colors.onSurface,
-  },
-  subtitle: {
-    fontSize: typography.fontSize.md,
-    color: colors.onSurfaceVariant,
-  },
-  chartCard: {
-    backgroundColor: colors.surfaceContainerHigh,
-    borderRadius: borderRadius.md,
-    borderWidth: 1,
-    borderColor: colors.outlineVariant,
-    padding: spacing.md,
-    gap: spacing.md,
-  },
-  legendRow: {
-    flexDirection: 'row',
-    gap: spacing.md,
-  },
-  legendItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-  },
-  legendDot: {
-    width: 10,
-    height: 10,
-    borderRadius: borderRadius.full,
-  },
-  legendText: {
-    color: colors.onSurfaceVariant,
-    fontSize: typography.fontSize.xs,
-  },
-  barChart: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    justifyContent: 'space-between',
-    gap: spacing.sm,
-    minHeight: 180,
-  },
-  monthColumn: {
-    flex: 1,
-    alignItems: 'center',
-    borderRadius: borderRadius.md,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: 2,
-  },
-  monthColumnSelected: {
-    backgroundColor: colors.surfaceContainerHighest,
-  },
-  barGroup: {
-    height: 148,
-    width: '100%',
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    justifyContent: 'center',
-    gap: 5,
-  },
-  bar: {
-    width: 12,
-    borderRadius: borderRadius.sm,
-  },
-  spentBar: {
-    backgroundColor: colors.primary,
-  },
-  budgetBar: {
-    backgroundColor: colors.onSurfaceVariant,
-    opacity: 0.3,
-  },
-  monthLabel: {
-    marginTop: spacing.sm,
-    fontSize: typography.fontSize.xs,
-    color: colors.onSurfaceVariant,
-  },
-  monthLabelSelected: {
-    color: colors.onSurface,
-    fontWeight: typography.fontWeight.semiBold,
-  },
-  summaryCard: {
-    backgroundColor: 'transparent',
-    padding: spacing.md,
-    gap: spacing.md,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.outlineVariant,
-  },
-  monthSection: {
-    gap: spacing.md,
-  },
-  summaryTitle: {
-    fontSize: typography.fontSize.xl,
-    fontWeight: typography.fontWeight.bold,
-    color: colors.onSurface,
-  },
-  summaryGrid: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-  },
-  summaryStat: {
-    flex: 1,
-    paddingVertical: spacing.xs,
-    gap: 4,
-  },
-  summaryLabel: {
-    fontSize: typography.fontSize.xs,
-    color: colors.onSurfaceVariant,
-  },
-  summaryValue: {
-    fontSize: typography.fontSize.md,
-    color: colors.onSurface,
-    fontWeight: typography.fontWeight.bold,
-  },
-  overValue: {
-    color: colors.error,
-  },
-  transactionsSection: {
-    gap: spacing.md,
-  },
-  transactionsTitle: {
-    fontSize: 10,
-    fontWeight: typography.fontWeight.semiBold,
-    color: colors.onSurfaceVariant,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-  },
-  transactionList: {
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.outlineVariant,
-  },
-  transactionItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: spacing.md,
-  },
-  transactionSeparator: {
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: colors.outlineVariant,
-    marginLeft: 58,
-  },
-  transactionIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: borderRadius.full,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: spacing.md,
-  },
-  transactionEmoji: {
-    fontSize: 18,
-  },
-  transactionDetails: {
-    flex: 1,
-  },
-  transactionDescription: {
-    fontSize: typography.fontSize.md,
-    color: colors.onSurface,
-    fontWeight: typography.fontWeight.medium,
-  },
-  transactionMeta: {
-    marginTop: 2,
-    fontSize: typography.fontSize.xs,
-    color: colors.onSurfaceVariant,
-  },
-  transactionAmount: {
-    fontSize: typography.fontSize.md,
-    fontWeight: typography.fontWeight.bold,
-    marginLeft: spacing.sm,
-  },
-  emptyCard: {
-    paddingVertical: spacing.lg,
-    alignItems: 'center',
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.outlineVariant,
-  },
-  emptyText: {
-    fontSize: typography.fontSize.md,
-    color: colors.onSurfaceVariant,
-  },
-});
+const createStyles = (colors: Colors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.surface,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    content: {
+      padding: spacing.md,
+      paddingBottom: 156,
+      gap: spacing.lg,
+    },
+    header: {
+      gap: 6,
+    },
+    title: {
+      fontSize: typography.fontSize.xxxl,
+      fontWeight: typography.fontWeight.bold,
+      color: colors.onSurface,
+    },
+    subtitle: {
+      fontSize: typography.fontSize.md,
+      color: colors.onSurfaceVariant,
+    },
+    chartCard: {
+      backgroundColor: colors.surfaceContainerHigh,
+      borderRadius: borderRadius.md,
+      borderWidth: 1,
+      borderColor: colors.outlineVariant,
+      padding: spacing.md,
+      gap: spacing.md,
+    },
+    legendRow: {
+      flexDirection: 'row',
+      gap: spacing.md,
+    },
+    legendItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.xs,
+    },
+    legendDot: {
+      width: 10,
+      height: 10,
+      borderRadius: borderRadius.full,
+    },
+    legendText: {
+      color: colors.onSurfaceVariant,
+      fontSize: typography.fontSize.xs,
+    },
+    barChart: {
+      flexDirection: 'row',
+      alignItems: 'flex-end',
+      justifyContent: 'space-between',
+      gap: spacing.sm,
+      minHeight: 180,
+    },
+    monthColumn: {
+      flex: 1,
+      alignItems: 'center',
+      borderRadius: borderRadius.md,
+      paddingVertical: spacing.sm,
+      paddingHorizontal: 2,
+    },
+    monthColumnSelected: {
+      backgroundColor: colors.surfaceContainerHighest,
+    },
+    barGroup: {
+      height: 148,
+      width: '100%',
+      flexDirection: 'row',
+      alignItems: 'flex-end',
+      justifyContent: 'center',
+      gap: 5,
+    },
+    bar: {
+      width: 12,
+      borderRadius: borderRadius.sm,
+    },
+    spentBar: {
+      backgroundColor: colors.primary,
+    },
+    budgetBar: {
+      backgroundColor: colors.onSurfaceVariant,
+      opacity: 0.3,
+    },
+    monthLabel: {
+      marginTop: spacing.sm,
+      fontSize: typography.fontSize.xs,
+      color: colors.onSurfaceVariant,
+    },
+    monthLabelSelected: {
+      color: colors.onSurface,
+      fontWeight: typography.fontWeight.semiBold,
+    },
+    summaryCard: {
+      backgroundColor: 'transparent',
+      padding: spacing.md,
+      gap: spacing.md,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.outlineVariant,
+    },
+    monthSection: {
+      gap: spacing.md,
+    },
+    summaryTitle: {
+      fontSize: typography.fontSize.xl,
+      fontWeight: typography.fontWeight.bold,
+      color: colors.onSurface,
+    },
+    summaryGrid: {
+      flexDirection: 'row',
+      gap: spacing.sm,
+    },
+    summaryStat: {
+      flex: 1,
+      paddingVertical: spacing.xs,
+      gap: 4,
+    },
+    summaryLabel: {
+      fontSize: typography.fontSize.xs,
+      color: colors.onSurfaceVariant,
+    },
+    summaryValue: {
+      fontSize: typography.fontSize.md,
+      color: colors.onSurface,
+      fontWeight: typography.fontWeight.bold,
+    },
+    overValue: {
+      color: colors.error,
+    },
+    transactionsSection: {
+      gap: spacing.md,
+    },
+    transactionsTitle: {
+      fontSize: 10,
+      fontWeight: typography.fontWeight.semiBold,
+      color: colors.onSurfaceVariant,
+      textTransform: 'uppercase',
+      letterSpacing: 1,
+    },
+    transactionList: {
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: colors.outlineVariant,
+    },
+    transactionItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: spacing.md,
+    },
+    transactionSeparator: {
+      height: StyleSheet.hairlineWidth,
+      backgroundColor: colors.outlineVariant,
+      marginLeft: 58,
+    },
+    transactionIcon: {
+      width: 42,
+      height: 42,
+      borderRadius: borderRadius.full,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginRight: spacing.md,
+    },
+    transactionEmoji: {
+      fontSize: 18,
+    },
+    transactionDetails: {
+      flex: 1,
+    },
+    transactionDescription: {
+      fontSize: typography.fontSize.md,
+      color: colors.onSurface,
+      fontWeight: typography.fontWeight.medium,
+    },
+    transactionMeta: {
+      marginTop: 2,
+      fontSize: typography.fontSize.xs,
+      color: colors.onSurfaceVariant,
+    },
+    transactionAmount: {
+      fontSize: typography.fontSize.md,
+      fontWeight: typography.fontWeight.bold,
+      marginLeft: spacing.sm,
+    },
+    emptyCard: {
+      paddingVertical: spacing.lg,
+      alignItems: 'center',
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: colors.outlineVariant,
+    },
+    emptyText: {
+      fontSize: typography.fontSize.md,
+      color: colors.onSurfaceVariant,
+    },
+  });

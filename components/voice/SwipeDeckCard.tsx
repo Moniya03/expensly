@@ -1,16 +1,16 @@
 import React, { useImperativeHandle, useMemo } from 'react';
-import { StyleSheet, Text, View, useWindowDimensions, type ViewStyle } from 'react-native';
+import { StyleSheet, Text, useWindowDimensions, View, type ViewStyle } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
+  Easing,
   Extrapolation,
   interpolate,
   runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
-  Easing,
 } from 'react-native-reanimated';
-import { borderRadius, spacing, typography, useColors, type Colors } from '../../constants/theme';
+import { borderRadius, type Colors, spacing, typography, useColors } from '../../constants/theme';
 
 const SWIPE_THRESHOLD = 90;
 const FLY_OFF_DURATION = 300;
@@ -47,23 +47,50 @@ export const SwipeDeckCard = React.forwardRef<SwipeDeckCardHandle, SwipeDeckCard
 
     const springBack = () => {
       'worklet';
-      translateX.value = withTiming(0, { duration: SPRING_BACK_DURATION, easing: Easing.out(Easing.cubic) });
-      translateY.value = withTiming(0, { duration: SPRING_BACK_DURATION, easing: Easing.out(Easing.cubic) });
-      rotate.value = withTiming(0, { duration: SPRING_BACK_DURATION, easing: Easing.out(Easing.cubic) });
+      translateX.value = withTiming(0, {
+        duration: SPRING_BACK_DURATION,
+        easing: Easing.out(Easing.cubic),
+      });
+      translateY.value = withTiming(0, {
+        duration: SPRING_BACK_DURATION,
+        easing: Easing.out(Easing.cubic),
+      });
+      rotate.value = withTiming(0, {
+        duration: SPRING_BACK_DURATION,
+        easing: Easing.out(Easing.cubic),
+      });
     };
 
     const flyOffRight = () => {
       'worklet';
-      translateX.value = withTiming(flyTarget, { duration: FLY_OFF_DURATION, easing: Easing.out(Easing.cubic) });
-      translateY.value = withTiming(0, { duration: FLY_OFF_DURATION, easing: Easing.out(Easing.cubic) });
-      rotate.value = withTiming(0, { duration: FLY_OFF_DURATION, easing: Easing.out(Easing.cubic) });
+      translateX.value = withTiming(flyTarget, {
+        duration: FLY_OFF_DURATION,
+        easing: Easing.out(Easing.cubic),
+      });
+      translateY.value = withTiming(0, {
+        duration: FLY_OFF_DURATION,
+        easing: Easing.out(Easing.cubic),
+      });
+      rotate.value = withTiming(0, {
+        duration: FLY_OFF_DURATION,
+        easing: Easing.out(Easing.cubic),
+      });
     };
 
     const flyOffLeft = () => {
       'worklet';
-      translateX.value = withTiming(-flyTarget, { duration: FLY_OFF_DURATION, easing: Easing.out(Easing.cubic) });
-      translateY.value = withTiming(0, { duration: FLY_OFF_DURATION, easing: Easing.out(Easing.cubic) });
-      rotate.value = withTiming(0, { duration: FLY_OFF_DURATION, easing: Easing.out(Easing.cubic) });
+      translateX.value = withTiming(-flyTarget, {
+        duration: FLY_OFF_DURATION,
+        easing: Easing.out(Easing.cubic),
+      });
+      translateY.value = withTiming(0, {
+        duration: FLY_OFF_DURATION,
+        easing: Easing.out(Easing.cubic),
+      });
+      rotate.value = withTiming(0, {
+        duration: FLY_OFF_DURATION,
+        easing: Easing.out(Easing.cubic),
+      });
     };
 
     // JS-thread handler: awaits the save, then chooses fly-off vs retract.
@@ -123,7 +150,7 @@ export const SwipeDeckCard = React.forwardRef<SwipeDeckCardHandle, SwipeDeckCard
         translateX.value,
         [0, SWIPE_THRESHOLD],
         [0, 1],
-        Extrapolation.CLAMP
+        Extrapolation.CLAMP,
       );
       return { opacity };
     });
@@ -133,7 +160,7 @@ export const SwipeDeckCard = React.forwardRef<SwipeDeckCardHandle, SwipeDeckCard
         translateX.value,
         [0, -SWIPE_THRESHOLD],
         [0, 1],
-        Extrapolation.CLAMP
+        Extrapolation.CLAMP,
       );
       return { opacity };
     });
@@ -142,12 +169,21 @@ export const SwipeDeckCard = React.forwardRef<SwipeDeckCardHandle, SwipeDeckCard
       ref,
       () => ({
         retract: () => {
-          translateX.value = withTiming(0, { duration: RETRACT_DURATION, easing: Easing.out(Easing.cubic) });
-          translateY.value = withTiming(0, { duration: RETRACT_DURATION, easing: Easing.out(Easing.cubic) });
-          rotate.value = withTiming(0, { duration: RETRACT_DURATION, easing: Easing.out(Easing.cubic) });
+          translateX.value = withTiming(0, {
+            duration: RETRACT_DURATION,
+            easing: Easing.out(Easing.cubic),
+          });
+          translateY.value = withTiming(0, {
+            duration: RETRACT_DURATION,
+            easing: Easing.out(Easing.cubic),
+          });
+          rotate.value = withTiming(0, {
+            duration: RETRACT_DURATION,
+            easing: Easing.out(Easing.cubic),
+          });
         },
       }),
-      [translateX, translateY, rotate]
+      [translateX, translateY, rotate],
     );
 
     return (
@@ -177,7 +213,7 @@ export const SwipeDeckCard = React.forwardRef<SwipeDeckCardHandle, SwipeDeckCard
         </Animated.View>
       </GestureDetector>
     );
-  }
+  },
 );
 
 SwipeDeckCard.displayName = 'SwipeDeckCard';
