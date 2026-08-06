@@ -42,3 +42,6 @@ yarn-error.*
 
 # Design Assets
 .stitch/
+
+# Agent 
+.pi/
