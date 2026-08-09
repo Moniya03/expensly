@@ -2,21 +2,36 @@
 
 **Voice-first expense tracker for students** - Track expenses naturally using voice input, eliminating the friction of manual data entry.
 
+## Features
+
+- 🎤 **Voice expense logging** - Say "spent 200 on lunch" and the expense is parsed and saved (OpenAI Whisper transcription + on-device category parsing)
+- 💸 **Expense tracking** - Manual and voice entry, notes, backdating, categories
+- 📊 **Insights** - Monthly category breakdowns and spending analysis
+- 🎯 **Budgets** - Per-category monthly budget targets with progress
+- 🏺 **Goals (Jars)** - Savings goals with custom icons and progress tracking
+- 🤝 **Split expenses** - Track friend splits
+- 📤 **CSV export** - Export transaction history
+- 🔐 **Google Sign-In** - Supabase Auth with Google OAuth
+- ☁️ **OTA updates** - JS-only changes ship instantly via EAS Update
+
 ## Tech Stack
 
 - **Framework**: React Native with Expo SDK 54
 - **Navigation**: Expo Router (file-based routing)
-- **Backend**: Supabase (authentication, database, storage)
+- **Backend**: Supabase (authentication, database, edge functions)
 - **State Management**: Zustand
 - **Data Fetching**: TanStack React Query
+- **Voice**: OpenAI Whisper (via Supabase edge function)
 - **Language**: TypeScript
+- **Code Quality**: Biome (lint + format), ESLint (expo), `tsc --noEmit`
 
 ## Prerequisites
 
 - **Node.js** 18 or higher
-- **npm** or **yarn**
+- **bun** (package manager — `bun.lock` is the lockfile)
 - **Expo Go** app on your phone (for testing on device)
 - **Supabase account** (free tier available at [supabase.com](https://supabase.com))
+- **Google Cloud OAuth client** (web client ID for sign-in)
 
 ## Setup Instructions
 
@@ -28,24 +43,27 @@
 
 2. **Install dependencies**
    ```bash
-   npm install
+   bun install
    ```
 
 3. **Configure environment variables**
-   ```bash
-   cp .env.example .env
-   ```
-   
-   Edit `.env` and add your Supabase credentials:
+
+   Create `.env` (gitignored) with your Supabase and Google credentials:
    - `EXPO_PUBLIC_SUPABASE_URL`: Your Supabase project URL
    - `EXPO_PUBLIC_SUPABASE_ANON_KEY`: Your Supabase anonymous key
-   - `EXPO_PUBLIC_API_URL`: Backend API URL (optional)
+   - `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID`: Your Google OAuth web client ID
 
-4. **Run the app**
+   These are inlined at bundle time (public prefix) — the same three values are stored as GitHub Actions secrets for CI builds (see [docs/secrets.md](docs/secrets.md)).
+
+4. **Set up the database**
+
+   The Supabase schema lives in `../supabase/migrations/`. Apply the migrations in order via the Supabase SQL Editor (see `../supabase/QUICKSTART.md`).
+
+5. **Run the app**
    ```bash
-   npm start
+   bun start
    ```
-   
+
    Scan the QR code with the Expo Go app to preview on your device.
 
 ## Project Structure
@@ -53,18 +71,32 @@
 ```
 expensly-app/
 ├── app/                    # Expo Router pages (file-based routing)
-│   ├── (auth)/            # Authentication screens
-│   ├── (tabs)/            # Main tab navigation
+│   ├── (auth)/            # Authentication screens (welcome)
+│   ├── (tabs)/            # Main tab navigation (home, history, voice, goals, profile)
+│   ├── onboarding/        # First-run onboarding (name, budget)
+│   ├── insights/          # Monthly insights and analysis
+│   ├── transaction/       # Add/edit transaction
+│   ├── settings.tsx       # App settings
+│   ├── support.tsx        # Support and feedback
 │   ├── _layout.tsx        # Root layout
 │   └── index.tsx          # Entry point (welcome screen)
 ├── components/            # Reusable UI components
-├── services/              # API services (Supabase, etc.)
+│   ├── home/              # Home dashboard widgets
+│   ├── goals/             # Savings goals UI
+│   ├── profile/           # Profile screen pieces
+│   ├── transactions/      # Transaction list/cards
+│   ├── voice/             # Voice capture UI
+│   └── ui/                # Shared primitives
+├── services/              # API services (Supabase, voice, export, support)
 ├── stores/                # Zustand state management
 ├── types/                 # TypeScript type definitions
 ├── constants/             # App constants (colors, config)
 ├── hooks/                 # Custom React hooks
 ├── utils/                 # Utility functions
-└── assets/                # Images, fonts, and static assets
+├── assets/                # Images, fonts, and static assets
+├── scripts/               # CI/CD helper scripts (build.gradle patch, signing preflight)
+├── docs/                  # Pipeline, release, OTA, secrets, troubleshooting docs
+└── .github/workflows/     # GitHub Actions: CI, native release, OTA publish
 ```
 
 ### Key Directories
@@ -81,37 +113,34 @@ expensly-app/
 
 - **Start development server**:
   ```bash
-  npm start
+  bun start
   ```
 
 - **Run on iOS simulator**:
   ```bash
-  npm run ios
+  bun run ios
   ```
 
 - **Run on Android emulator**:
   ```bash
-  npm run android
+  bun run android
   ```
 
 - **Run on web**:
   ```bash
-  npm run web
+  bun run web
   ```
 
-### Type Checking
+### Quality Gates
 
-Run TypeScript type checking without emitting files:
 ```bash
-npx tsc --noEmit
+bun run lint          # Biome lint
+bun run format        # Biome format (write mode)
+bun run check-types   # TypeScript type checking (tsc --noEmit)
+bun run lint:expo     # ESLint via expo lint
 ```
 
-### Code Quality
-
-- Follow the existing code structure and naming conventions
-- Use TypeScript strict mode
-- Keep components focused and reusable
-- Write meaningful commit messages
+These exact checks run in CI on every PR (see [docs/pipeline.md](docs/pipeline.md)).
 
 ## Architecture
 
@@ -126,39 +155,40 @@ For detailed architecture documentation, see [ARCHITECTURE.md](../ARCHITECTURE.m
 
 ### Key Patterns
 
-- **Authentication Flow**: Managed by `authStore` (Zustand) + Supabase Auth
+- **Authentication Flow**: Managed by `authStore` (Zustand) + Supabase Auth (Google OAuth)
 - **Navigation**: File-based routing with Expo Router
 - **State Management**: Zustand for global state, React Query for server state
 - **API Integration**: Centralized in `services/` directory
 
-## Current Status
+## CI/CD Pipeline
 
-### Completed
+The repo ships a full two-layer release pipeline on GitHub Actions:
 
-- ✅ **Milestone 1 (Partial)**: Authentication skeleton and welcome screen
-  - Welcome screen with branding
-  - Basic auth flow structure
-  - Environment configuration
-  - Project scaffolding with Expo Router
+| Workflow | Trigger | What it does |
+|---|---|---|
+| `ci.yml` | PRs to `main` | Runs Biome lint, expo lint, and `tsc --noEmit` |
+| `release-mobile.yml` | Version bump in `package.json` (or manual dispatch) | Builds 4 signed APKs (universal + arm64 + armeabi-v7a + x86_64) and publishes a GitHub Release with an auto-generated changelog |
+| `ota-publish.yml` | Any app-code push to `main` | Publishes a JS-only update to the production channel via EAS Update (gated by runtime fingerprint) |
 
-### In Progress
+Native APKs are signed with the Expensly keystore stored in GitHub secrets — never committed. JS-only fixes reach users within minutes without reinstalling; native changes require a version bump.
 
-- 🚧 Google OAuth integration
-- 🚧 Home dashboard UI
+For full details see [docs/pipeline.md](docs/pipeline.md), [docs/release.md](docs/release.md), and [docs/ota.md](docs/ota.md).
 
-### Next Steps
+## Documentation
 
-1. Complete Google OAuth implementation
-2. Build main dashboard with expense overview
-3. Implement voice-to-text expense capture
-4. Add expense categorization
-5. Create analytics and insights view
+- [docs/README.md](docs/README.md) - Index and quickstart for the pipeline
+- [docs/pipeline.md](docs/pipeline.md) - Architecture and trigger matrix of all 3 workflows
+- [docs/release.md](docs/release.md) - When to bump versions, release flow, verification, APK rollback
+- [docs/ota.md](docs/ota.md) - EAS Update behavior, fingerprint coupling, dashboard rollback
+- [docs/secrets.md](docs/secrets.md) - The 8 CI secrets, keystore facts, backup requirements
+- [docs/troubleshooting.md](docs/troubleshooting.md) - Failure modes and the versionCode monotonicity trap
+- [ARCHITECTURE.md](../ARCHITECTURE.md) - App architecture overview
 
 ## Contributing
 
 1. Create a feature branch from `main`
-2. Make your changes following the code style
-3. Test on both iOS and Android
+2. Make your changes following the code style (Biome enforced)
+3. Run `bun run lint`, `bun run check-types`, and `bun run lint:expo`
 4. Submit a pull request with a clear description
 
 ## License
