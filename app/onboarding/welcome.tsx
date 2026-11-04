@@ -1,13 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useMemo } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { Button, Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { type Colors, spacing, typography, useColors } from '../../constants/theme';
+import { type AppTheme, spacing, typography, useAppTheme } from '../../constants/theme';
 
 export default function OnboardingWelcomeScreen() {
-  const colors = useColors();
-  const styles = useMemo(() => createStyles(colors), [colors]);
+  const theme = useAppTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const router = useRouter();
 
   return (
@@ -17,33 +18,39 @@ export default function OnboardingWelcomeScreen() {
 
       <View style={styles.content}>
         <View style={styles.iconContainer}>
-          <Ionicons name="mic-outline" size={64} color={colors.primary} />
+          <Ionicons name="mic-outline" size={64} color={theme.colors.primary} />
         </View>
 
-        <Text style={styles.title}>Expensly.</Text>
-        <Text style={styles.subtitle}>Manage your transactions simply with a voice message.</Text>
+        <Text variant="displaySmall" style={styles.title}>
+          Expensly.
+        </Text>
+        <Text variant="bodyLarge" style={styles.subtitle}>
+          Manage your transactions simply with a voice message.
+        </Text>
       </View>
 
       <View style={styles.footer}>
-        <Pressable style={styles.primaryButton} onPress={() => router.push('/onboarding/name')}>
-          <Text style={styles.primaryButtonText}>Get Started</Text>
-          <Ionicons
-            name="arrow-forward"
-            size={20}
-            color={colors.onAccent}
-            style={styles.buttonIcon}
-          />
-        </Pressable>
+        <Button
+          mode="contained"
+          buttonColor={theme.colors.primary}
+          textColor={theme.colors.onPrimary}
+          icon="arrow-right"
+          contentStyle={styles.buttonContent}
+          style={styles.primaryButton}
+          onPress={() => router.push('/onboarding/name')}
+        >
+          Get Started
+        </Button>
       </View>
     </SafeAreaView>
   );
 }
 
-const createStyles = (colors: Colors) =>
+const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: colors.surface,
+      backgroundColor: theme.colors.surface,
     },
     ambientGlow: {
       position: 'absolute',
@@ -52,7 +59,7 @@ const createStyles = (colors: Colors) =>
       width: 400,
       height: 400,
       borderRadius: 200,
-      backgroundColor: `${colors.primary}15`,
+      backgroundColor: `${theme.colors.primary}15`,
       transform: [{ scale: 1.5 }],
     },
     content: {
@@ -65,15 +72,13 @@ const createStyles = (colors: Colors) =>
       marginBottom: spacing.xxl,
     },
     title: {
-      color: colors.onSurface,
-      fontSize: typography.fontSize.xxxl * 1.2,
+      color: theme.colors.onSurface,
       fontWeight: typography.fontWeight.bold,
       marginBottom: spacing.lg,
       letterSpacing: -1,
     },
     subtitle: {
-      color: colors.onSurfaceVariant,
-      fontSize: typography.fontSize.xl,
+      color: theme.colors.onSurfaceVariant,
       lineHeight: 32,
       fontWeight: typography.fontWeight.regular,
     },
@@ -82,20 +87,9 @@ const createStyles = (colors: Colors) =>
       paddingBottom: spacing.xxl,
     },
     primaryButton: {
-      minHeight: 64,
-      borderRadius: 32,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      backgroundColor: colors.primary,
-      paddingHorizontal: spacing.xl,
+      borderRadius: 28,
     },
-    primaryButtonText: {
-      color: colors.onAccent,
-      fontSize: typography.fontSize.lg,
-      fontWeight: typography.fontWeight.semiBold,
-    },
-    buttonIcon: {
-      marginLeft: spacing.sm,
+    buttonContent: {
+      height: 56,
     },
   });

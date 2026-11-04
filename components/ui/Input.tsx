@@ -1,93 +1,51 @@
-import { useMemo, useState } from 'react';
-import {
-  StyleSheet,
-  Text,
-  TextInput,
-  type TextInputProps,
-  View,
-  type ViewStyle,
-} from 'react-native';
-import { borderRadius, type Colors, spacing, typography, useColors } from '../../constants/theme';
+import { useMemo } from 'react';
+import { type StyleProp, StyleSheet, View, type ViewStyle } from 'react-native';
+import { HelperText, TextInput, type TextInputProps } from 'react-native-paper';
+import { type AppTheme, useAppTheme } from '../../constants/md3-theme';
+import { spacing } from '../../constants/theme';
 
-interface InputProps extends Omit<TextInputProps, 'style'> {
+export interface InputProps extends Omit<TextInputProps, 'error'> {
   label?: string;
   error?: string;
-  containerStyle?: ViewStyle;
+  containerStyle?: StyleProp<ViewStyle>;
 }
 
-export function Input({
-  label,
-  placeholder,
-  value,
-  onChangeText,
-  multiline = false,
-  error,
-  containerStyle,
-  ...rest
-}: InputProps) {
-  const colors = useColors();
-  const styles = useMemo(() => createStyles(colors), [colors]);
-
-  const [isFocused, setIsFocused] = useState(false);
-
-  const getBorderColor = () => {
-    if (error) return colors.error;
-    if (isFocused) return colors.primary;
-    return colors.outlineVariant;
-  };
+export function Input({ label, error, containerStyle, style, multiline, ...rest }: InputProps) {
+  const theme = useAppTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
 
   return (
     <View style={[styles.container, containerStyle]}>
-      {label && <Text style={styles.label}>{label}</Text>}
       <TextInput
-        style={[
-          styles.input,
-          multiline && styles.multilineInput,
-          { borderColor: getBorderColor() },
-        ]}
-        placeholder={placeholder}
-        placeholderTextColor={colors.onSurfaceVariant}
-        value={value}
-        onChangeText={onChangeText}
+        mode="outlined"
+        label={label}
+        error={Boolean(error)}
         multiline={multiline}
-        onFocus={() => setIsFocused(true)}
-        onBlur={() => setIsFocused(false)}
-        selectionColor={colors.primary}
+        style={[styles.input, multiline && styles.multilineInput, style]}
+        outlineColor={theme.colors.outlineVariant}
+        activeOutlineColor={theme.colors.primary}
+        textColor={theme.colors.onSurface}
+        placeholderTextColor={theme.colors.onSurfaceVariant}
         {...rest}
       />
-      {error && <Text style={styles.error}>{error}</Text>}
+      {Boolean(error) && (
+        <HelperText type="error" visible={!!error}>
+          {error}
+        </HelperText>
+      )}
     </View>
   );
 }
 
-const createStyles = (colors: Colors) =>
+const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     container: {
       marginBottom: spacing.md,
     },
-    label: {
-      fontSize: typography.fontSize.sm,
-      fontWeight: typography.fontWeight.medium,
-      color: colors.onSurfaceVariant,
-      marginBottom: spacing.xs,
-    },
     input: {
-      backgroundColor: colors.surfaceContainer,
-      borderWidth: 1,
-      borderRadius: borderRadius.md,
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.md,
-      fontSize: typography.fontSize.md,
-      color: colors.onSurface,
-      fontFamily: typography.fontFamily.regular,
+      backgroundColor: theme.colors.surfaceContainer,
     },
     multilineInput: {
       minHeight: 80,
-      textAlignVertical: 'top',
-    },
-    error: {
-      fontSize: typography.fontSize.xs,
-      color: colors.error,
-      marginTop: spacing.xs,
     },
   });

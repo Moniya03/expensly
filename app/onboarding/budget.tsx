@@ -1,9 +1,9 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useMemo } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { Button, HelperText, Text, TextInput } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { borderRadius, type Colors, spacing, typography, useColors } from '../../constants/theme';
+import { type AppTheme, spacing, typography, useAppTheme } from '../../constants/theme';
 import { useUpdateProfile } from '../../hooks/useProfile';
 
 function formatBudgetInput(value: string) {
@@ -13,8 +13,8 @@ function formatBudgetInput(value: string) {
 }
 
 export default function BudgetOnboardingScreen() {
-  const colors = useColors();
-  const styles = useMemo(() => createStyles(colors), [colors]);
+  const theme = useAppTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const router = useRouter();
   const { mutateAsync: updateProfile, isPending } = useUpdateProfile();
   const [budget, setBudget] = React.useState('');
@@ -61,70 +61,74 @@ export default function BudgetOnboardingScreen() {
 
       <View style={styles.content}>
         <View style={styles.header}>
-          <Text style={styles.eyebrow}>Step 2 of 2</Text>
-          <Text style={styles.title}>Set a monthly budget</Text>
-          <Text style={styles.subtitle}>
+          <Text variant="labelLarge" style={styles.eyebrow}>
+            Step 2 of 2
+          </Text>
+          <Text variant="headlineMedium" style={styles.title}>
+            Set a monthly budget
+          </Text>
+          <Text variant="bodyLarge" style={styles.subtitle}>
             This helps us track your spending progress. You can change this later.
           </Text>
         </View>
 
-        <View style={[styles.inputWrap, error ? styles.inputWrapError : null]}>
-          <Text style={styles.currency}>₹</Text>
-          <TextInput
-            style={styles.input}
-            value={budget}
-            onChangeText={(value) => {
-              setBudget(formatBudgetInput(value));
-              if (error) setError(null);
-            }}
-            placeholder="0"
-            placeholderTextColor={`${colors.onSurfaceVariant}80`}
-            keyboardType="number-pad"
-            selectionColor={colors.primary}
-            editable={!isPending}
-            maxLength={12}
-            autoFocus
-            cursorColor={colors.primary}
-          />
-        </View>
-
-        {error ? (
-          <View style={styles.errorContainer}>
-            <Ionicons name="alert-circle" size={16} color={colors.error} />
-            <Text style={styles.errorText}>{error}</Text>
-          </View>
-        ) : null}
+        <TextInput
+          mode="outlined"
+          label="Monthly budget"
+          left={<TextInput.Affix text="₹" />}
+          keyboardType="number-pad"
+          value={budget}
+          onChangeText={(value) => {
+            setBudget(formatBudgetInput(value));
+            if (error) setError(null);
+          }}
+          error={Boolean(error)}
+          editable={!isPending}
+          maxLength={12}
+          autoFocus
+          returnKeyType="done"
+          onSubmitEditing={handleSave}
+          style={styles.input}
+        />
+        <HelperText type="error" visible={Boolean(error)}>
+          {error}
+        </HelperText>
       </View>
 
       <View style={styles.footer}>
-        <Pressable
-          style={[styles.primaryButton, (!budget || isPending) && styles.buttonDisabled]}
-          onPress={handleSave}
+        <Button
+          mode="contained"
+          buttonColor={theme.colors.primary}
+          textColor={theme.colors.onPrimary}
+          loading={isPending}
           disabled={!budget || isPending}
+          icon="arrow-right"
+          contentStyle={styles.buttonContent}
+          style={styles.primaryButton}
+          onPress={handleSave}
         >
-          {isPending ? (
-            <ActivityIndicator size="small" color="#000000" />
-          ) : (
-            <>
-              <Text style={styles.primaryButtonText}>Save budget</Text>
-              <Ionicons name="arrow-forward" size={20} color="#000000" style={styles.buttonIcon} />
-            </>
-          )}
-        </Pressable>
+          Save budget
+        </Button>
 
-        <Pressable style={styles.skipButton} onPress={handleSkip} disabled={isPending}>
-          <Text style={styles.skipButtonText}>Skip for now</Text>
-        </Pressable>
+        <Button
+          mode="text"
+          textColor={theme.colors.onSurfaceVariant}
+          disabled={isPending}
+          onPress={handleSkip}
+          style={styles.skipButton}
+        >
+          Skip for now
+        </Button>
       </View>
     </SafeAreaView>
   );
 }
 
-const createStyles = (colors: Colors) =>
+const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: colors.surface,
+      backgroundColor: theme.colors.surface,
     },
     ambientGlow: {
       position: 'absolute',
@@ -133,7 +137,7 @@ const createStyles = (colors: Colors) =>
       width: 300,
       height: 300,
       borderRadius: 150,
-      backgroundColor: `${colors.primary}0D`,
+      backgroundColor: `${theme.colors.primary}0D`,
       transform: [{ scale: 1.2 }],
     },
     content: {
@@ -146,108 +150,36 @@ const createStyles = (colors: Colors) =>
       marginTop: spacing.xl,
     },
     eyebrow: {
-      color: colors.primary,
-      fontSize: typography.fontSize.sm,
-      fontWeight: typography.fontWeight.semiBold,
+      color: theme.colors.primary,
       textTransform: 'lowercase',
       letterSpacing: 0.5,
       marginBottom: spacing.sm,
     },
     title: {
-      color: colors.onSurface,
-      fontSize: typography.fontSize.xxl + 4,
+      color: theme.colors.onSurface,
       fontWeight: typography.fontWeight.bold,
       marginBottom: spacing.xs,
       letterSpacing: -0.5,
     },
     subtitle: {
-      color: colors.onSurfaceVariant,
-      fontSize: typography.fontSize.md,
+      color: theme.colors.onSurfaceVariant,
       lineHeight: 24,
     },
-    inputWrap: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      borderBottomWidth: 1.5,
-      borderBottomColor: `${colors.primary}4D`,
-      paddingVertical: spacing.md,
-      marginTop: spacing.sm,
-    },
-    inputWrapError: {
-      borderBottomColor: colors.error,
-    },
-    currency: {
-      color: colors.secondary,
-      fontSize: typography.fontSize.xxl,
-      fontWeight: typography.fontWeight.semiBold,
-      marginRight: spacing.sm,
-      marginTop: 2, // Slight alignment tweak for large numbers
-    },
     input: {
-      flex: 1,
-      color: colors.onSurface,
-      fontSize: typography.fontSize.xxxl,
-      fontWeight: typography.fontWeight.medium,
-      padding: 0,
-      letterSpacing: -0.5,
-    },
-    errorContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      backgroundColor: `${colors.error}15`,
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.sm,
-      borderRadius: borderRadius.sm,
-      marginTop: spacing.lg,
-      borderWidth: 1,
-      borderColor: `${colors.error}30`,
-    },
-    errorText: {
-      color: colors.error,
-      fontSize: typography.fontSize.sm,
-      marginLeft: spacing.xs,
+      backgroundColor: theme.colors.surface,
     },
     footer: {
       paddingHorizontal: spacing.xl,
       paddingBottom: spacing.xl,
     },
     primaryButton: {
-      minHeight: 56,
-      borderRadius: borderRadius.md,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: colors.primary,
-      paddingHorizontal: spacing.xl,
-      shadowColor: colors.primary,
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.2,
-      shadowRadius: 8,
-      elevation: 4,
+      borderRadius: 28,
     },
-    primaryButtonText: {
-      color: colors.onAccent,
-      fontSize: typography.fontSize.lg,
-      fontWeight: typography.fontWeight.semiBold,
-    },
-    buttonIcon: {
-      marginLeft: spacing.sm,
-    },
-    buttonDisabled: {
-      opacity: 0.5,
-      shadowOpacity: 0,
-      elevation: 0,
+    buttonContent: {
+      height: 56,
     },
     skipButton: {
       alignSelf: 'center',
-      marginTop: spacing.lg,
-      paddingVertical: spacing.sm,
-      paddingHorizontal: spacing.md,
-    },
-    skipButtonText: {
-      color: colors.onSurfaceVariant,
-      fontSize: typography.fontSize.sm,
-      fontWeight: typography.fontWeight.medium,
-      textDecorationLine: 'underline',
+      marginTop: spacing.md,
     },
   });

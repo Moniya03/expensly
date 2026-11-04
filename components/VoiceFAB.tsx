@@ -1,9 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
-import { type Colors, useColors } from '../constants/theme';
+import { Animated, Pressable, StyleSheet, View } from 'react-native';
+import { Text } from 'react-native-paper';
+import { type AppTheme, useAppTheme } from '../constants/theme';
 import { useCreateTransaction } from '../hooks/useTransactions';
 import { useVoiceRecording } from '../hooks/useVoiceRecording';
 import { audioUriToBase64, processVoiceExpense } from '../services/voiceExpense';
@@ -11,6 +11,19 @@ import { useAuthStore } from '../stores/authStore';
 import type { CreateTransactionInput, VoiceExpenseDraft, VoiceExpenseResponse } from '../types';
 import { AudioWaveform } from './ui/AudioWaveform';
 import { VoiceExpenseConfirmationSheet } from './voice/VoiceExpenseConfirmationSheet';
+
+function hexToRgba(color: string, alpha: number): string {
+  if (color.startsWith('#')) {
+    const raw = color.slice(1);
+    if (raw.length === 6) {
+      const r = Number.parseInt(raw.slice(0, 2), 16);
+      const g = Number.parseInt(raw.slice(2, 4), 16);
+      const b = Number.parseInt(raw.slice(4, 6), 16);
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+  }
+  return color;
+}
 
 function normalizeDraft(response: VoiceExpenseResponse): {
   drafts: VoiceExpenseDraft[];
@@ -23,8 +36,8 @@ function normalizeDraft(response: VoiceExpenseResponse): {
 }
 
 export default function VoiceFAB() {
-  const colors = useColors();
-  const styles = useMemo(() => createStyles(colors), [colors]);
+  const theme = useAppTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
 
   const {
     state,
@@ -193,23 +206,27 @@ export default function VoiceFAB() {
     reset();
   };
 
-  const getButtonColors = (): [string, string] => {
+  const getButtonBackgroundColor = () => {
     switch (state) {
+      case 'recording':
+        return theme.colors.error;
       case 'error':
-        return ['#F5A623', '#F5A623'];
+        return theme.colors.errorContainer;
       default:
-        return ['#1A6BFF', '#4D9FFF'];
+        return theme.colors.primary;
     }
   };
 
   const getIcon = () => {
+    const iconColor = state === 'error' ? theme.colors.onErrorContainer : theme.colors.onPrimary;
+
     switch (state) {
       case 'processing':
-        return <Text style={styles.processingText}>...</Text>;
+        return <Text style={[styles.processingText, { color: iconColor }]}>...</Text>;
       case 'error':
-        return <Ionicons name="close" size={24} color="#FFFFFF" />;
+        return <Ionicons name="close" size={24} color={iconColor} />;
       default:
-        return <Ionicons name="mic" size={24} color="#FFFFFF" />;
+        return <Ionicons name="mic" size={24} color={iconColor} />;
     }
   };
 
@@ -218,13 +235,15 @@ export default function VoiceFAB() {
       <View style={styles.container} pointerEvents="box-none">
         {inlineErrorMessage ? (
           <View style={styles.errorBanner}>
-            <Text numberOfLines={1} style={styles.errorText}>
+            <Text variant="bodySmall" numberOfLines={1} style={styles.errorText}>
               {inlineErrorMessage}
             </Text>
           </View>
         ) : null}
 
-        <Text style={styles.hint}>Long press for manual</Text>
+        <Text variant="labelSmall" style={styles.hint}>
+          Long press for manual
+        </Text>
 
         <Pressable
           onPress={handlePress}
@@ -251,17 +270,12 @@ export default function VoiceFAB() {
             ]}
           />
           <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
-            <LinearGradient
-              colors={getButtonColors()}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.button}
-            >
+            <View style={[styles.button, { backgroundColor: getButtonBackgroundColor() }]}>
               <View style={styles.contentWrapper}>
                 {getIcon()}
                 {state === 'recording' && <AudioWaveform isActive={true} barCount={5} />}
               </View>
-            </LinearGradient>
+            </View>
           </Animated.View>
         </Pressable>
       </View>
@@ -277,7 +291,7 @@ export default function VoiceFAB() {
   );
 }
 
-const createStyles = (colors: Colors) =>
+const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     container: {
       position: 'absolute',
@@ -289,23 +303,19 @@ const createStyles = (colors: Colors) =>
     },
     hint: {
       marginBottom: 8,
-      color: colors.onSurfaceVariant,
-      fontSize: 12,
+      color: theme.colors.onSurfaceVariant,
     },
     errorBanner: {
       marginBottom: 8,
       paddingHorizontal: 12,
       paddingVertical: 6,
       borderRadius: 999,
-      backgroundColor: 'rgba(0, 0, 0, 0.35)',
-      borderWidth: 1,
-      borderColor: 'rgba(255, 255, 255, 0.12)',
+      backgroundColor: theme.colors.errorContainer,
       maxWidth: 260,
       alignSelf: 'center',
     },
     errorText: {
-      color: '#FFFFFF',
-      fontSize: 12,
+      color: theme.colors.onErrorContainer,
       textAlign: 'center',
     },
     button: {
@@ -314,11 +324,11 @@ const createStyles = (colors: Colors) =>
       borderRadius: 24,
       justifyContent: 'center',
       alignItems: 'center',
-      shadowColor: '#1A6BFF',
+      shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 6 },
       shadowOpacity: 0.22,
       shadowRadius: 10,
-      elevation: 8,
+      elevation: 6,
     },
     idleAura: {
       position: 'absolute',
@@ -327,16 +337,15 @@ const createStyles = (colors: Colors) =>
       borderRadius: 32,
       alignSelf: 'center',
       top: -8,
-      backgroundColor: 'rgba(29,196,150,0.08)',
+      backgroundColor: hexToRgba(theme.colors.primary, 0.12),
       borderWidth: 1,
-      borderColor: 'rgba(29,196,150,0.12)',
+      borderColor: hexToRgba(theme.colors.primary, 0.24),
     },
     contentWrapper: {
       alignItems: 'center',
       gap: 0,
     },
     processingText: {
-      color: '#FFFFFF',
       fontSize: 28,
       lineHeight: 28,
     },

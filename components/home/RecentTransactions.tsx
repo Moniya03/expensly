@@ -1,8 +1,15 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React, { useMemo } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { Button, Divider, Text, TouchableRipple } from 'react-native-paper';
 import { getCategoryConfig } from '../../constants/categories';
-import { borderRadius, type Colors, spacing, typography, useColors } from '../../constants/theme';
+import {
+  type AppTheme,
+  borderRadius,
+  spacing,
+  typography,
+  useAppTheme,
+} from '../../constants/theme';
 import type { Transaction } from '../../types';
 import { formatRupees } from '../../utils/currency';
 import { formatDate, getRelativeTime, parseLocalDate } from '../../utils/date';
@@ -11,11 +18,16 @@ import { sentenceCase } from '../../utils/string';
 interface RecentTransactionsProps {
   transactions: Transaction[];
   onSeeAll?: () => void;
+  onPressTransaction?: (transaction: Transaction) => void;
 }
 
-export default function RecentTransactions({ transactions, onSeeAll }: RecentTransactionsProps) {
-  const colors = useColors();
-  const styles = useMemo(() => createStyles(colors), [colors]);
+export default function RecentTransactions({
+  transactions,
+  onSeeAll,
+  onPressTransaction,
+}: RecentTransactionsProps) {
+  const theme = useAppTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const recentTransactions = transactions.slice(0, 5);
 
   return (
@@ -23,12 +35,21 @@ export default function RecentTransactions({ transactions, onSeeAll }: RecentTra
       <View style={styles.header}>
         <View style={styles.titleRow}>
           <View style={styles.titleDot} />
-          <Text style={styles.title}>Recent</Text>
+          <Text variant="titleMedium" style={styles.title}>
+            Recent
+          </Text>
         </View>
         {onSeeAll && (
-          <TouchableOpacity onPress={onSeeAll} activeOpacity={0.7}>
-            <Text style={styles.seeAllText}>See all →</Text>
-          </TouchableOpacity>
+          <Button
+            mode="text"
+            compact
+            textColor={theme.colors.primary}
+            onPress={onSeeAll}
+            contentStyle={styles.seeAllButtonContent}
+            labelStyle={styles.seeAllText}
+          >
+            See all →
+          </Button>
         )}
       </View>
 
@@ -40,70 +61,87 @@ export default function RecentTransactions({ transactions, onSeeAll }: RecentTra
 
             return (
               <React.Fragment key={transaction.id}>
-                <View style={styles.transactionItem}>
-                  <View
-                    style={[
-                      styles.iconContainer,
-                      {
-                        backgroundColor:
-                          categoryConfig.iconBackgroundColor ?? `${categoryConfig.iconColor}18`,
-                      },
-                    ]}
-                  >
-                    <MaterialCommunityIcons
-                      name={
-                        categoryConfig.iconName as React.ComponentProps<
-                          typeof MaterialCommunityIcons
-                        >['name']
-                      }
-                      size={22}
-                      color={categoryConfig.iconColor}
-                    />
-                  </View>
+                <TouchableRipple
+                  style={styles.transactionItem}
+                  onPress={() => onPressTransaction?.(transaction)}
+                >
+                  <View style={styles.transactionRow}>
+                    <View
+                      style={[
+                        styles.iconContainer,
+                        {
+                          backgroundColor:
+                            categoryConfig.iconBackgroundColor ?? `${categoryConfig.iconColor}18`,
+                        },
+                      ]}
+                    >
+                      <MaterialCommunityIcons
+                        name={
+                          categoryConfig.iconName as React.ComponentProps<
+                            typeof MaterialCommunityIcons
+                          >['name']
+                        }
+                        size={22}
+                        color={categoryConfig.iconColor}
+                      />
+                    </View>
 
-                  <View style={styles.details}>
-                    <Text style={styles.description} numberOfLines={1}>
-                      {sentenceCase(transaction.description || categoryConfig.label)}
-                    </Text>
-                    <View style={styles.metaRow}>
-                      <View
-                        style={[
-                          styles.categoryPill,
-                          {
-                            backgroundColor: pillBg,
-                            borderColor: `${categoryConfig.color}33`,
-                          },
-                        ]}
-                      >
-                        <Text style={[styles.categoryPillText, { color: categoryConfig.color }]}>
-                          {categoryConfig.label}
+                    <View style={styles.details}>
+                      <Text variant="bodyMedium" style={styles.description} numberOfLines={1}>
+                        {sentenceCase(transaction.description || categoryConfig.label)}
+                      </Text>
+                      <View style={styles.metaRow}>
+                        <View
+                          style={[
+                            styles.categoryPill,
+                            {
+                              backgroundColor: pillBg,
+                              borderColor: `${categoryConfig.color}33`,
+                            },
+                          ]}
+                        >
+                          <Text
+                            variant="labelSmall"
+                            style={[styles.categoryPillText, { color: categoryConfig.color }]}
+                          >
+                            {categoryConfig.label}
+                          </Text>
+                        </View>
+                        <Text variant="bodySmall" style={styles.timeAgo}>
+                          {transaction.created_at
+                            ? getRelativeTime(new Date(transaction.created_at))
+                            : formatDate(parseLocalDate(transaction.transaction_date), 'short')}
+                          {transaction.merchant ? ` • ${transaction.merchant}` : ''}
                         </Text>
                       </View>
-                      <Text style={styles.timeAgo}>
-                        {transaction.created_at
-                          ? getRelativeTime(new Date(transaction.created_at))
-                          : formatDate(parseLocalDate(transaction.transaction_date), 'short')}
-                      </Text>
                     </View>
-                  </View>
 
-                  <Text style={styles.amount}>-{formatRupees(transaction.amount)}</Text>
-                </View>
-                {index < recentTransactions.length - 1 ? <View style={styles.separator} /> : null}
+                    <Text variant="titleMedium" style={styles.amount}>
+                      -{formatRupees(transaction.amount)}
+                    </Text>
+                  </View>
+                </TouchableRipple>
+                {index < recentTransactions.length - 1 ? (
+                  <Divider
+                    style={{ marginLeft: 56, backgroundColor: theme.colors.outlineVariant }}
+                  />
+                ) : null}
               </React.Fragment>
             );
           })}
         </View>
       ) : (
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>No transactions yet</Text>
+          <Text variant="bodyMedium" style={styles.emptyText}>
+            No transactions yet
+          </Text>
         </View>
       )}
     </View>
   );
 }
 
-const createStyles = (colors: Colors) =>
+const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     container: {
       gap: spacing.md,
@@ -123,22 +161,27 @@ const createStyles = (colors: Colors) =>
       width: 6,
       height: 6,
       borderRadius: 999,
-      backgroundColor: colors.primary,
+      backgroundColor: theme.colors.primary,
     },
     title: {
-      fontSize: typography.fontSize.xl,
       fontWeight: typography.fontWeight.bold,
-      color: colors.onSurface,
+      color: theme.colors.onSurface,
+    },
+    seeAllButtonContent: {
+      marginHorizontal: 0,
+      paddingHorizontal: 0,
     },
     seeAllText: {
       fontSize: typography.fontSize.sm,
       fontWeight: typography.fontWeight.semiBold,
-      color: colors.primary,
     },
     list: {
       borderTopWidth: 0,
     },
     transactionItem: {
+      borderRadius: borderRadius.md,
+    },
+    transactionRow: {
       flexDirection: 'row',
       alignItems: 'center',
       paddingVertical: spacing.md,
@@ -150,7 +193,7 @@ const createStyles = (colors: Colors) =>
       alignItems: 'center',
       borderRadius: borderRadius.full,
       borderWidth: 1,
-      borderColor: 'rgba(255,255,255,0.08)',
+      borderColor: theme.colors.outlineVariant,
       marginRight: spacing.md,
     },
     metaRow: {
@@ -164,14 +207,12 @@ const createStyles = (colors: Colors) =>
       gap: 6,
     },
     description: {
-      fontSize: typography.fontSize.md,
       fontWeight: typography.fontWeight.medium,
-      color: colors.onSurface,
+      color: theme.colors.onSurface,
     },
     timeAgo: {
-      fontSize: typography.fontSize.xs,
       fontWeight: typography.fontWeight.regular,
-      color: colors.onSurfaceVariant,
+      color: theme.colors.onSurfaceVariant,
     },
     categoryPill: {
       paddingHorizontal: 8,
@@ -185,23 +226,16 @@ const createStyles = (colors: Colors) =>
       letterSpacing: 0.5,
     },
     amount: {
-      fontSize: typography.fontSize.lg,
       fontWeight: typography.fontWeight.semiBold,
       marginLeft: spacing.sm,
       color: '#F5A623',
-    },
-    separator: {
-      height: 1,
-      backgroundColor: colors.outlineVariant,
-      marginLeft: 56,
     },
     emptyContainer: {
       paddingVertical: spacing.lg,
       alignItems: 'center',
     },
     emptyText: {
-      fontSize: typography.fontSize.md,
       fontWeight: typography.fontWeight.medium,
-      color: colors.onSurfaceVariant,
+      color: theme.colors.onSurfaceVariant,
     },
   });

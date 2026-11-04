@@ -1,30 +1,43 @@
-import { BlurView } from 'expo-blur';
+import type React from 'react';
 import { StyleSheet, type ViewProps } from 'react-native';
-import { borderRadius, spacing } from '../../constants/theme';
+import { Surface } from 'react-native-paper';
+import { borderRadius, spacing, useAppTheme } from '../../constants/theme';
 
-interface GlassmorphicCardProps extends ViewProps {
+export interface GlassmorphicCardProps extends ViewProps {
   children: React.ReactNode;
   intensity?: number;
 }
 
 export function GlassmorphicCard({
   children,
-  intensity = 10,
+  intensity: _intensity,
   style,
   ...props
 }: GlassmorphicCardProps) {
+  const theme = useAppTheme();
+
   return (
-    <BlurView intensity={intensity} tint="dark" style={[styles.container, style]} {...props}>
+    <Surface
+      mode="elevated"
+      elevation={2}
+      style={[
+        styles.container,
+        {
+          backgroundColor: theme.colors.surfaceContainer,
+          borderColor: theme.colors.outlineVariant,
+        },
+        style,
+      ]}
+      {...props}
+    >
       {children}
-    </BlurView>
+    </Surface>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
     borderRadius: borderRadius.lg,
     padding: spacing.lg,
     overflow: 'hidden',

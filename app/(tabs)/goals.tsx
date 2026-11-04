@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useMemo } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Surface, Text } from 'react-native-paper';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -16,13 +17,19 @@ import { GoalCard, type GoalOrigin } from '../../components/goals/GoalCard';
 import { GoalCelebrationOverlay } from '../../components/goals/GoalCelebrationOverlay';
 import { GoalCreateCard } from '../../components/goals/GoalCreateCard';
 import { GoalEmptyState } from '../../components/goals/GoalEmptyState';
-import { borderRadius, type Colors, spacing, typography, useColors } from '../../constants/theme';
+import {
+  type AppTheme,
+  borderRadius,
+  spacing,
+  typography,
+  useAppTheme,
+} from '../../constants/theme';
 import { useDeleteGoal, useGoalGroups, useUpdateGoalProgress } from '../../hooks/useGoals';
 import type { Goal } from '../../types';
 
 export default function GoalsScreen() {
-  const colors = useColors();
-  const styles = useMemo(() => createStyles(colors), [colors]);
+  const theme = useAppTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const { active, completed, isLoading } = useGoalGroups();
   const [selectedGoalId, setSelectedGoalId] = React.useState<string | null>(null);
   const [origin, setOrigin] = React.useState<GoalOrigin | null>(null);
@@ -55,8 +62,8 @@ export default function GoalsScreen() {
     setCreateOpen(true);
   };
 
-  const showCelebration = !!pendingCelebrationGoal;
-  const completedAccordionOpen = shouldOpenCompleted || !!pendingCelebrationGoal;
+  const showCelebration = Boolean(pendingCelebrationGoal);
+  const completedAccordionOpen = shouldOpenCompleted || Boolean(pendingCelebrationGoal);
 
   // Pulsing add button
   const pulse = useSharedValue(1);
@@ -71,97 +78,103 @@ export default function GoalsScreen() {
   }, [pulse]);
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.title}>Goals</Text>
-          <Text style={styles.subtitle}>Small milestones, steady wins</Text>
+    <Surface style={{ flex: 1, backgroundColor: theme.colors.surface }}>
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <View style={styles.header}>
+          <View>
+            <Text variant="headlineLarge" style={styles.title}>
+              Goals
+            </Text>
+            <Text variant="bodyMedium" style={styles.subtitle}>
+              Small milestones, steady wins
+            </Text>
+          </View>
+          <Animated.View style={pulseStyle}>
+            <Pressable style={styles.addButton} onPress={() => openCreate(null)} hitSlop={8}>
+              <Ionicons name="add" size={24} color="#FFFFFF" />
+            </Pressable>
+          </Animated.View>
         </View>
-        <Animated.View style={pulseStyle}>
-          <Pressable style={styles.addButton} onPress={() => openCreate(null)} hitSlop={8}>
-            <Ionicons name="add" size={24} color={colors.onAccent} />
-          </Pressable>
-        </Animated.View>
-      </View>
 
-      {isLoading ? (
-        <View style={styles.loading}>
-          <ActivityIndicator color={colors.primary} />
-        </View>
-      ) : (
-        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-          {!active.length && !completed.length ? (
-            <GoalEmptyState onCreate={() => openCreate(null)} />
-          ) : (
-            <View style={styles.stack}>
-              {active.map((goal) => (
-                <GoalCard key={goal.id} goal={goal} onOpen={(origin) => openGoal(goal, origin)} />
-              ))}
-            </View>
-          )}
+        {isLoading ? (
+          <View style={styles.loading}>
+            <ActivityIndicator size="large" color={theme.colors.primary} />
+          </View>
+        ) : (
+          <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+            {!active.length && !completed.length ? (
+              <GoalEmptyState onCreate={() => openCreate(null)} />
+            ) : (
+              <View style={styles.stack}>
+                {active.map((goal) => (
+                  <GoalCard key={goal.id} goal={goal} onOpen={(origin) => openGoal(goal, origin)} />
+                ))}
+              </View>
+            )}
 
-          <CompletedGoalsAccordion
-            goals={completed}
-            onOpen={openGoal}
-            defaultOpen={completedAccordionOpen}
-          />
-        </ScrollView>
-      )}
+            <CompletedGoalsAccordion
+              goals={completed}
+              onOpen={openGoal}
+              defaultOpen={completedAccordionOpen}
+            />
+          </ScrollView>
+        )}
 
-      <ExpandedGoalCard
-        visible={!!selectedGoal && !showDelete}
-        goal={selectedGoal}
-        origin={origin}
-        isSaving={isUpdatingProgress}
-        onClose={closeDetails}
-        onSaveProgress={async (amount) => {
-          if (!selectedGoal) return;
-          const beforeCompleted = selectedGoal.is_completed;
-          const updatedGoal = await updateProgress({
-            id: selectedGoal.id,
-            amount,
-          });
-          closeDetails();
-          if (!beforeCompleted && updatedGoal.is_completed) {
-            setShouldOpenCompleted(true);
-            setPendingCelebrationGoal(updatedGoal);
-          }
-        }}
-        onEdit={() => openCreate(selectedGoal)}
-        onDelete={() => setShowDelete(true)}
-      />
+        <ExpandedGoalCard
+          visible={Boolean(selectedGoal && !showDelete)}
+          goal={selectedGoal}
+          origin={origin}
+          isSaving={isUpdatingProgress}
+          onClose={closeDetails}
+          onSaveProgress={async (amount) => {
+            if (!selectedGoal) return;
+            const beforeCompleted = selectedGoal.is_completed;
+            const updatedGoal = await updateProgress({
+              id: selectedGoal.id,
+              amount,
+            });
+            closeDetails();
+            if (!beforeCompleted && updatedGoal.is_completed) {
+              setShouldOpenCompleted(true);
+              setPendingCelebrationGoal(updatedGoal);
+            }
+          }}
+          onEdit={() => openCreate(selectedGoal)}
+          onDelete={() => setShowDelete(true)}
+        />
 
-      <GoalCreateCard
-        visible={createOpen}
-        goal={editingGoal}
-        onClose={() => setCreateOpen(false)}
-      />
+        <GoalCreateCard
+          visible={createOpen}
+          goal={editingGoal}
+          onClose={() => setCreateOpen(false)}
+        />
 
-      <GoalCelebrationOverlay
-        visible={showCelebration}
-        goal={pendingCelebrationGoal}
-        onDone={() => setPendingCelebrationGoal(null)}
-      />
+        <GoalCelebrationOverlay
+          visible={showCelebration}
+          goal={pendingCelebrationGoal}
+          onDone={() => setPendingCelebrationGoal(null)}
+        />
 
-      <DeleteGoalConfirmSheet
-        visible={!!selectedGoal && showDelete}
-        goal={selectedGoal}
-        isDeleting={isDeleting}
-        onClose={() => setShowDelete(false)}
-        onDelete={async () => {
-          if (!selectedGoal) return;
-          await deleteGoal(selectedGoal.id);
-          setShowDelete(false);
-          closeDetails();
-        }}
-      />
-    </SafeAreaView>
+        <DeleteGoalConfirmSheet
+          visible={Boolean(selectedGoal && showDelete)}
+          goal={selectedGoal}
+          isDeleting={isDeleting}
+          onClose={() => setShowDelete(false)}
+          onDelete={async () => {
+            if (!selectedGoal) return;
+            await deleteGoal(selectedGoal.id);
+            setShowDelete(false);
+            closeDetails();
+          }}
+        />
+      </SafeAreaView>
+    </Surface>
   );
 }
 
-const createStyles = (colors: Colors) =>
+const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
-    container: { flex: 1, backgroundColor: colors.surface },
+    container: { flex: 1 },
     header: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -171,23 +184,21 @@ const createStyles = (colors: Colors) =>
       paddingBottom: spacing.sm,
     },
     title: {
-      color: colors.onSurface,
-      fontSize: typography.fontSize.xxxl,
+      color: theme.colors.onSurface,
       fontWeight: typography.fontWeight.bold,
     },
     subtitle: {
-      color: colors.onSurfaceVariant,
-      fontSize: typography.fontSize.sm,
+      color: theme.colors.onSurfaceVariant,
       marginTop: 2,
     },
     addButton: {
       width: 48,
       height: 48,
       borderRadius: borderRadius.full,
-      backgroundColor: colors.primary,
+      backgroundColor: theme.colors.primary,
       alignItems: 'center',
       justifyContent: 'center',
-      shadowColor: colors.primary,
+      shadowColor: theme.colors.primary,
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.4,
       shadowRadius: 10,

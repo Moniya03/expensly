@@ -1,17 +1,22 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
   Alert,
-  Modal,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
-  TextInput,
   View,
 } from 'react-native';
-import { borderRadius, type Colors, spacing, typography, useColors } from '../../constants/theme';
+import { Button, IconButton, Modal, Portal, Surface, Text, TextInput } from 'react-native-paper';
+import {
+  type AppTheme,
+  borderRadius,
+  spacing,
+  typography,
+  useAppTheme,
+} from '../../constants/theme';
 import { useCreateGoalIcon, useDeleteGoalIcon, useUpdateGoalIcon } from '../../hooks/useGoalIcons';
 import { useGoals } from '../../hooks/useGoals';
 import type { UserGoalIcon } from '../../types';
@@ -107,14 +112,24 @@ export function GoalIconBuilder({
   editing: UserGoalIcon | null;
   onClose: () => void;
 }) {
-  const colors = useColors();
-  const styles = useMemo(() => createStyles(colors), [colors]);
+  const theme = useAppTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
 
   const [iconName, setIconName] = useState(editing?.icon_name ?? 'airplane-outline');
   const [label, setLabel] = useState(editing?.label ?? '');
   const [color, setColor] = useState(editing?.color ?? '#B48CFF');
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+
+  useEffect(() => {
+    if (visible) {
+      setIconName(editing?.icon_name ?? 'airplane-outline');
+      setLabel(editing?.label ?? '');
+      setColor(editing?.color ?? '#B48CFF');
+      setSaving(false);
+      setDeleting(false);
+    }
+  }, [visible, editing]);
 
   const createIcon = useCreateGoalIcon();
   const updateIcon = useUpdateGoalIcon();
@@ -123,7 +138,6 @@ export function GoalIconBuilder({
   const usedByCount = editing ? (goals?.filter((goal) => goal.icon === editing.id).length ?? 0) : 0;
 
   const filtered = ALL_ICONS;
-
   const validHex = HEX_REGEX.test(color.trim());
 
   const handleSave = async () => {
@@ -182,178 +196,213 @@ export function GoalIconBuilder({
   };
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <View style={styles.overlay}>
-        <View style={styles.card}>
-          <View style={styles.header}>
-            <Text style={styles.title}>{editing ? 'Edit icon' : 'New icon'}</Text>
-            <Pressable onPress={onClose} hitSlop={8}>
-              <Ionicons name="close" size={22} color={colors.onSurfaceVariant} />
-            </Pressable>
-          </View>
-
-          <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-            <Text style={styles.label}>Icon</Text>
-            <View style={styles.iconGrid}>
-              {filtered.map((name) => {
-                const selected = name === iconName;
-                return (
-                  <Pressable
-                    key={name}
-                    style={[styles.iconCell, selected && { borderColor: color }]}
-                    onPress={() => setIconName(name)}
-                  >
-                    <Ionicons
-                      name={name as keyof typeof Ionicons.glyphMap}
-                      size={20}
-                      color={selected ? color : colors.onSurfaceVariant}
-                    />
-                  </Pressable>
-                );
-              })}
+    <Portal>
+      <Modal visible={visible} onDismiss={onClose} contentContainerStyle={styles.modalContent}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={styles.keyboardView}
+        >
+          <Surface elevation={3} style={styles.card}>
+            <View style={styles.header}>
+              <Text variant="titleMedium" style={styles.title}>
+                {editing ? 'Edit icon' : 'New icon'}
+              </Text>
+              <IconButton
+                icon="close"
+                size={20}
+                iconColor={theme.colors.onSurfaceVariant}
+                containerColor={theme.colors.surfaceContainer}
+                onPress={onClose}
+                style={styles.closeButton}
+                accessibilityLabel="Close"
+              />
             </View>
 
-            <Text style={styles.label}>Label (optional)</Text>
-            <TextInput
-              style={styles.input}
-              value={label}
-              onChangeText={setLabel}
-              placeholder="e.g. Gym, Trip to Goa"
-              placeholderTextColor={colors.onSurfaceVariant}
-              selectionColor={colors.primary}
-              maxLength={24}
-            />
-
-            <Text style={styles.label}>Color</Text>
-            <View style={styles.swatchRow}>
-              {SWATCHES.map((swatch) => (
-                <Pressable
-                  key={swatch}
-                  style={[styles.swatch, swatch === color && styles.swatchSelected]}
-                  onPress={() => setColor(swatch)}
-                >
-                  <View style={[styles.swatchCircle, { backgroundColor: swatch }]}>
-                    {swatch === color ? <Ionicons name="checkmark" size={14} color="#fff" /> : null}
-                  </View>
-                </Pressable>
-              ))}
-            </View>
-            <TextInput
-              style={[styles.input, !validHex && color.length > 0 && { borderColor: colors.error }]}
-              value={color}
-              onChangeText={setColor}
-              placeholder="#B48CFF"
-              placeholderTextColor={colors.onSurfaceVariant}
-              selectionColor={colors.primary}
-              autoCapitalize="characters"
-              maxLength={7}
-            />
-
-            <View style={styles.previewRow}>
-              <View style={[styles.previewBadge, { backgroundColor: color }]}>
-                <Ionicons
-                  name={iconName as keyof typeof Ionicons.glyphMap}
-                  size={18}
-                  color="#fff"
-                />
-              </View>
-              <Text style={styles.previewText}>{label.trim() || 'Preview'}</Text>
-            </View>
-          </ScrollView>
-
-          <View style={styles.footer}>
-            {editing ? (
-              <Pressable style={styles.deleteButton} onPress={handleDelete} disabled={deleting}>
-                {deleting ? (
-                  <ActivityIndicator size="small" color={colors.error} />
-                ) : (
-                  <Ionicons name="trash-outline" size={20} color={colors.error} />
-                )}
-              </Pressable>
-            ) : null}
-            <Pressable
-              style={[styles.saveButton, (!validHex || saving) && { opacity: 0.5 }]}
-              onPress={handleSave}
-              disabled={!validHex || saving}
+            <ScrollView
+              contentContainerStyle={styles.form}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
             >
-              {saving ? (
-                <ActivityIndicator size="small" color={colors.onAccent} />
-              ) : (
-                <Text style={styles.saveText}>Save icon</Text>
-              )}
-            </Pressable>
-          </View>
-        </View>
-      </View>
-    </Modal>
+              <Text variant="bodySmall" style={styles.sectionLabel}>
+                Icon
+              </Text>
+              <View style={styles.iconGrid}>
+                {filtered.map((name) => {
+                  const selected = name === iconName;
+                  return (
+                    <Pressable
+                      key={name}
+                      style={[styles.iconCell, selected && { borderColor: color, borderWidth: 2 }]}
+                      onPress={() => setIconName(name)}
+                    >
+                      <Ionicons
+                        name={name as keyof typeof Ionicons.glyphMap}
+                        size={20}
+                        color={selected ? color : theme.colors.onSurfaceVariant}
+                      />
+                    </Pressable>
+                  );
+                })}
+              </View>
+
+              <TextInput
+                mode="outlined"
+                label="Label (optional)"
+                value={label}
+                onChangeText={setLabel}
+                placeholder="e.g. Gym, Trip to Goa"
+                maxLength={24}
+                style={styles.input}
+              />
+
+              <Text variant="bodySmall" style={styles.sectionLabel}>
+                Color
+              </Text>
+              <View style={styles.swatchRow}>
+                {SWATCHES.map((swatch) => (
+                  <Pressable
+                    key={swatch}
+                    style={[styles.swatch, swatch === color && styles.swatchSelected]}
+                    onPress={() => setColor(swatch)}
+                  >
+                    <View style={[styles.swatchCircle, { backgroundColor: swatch }]}>
+                      {swatch === color ? (
+                        <Ionicons name="checkmark" size={14} color="#fff" />
+                      ) : null}
+                    </View>
+                  </Pressable>
+                ))}
+              </View>
+              <TextInput
+                mode="outlined"
+                label="Hex color"
+                value={color}
+                onChangeText={setColor}
+                placeholder="#B48CFF"
+                autoCapitalize="characters"
+                maxLength={7}
+                error={!validHex && color.length > 0}
+                style={styles.input}
+              />
+
+              <View style={styles.previewRow}>
+                <View style={[styles.previewBadge, { backgroundColor: color }]}>
+                  <Ionicons
+                    name={iconName as keyof typeof Ionicons.glyphMap}
+                    size={18}
+                    color="#fff"
+                  />
+                </View>
+                <Text variant="titleSmall" style={styles.previewText}>
+                  {label.trim() || 'Preview'}
+                </Text>
+              </View>
+            </ScrollView>
+
+            <View style={styles.footer}>
+              {editing ? (
+                <Button
+                  mode="outlined"
+                  textColor={theme.colors.error}
+                  icon="trash-can-outline"
+                  loading={deleting}
+                  disabled={deleting || saving}
+                  onPress={handleDelete}
+                  style={styles.deleteButton}
+                >
+                  Delete
+                </Button>
+              ) : null}
+              <Button
+                mode="contained"
+                loading={saving}
+                disabled={!validHex || saving || deleting}
+                onPress={handleSave}
+                style={styles.saveButton}
+                contentStyle={styles.saveButtonContent}
+                labelStyle={styles.saveButtonLabel}
+              >
+                Save icon
+              </Button>
+            </View>
+          </Surface>
+        </KeyboardAvoidingView>
+      </Modal>
+    </Portal>
   );
 }
 
-const createStyles = (colors: Colors) =>
+const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
-    overlay: {
-      flex: 1,
-      backgroundColor: 'rgba(0,0,0,0.72)',
+    modalContent: {
+      paddingHorizontal: spacing.lg,
       justifyContent: 'center',
       alignItems: 'center',
-      padding: spacing.xl,
+    },
+    keyboardView: {
+      width: '100%',
+      maxWidth: 420,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     card: {
       width: '100%',
       maxWidth: 420,
-      maxHeight: '85%',
-      backgroundColor: colors.surfaceContainer,
-      borderRadius: borderRadius.lg,
+      maxHeight: '88%',
+      backgroundColor: theme.colors.surfaceContainerHigh,
+      borderRadius: borderRadius.xl,
       padding: spacing.lg,
+      gap: spacing.md,
+      overflow: 'hidden',
     },
     header: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      marginBottom: spacing.md,
     },
     title: {
-      color: colors.onSurface,
-      fontSize: typography.fontSize.xl,
+      color: theme.colors.onSurface,
       fontWeight: typography.fontWeight.bold,
     },
-    label: {
-      color: colors.onSurfaceVariant,
+    closeButton: {
+      margin: 0,
+    },
+    form: {
+      gap: spacing.sm,
+      paddingBottom: spacing.xs,
+    },
+    sectionLabel: {
+      color: theme.colors.onSurfaceVariant,
       fontSize: typography.fontSize.sm,
       fontWeight: typography.fontWeight.medium,
-      marginTop: spacing.md,
-      marginBottom: spacing.sm,
+      marginTop: spacing.xs,
+      marginBottom: 2,
     },
     iconGrid: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      gap: spacing.sm,
-      marginTop: spacing.sm,
+      gap: spacing.xs,
+      marginTop: spacing.xs,
+      marginBottom: spacing.xs,
     },
     iconCell: {
       width: 44,
       height: 44,
       borderRadius: borderRadius.md,
-      backgroundColor: colors.surfaceContainerHigh,
+      backgroundColor: theme.colors.surfaceContainer,
       alignItems: 'center',
       justifyContent: 'center',
       borderWidth: 1,
-      borderColor: colors.outlineVariant,
+      borderColor: theme.colors.outlineVariant,
     },
     input: {
-      backgroundColor: colors.surfaceContainerHigh,
-      borderWidth: 1,
-      borderColor: colors.outlineVariant,
-      borderRadius: borderRadius.md,
-      padding: spacing.md,
-      color: colors.onSurface,
-      fontSize: typography.fontSize.md,
+      backgroundColor: theme.colors.surfaceContainerHigh,
     },
     swatchRow: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      gap: spacing.sm,
-      marginBottom: spacing.sm,
+      gap: spacing.xs,
+      marginVertical: spacing.xs,
     },
     swatch: {
       borderRadius: 999,
@@ -362,7 +411,7 @@ const createStyles = (colors: Colors) =>
       padding: 2,
     },
     swatchSelected: {
-      borderColor: colors.onSurfaceVariant,
+      borderColor: theme.colors.onSurfaceVariant,
     },
     swatchCircle: {
       width: 32,
@@ -375,44 +424,40 @@ const createStyles = (colors: Colors) =>
       flexDirection: 'row',
       alignItems: 'center',
       gap: spacing.sm,
-      marginTop: spacing.md,
+      marginTop: spacing.sm,
+      padding: spacing.sm,
+      borderRadius: borderRadius.md,
+      backgroundColor: theme.colors.surfaceContainer,
     },
     previewBadge: {
       width: 40,
       height: 40,
-      borderRadius: 12,
+      borderRadius: borderRadius.md,
       alignItems: 'center',
       justifyContent: 'center',
     },
     previewText: {
-      color: colors.onSurface,
-      fontSize: typography.fontSize.md,
+      color: theme.colors.onSurface,
       fontWeight: typography.fontWeight.semiBold,
     },
     footer: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: spacing.sm,
-      marginTop: spacing.lg,
+      marginTop: spacing.xs,
     },
     deleteButton: {
-      width: 52,
-      height: 52,
-      borderRadius: borderRadius.md,
-      backgroundColor: colors.surfaceContainerHigh,
-      alignItems: 'center',
-      justifyContent: 'center',
+      borderColor: theme.colors.error,
+      borderRadius: borderRadius.lg,
     },
     saveButton: {
       flex: 1,
-      height: 52,
-      borderRadius: borderRadius.md,
-      backgroundColor: colors.primary,
-      alignItems: 'center',
-      justifyContent: 'center',
+      borderRadius: borderRadius.lg,
     },
-    saveText: {
-      color: colors.onAccent,
+    saveButtonContent: {
+      minHeight: 48,
+    },
+    saveButtonLabel: {
       fontSize: typography.fontSize.md,
       fontWeight: typography.fontWeight.semiBold,
     },

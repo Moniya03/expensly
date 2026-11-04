@@ -8,7 +8,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import Svg, { Circle } from 'react-native-svg';
-import { useColors } from '../../constants/theme';
+import { useAppTheme } from '../../constants/theme';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
@@ -29,9 +29,9 @@ export function ProgressRing({
   trackColor,
   children,
 }: Props) {
-  const colors = useColors();
-  const resolvedColor = color ?? colors.primary;
-  const resolvedTrackColor = trackColor ?? colors.surfaceContainerHighest;
+  const theme = useAppTheme();
+  const resolvedColor = color ?? theme.colors.primary;
+  const resolvedTrackColor = trackColor ?? theme.colors.surfaceContainerHighest;
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const animatedProgress = useSharedValue(0);

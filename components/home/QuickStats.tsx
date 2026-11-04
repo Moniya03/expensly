@@ -1,6 +1,13 @@
 import React, { useMemo } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import { borderRadius, type Colors, spacing, typography, useColors } from '../../constants/theme';
+import { StyleSheet, View } from 'react-native';
+import { Surface, Text } from 'react-native-paper';
+import {
+  type AppTheme,
+  borderRadius,
+  spacing,
+  typography,
+  useAppTheme,
+} from '../../constants/theme';
 import { formatRupees } from '../../utils/currency';
 import { SoftDivider } from '../ui/SoftDivider';
 
@@ -15,8 +22,8 @@ const statCards = [
 ] as const;
 
 export default function QuickStats({ today, week }: QuickStatsProps) {
-  const colors = useColors();
-  const styles = useMemo(() => createStyles(colors), [colors]);
+  const theme = useAppTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
 
   const values = {
     today: formatRupees(today),
@@ -24,33 +31,33 @@ export default function QuickStats({ today, week }: QuickStatsProps) {
   };
 
   return (
-    <View style={styles.container}>
+    <Surface elevation={1} style={styles.container}>
       <View style={styles.frame}>
         {statCards.map((card, index) => (
           <React.Fragment key={card.key}>
             <View style={styles.stat}>
-              <Text style={styles.label}>{card.label}</Text>
-              <Text style={styles.value}>{values[card.key]}</Text>
+              <Text variant="labelSmall" style={styles.label}>
+                {card.label}
+              </Text>
+              <Text variant="titleLarge" style={styles.value}>
+                {values[card.key]}
+              </Text>
             </View>
             {index < statCards.length - 1 ? <SoftDivider vertical style={styles.divider} /> : null}
           </React.Fragment>
         ))}
       </View>
-    </View>
+    </Surface>
   );
 }
 
-const createStyles = (colors: Colors) =>
+const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     container: {
       borderRadius: borderRadius.xl,
-      backgroundColor: 'rgba(255,255,255,0.03)',
+      backgroundColor: theme.colors.surfaceContainer,
       borderWidth: 1,
-      borderColor: 'rgba(255,255,255,0.06)',
-      shadowColor: colors.primary,
-      shadowOpacity: 0.06,
-      shadowRadius: 14,
-      shadowOffset: { width: 0, height: 8 },
+      borderColor: theme.colors.outlineVariant,
     },
     frame: {
       flexDirection: 'row',
@@ -69,15 +76,13 @@ const createStyles = (colors: Colors) =>
       opacity: 0.7,
     },
     label: {
-      fontSize: typography.fontSize.xs,
       fontWeight: typography.fontWeight.medium,
-      color: colors.onSurfaceVariant,
+      color: theme.colors.onSurfaceVariant,
       textTransform: 'uppercase',
       letterSpacing: 0.8,
     },
     value: {
-      fontSize: typography.fontSize.lg,
       fontWeight: typography.fontWeight.bold,
-      color: colors.onSurface,
+      color: theme.colors.onSurface,
     },
   });

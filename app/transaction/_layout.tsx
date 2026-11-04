@@ -1,21 +1,21 @@
 import { Stack } from 'expo-router';
-import { useColors } from '../../constants/theme';
+import { useAppTheme } from '../../constants/theme';
 
 export default function TransactionLayout() {
-  const colors = useColors();
+  const theme = useAppTheme();
   return (
     <Stack
       screenOptions={{
         headerStyle: {
-          backgroundColor: colors.surface,
+          backgroundColor: theme.colors.surface,
         },
-        headerTintColor: colors.onSurface,
+        headerTintColor: theme.colors.onSurface,
         headerTitleStyle: {
           fontWeight: '600',
         },
         headerShadowVisible: false,
         contentStyle: {
-          backgroundColor: colors.surface,
+          backgroundColor: theme.colors.surface,
         },
       }}
     >
@@ -24,7 +24,6 @@ export default function TransactionLayout() {
         options={{
           title: 'Add Expense',
           presentation: 'modal',
-          headerShown: true,
         }}
       />
     </Stack>

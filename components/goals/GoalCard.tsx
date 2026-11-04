@@ -1,14 +1,21 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useMemo, useRef } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { Surface, Text } from 'react-native-paper';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
-import { borderRadius, type Colors, spacing, typography, useColors } from '../../constants/theme';
+import {
+  type AppTheme,
+  borderRadius,
+  spacing,
+  typography,
+  useAppTheme,
+} from '../../constants/theme';
 import { useGoalIcons } from '../../hooks/useGoalIcons';
 import type { Goal } from '../../types';
 import { formatRupees } from '../../utils/currency';
@@ -33,8 +40,8 @@ const deadlineLabel = (goal: Goal) =>
     : 'No deadline';
 
 export function GoalCard({ goal, onOpen }: { goal: Goal; onOpen?: (origin: GoalOrigin) => void }) {
-  const colors = useColors();
-  const styles = useMemo(() => createStyles(colors), [colors]);
+  const theme = useAppTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
 
   const ref = useRef<View>(null);
   const { data: customIcons } = useGoalIcons();
@@ -61,71 +68,66 @@ export function GoalCard({ goal, onOpen }: { goal: Goal; onOpen?: (origin: GoalO
   };
 
   return (
-    <Pressable
-      onPress={handlePress}
-      style={({ pressed }) => [styles.shadow, pressed && styles.pressed]}
-    >
-      <View ref={ref} collapsable={false}>
-        <LinearGradient
-          colors={meta.tint}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.card}
-        >
-          <View style={styles.topRow}>
-            <Animated.View
-              style={[styles.iconWrap, { backgroundColor: `${meta.accent}1F` }, wiggleStyle]}
-            >
-              <Ionicons name={meta.icon} size={20} color={meta.accent} />
-            </Animated.View>
-            <View style={styles.meta}>
-              <Text style={styles.name} numberOfLines={1}>
-                {goal.name}
-              </Text>
-              <Text style={styles.deadline}>{deadlineLabel(goal)}</Text>
+    <Pressable onPress={handlePress} style={({ pressed }) => [pressed && styles.pressed]}>
+      <Surface elevation={1} style={styles.surface}>
+        <View ref={ref} collapsable={false}>
+          <LinearGradient
+            colors={meta.tint}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.card}
+          >
+            <View style={styles.topRow}>
+              <Animated.View
+                style={[styles.iconWrap, { backgroundColor: `${meta.accent}1F` }, wiggleStyle]}
+              >
+                <Ionicons name={meta.icon} size={20} color={meta.accent} />
+              </Animated.View>
+              <View style={styles.meta}>
+                <Text style={styles.name} numberOfLines={1}>
+                  {goal.name}
+                </Text>
+                <Text style={styles.deadline}>{deadlineLabel(goal)}</Text>
+              </View>
+              <ProgressRing
+                size={56}
+                strokeWidth={5}
+                progress={progress}
+                color={meta.accent}
+                trackColor={`${meta.accent}22`}
+              >
+                <Text style={[styles.percent, { color: meta.accent }]}>{percent}%</Text>
+              </ProgressRing>
             </View>
-            <ProgressRing
-              size={56}
-              strokeWidth={5}
-              progress={progress}
-              color={meta.accent}
-              trackColor={`${meta.accent}22`}
-            >
-              <Text style={[styles.percent, { color: meta.accent }]}>{percent}%</Text>
-            </ProgressRing>
-          </View>
 
-          <View style={styles.statsRow}>
-            <View style={styles.statBlock}>
-              <Text style={styles.statLabel}>Saved</Text>
-              <Text style={styles.statValue}>{formatRupees(goal.saved_amount)}</Text>
+            <View style={styles.statsRow}>
+              <View style={styles.statBlock}>
+                <Text style={styles.statLabel}>Saved</Text>
+                <Text style={styles.statValue}>{formatRupees(goal.saved_amount)}</Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statBlock}>
+                <Text style={styles.statLabel}>Target</Text>
+                <Text style={styles.statValue}>{formatRupees(goal.target_amount)}</Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statBlock}>
+                <Text style={styles.statLabel}>Remaining</Text>
+                <Text style={styles.statValue}>{formatRupees(remaining)}</Text>
+              </View>
             </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statBlock}>
-              <Text style={styles.statLabel}>Target</Text>
-              <Text style={styles.statValue}>{formatRupees(goal.target_amount)}</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statBlock}>
-              <Text style={styles.statLabel}>Remaining</Text>
-              <Text style={styles.statValue}>{formatRupees(remaining)}</Text>
-            </View>
-          </View>
-        </LinearGradient>
-      </View>
+          </LinearGradient>
+        </View>
+      </Surface>
     </Pressable>
   );
 }
 
-const createStyles = (colors: Colors) =>
+const createStyles = (_theme: AppTheme) =>
   StyleSheet.create({
-    shadow: {
+    surface: {
       borderRadius: borderRadius.xl,
-      shadowColor: '#000000',
-      shadowOffset: { width: 0, height: 6 },
-      shadowOpacity: 0.25,
-      shadowRadius: 12,
-      elevation: 4,
+      overflow: 'hidden',
     },
     pressed: { opacity: 0.92, transform: [{ scale: 0.985 }] },
     card: {
@@ -145,7 +147,7 @@ const createStyles = (colors: Colors) =>
     },
     meta: { flex: 1 },
     name: {
-      color: colors.onAccent,
+      color: '#FFFFFF',
       fontSize: typography.fontSize.lg,
       fontWeight: typography.fontWeight.semiBold,
     },
@@ -165,7 +167,7 @@ const createStyles = (colors: Colors) =>
       fontSize: typography.fontSize.xs,
     },
     statValue: {
-      color: colors.onAccent,
+      color: '#FFFFFF',
       fontSize: typography.fontSize.sm,
       fontWeight: typography.fontWeight.semiBold,
     },

@@ -1,43 +1,38 @@
-import React, { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import React, { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  ActivityIndicator,
   KeyboardAvoidingView,
   Modal,
   Platform,
   Pressable,
   StyleSheet,
-  Text,
   useWindowDimensions,
   View,
 } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { ActivityIndicator, Button, Surface, Text } from 'react-native-paper';
 import Animated, {
   Easing,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { AmountInput } from '../ui/AmountInput';
-import { CategoryPicker } from '../ui/CategoryPicker';
-import { Input } from '../ui/Input';
-import { DatePicker } from '../ui/DatePicker';
-import { SwipeDeckCard, type SwipeDeckCardHandle } from './SwipeDeckCard';
+import { categories } from '../../constants/categories';
 import {
+  type AppTheme,
   borderRadius,
   spacing,
   typography,
-  useColors,
-  type Colors,
+  useAppTheme,
 } from '../../constants/theme';
-import { categories } from '../../constants/categories';
-import type {
-  Category,
-  CreateTransactionInput,
-  VoiceExpenseDraft,
-} from '../../types';
-import { formatDate, parseLocalDate, toLocalDateString } from '../../utils/date';
+import type { Category, CreateTransactionInput, VoiceExpenseDraft } from '../../types';
 import { formatRupees } from '../../utils/currency';
+import { formatDate, parseLocalDate, toLocalDateString } from '../../utils/date';
+import { AmountInput } from '../ui/AmountInput';
+import { CategoryPicker } from '../ui/CategoryPicker';
+import { DatePicker } from '../ui/DatePicker';
+import { Input } from '../ui/Input';
+import { SwipeDeckCard, type SwipeDeckCardHandle } from './SwipeDeckCard';
 
 type Props = {
   visible: boolean;
@@ -69,11 +64,8 @@ function toDate(value?: string): Date {
   return Number.isNaN(parsed.getTime()) ? fallback : parsed;
 }
 
-function buildTransaction(
-  item: DraftItem,
-  transcription: string
-): CreateTransactionInput | null {
-  const parsed = parseInt(item.amount, 10);
+function buildTransaction(item: DraftItem, transcription: string): CreateTransactionInput | null {
+  const parsed = Number.parseInt(item.amount, 10);
   if (!Number.isInteger(parsed) || parsed <= 0) return null;
   if (!item.category) return null;
   const merchant = item.merchant.trim();
@@ -118,8 +110,8 @@ export function VoiceExpenseConfirmationSheet({
   onSaveSingle,
   onCancel,
 }: Props) {
-  const colors = useColors();
-  const styles = useMemo(() => createStyles(colors), [colors]);
+  const theme = useAppTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const { width: screenW } = useWindowDimensions();
   const cardWidth = Math.min(screenW - 48, 340);
 
@@ -158,7 +150,7 @@ export function VoiceExpenseConfirmationSheet({
         description: d.description || '',
         merchant: d.merchant || '',
         date: toDate(d.transaction_date || d.date),
-      }))
+      })),
     );
     setCurrentIndex(0);
     setAcceptedCount(0);
@@ -167,8 +159,7 @@ export function VoiceExpenseConfirmationSheet({
     setSaveError(null);
     setEditingField(null);
     setConfirmingReject(false);
-  }, [visible, drafts]);
-  // onCancel omitted from deps: only fired at open time when drafts is empty (stable enough).
+  }, [visible, drafts, onCancel]);
 
   // Cleanup pending timers on unmount.
   useEffect(() => {
@@ -186,9 +177,7 @@ export function VoiceExpenseConfirmationSheet({
   const cardDisabled = isSaving || confirmingReject || editingField !== null;
 
   const updateTopItem = (patch: Partial<DraftItem>) => {
-    setItems((prev) =>
-      prev.map((it, i) => (i === currentIndex ? { ...it, ...patch } : it))
-    );
+    setItems((prev) => prev.map((it, i) => (i === currentIndex ? { ...it, ...patch } : it)));
   };
 
   const flashError = (message: string) => {
@@ -204,7 +193,7 @@ export function VoiceExpenseConfirmationSheet({
     if (!topItem) return false;
     const input = buildTransaction(topItem, transcription);
     if (!input) {
-      const parsed = parseInt(topItem.amount, 10);
+      const parsed = Number.parseInt(topItem.amount, 10);
       if (!Number.isInteger(parsed) || parsed <= 0) {
         flashError('Enter an amount first');
       } else if (!topItem.category) {
@@ -257,233 +246,256 @@ export function VoiceExpenseConfirmationSheet({
           or pan gestures never activate (touches fall through to Pressables). */}
       <GestureHandlerRootView style={{ flex: 1 }}>
         <View style={styles.overlay}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          style={styles.keyboardAvoidingView}
-        >
-          {allDecided ? (
-            <SummaryView
-              accepted={acceptedCount}
-              rejected={rejectedCount}
-              total={items.length}
-              onClose={onCancel}
-              cardWidth={cardWidth}
-              styles={styles}
-            />
-          ) : (
-            <>
-              <View style={styles.hintPill}>
-                <Text style={styles.hintText}>
-                  Swipe right to accept · left to reject
-                </Text>
-              </View>
-
-              {saveError ? (
-                <View style={styles.errorBanner}>
-                  <Text style={styles.errorBannerText}>{saveError}</Text>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            style={styles.keyboardAvoidingView}
+          >
+            {allDecided ? (
+              <SummaryView
+                accepted={acceptedCount}
+                rejected={rejectedCount}
+                total={items.length}
+                onClose={onCancel}
+                cardWidth={cardWidth}
+                styles={styles}
+                theme={theme}
+              />
+            ) : (
+              <>
+                <View style={styles.hintPill}>
+                  <Text variant="labelMedium" style={styles.hintText}>
+                    Swipe right to accept · left to reject
+                  </Text>
                 </View>
-              ) : null}
 
-              <View style={styles.deck}>
-                {peekItem ? (
-                  <View style={styles.peekCardWrapper} pointerEvents="none">
-                    <PeekCard
-                      item={peekItem}
-                      index={currentIndex + 2}
-                      total={items.length}
-                      cardWidth={cardWidth}
-                      styles={styles}
-                    />
+                {saveError ? (
+                  <View style={styles.errorBanner}>
+                    <Text variant="bodySmall" style={styles.errorBannerText}>
+                      {saveError}
+                    </Text>
                   </View>
                 ) : null}
-                {topItem ? (
-                  <CardEntrance key={currentIndex}>
-                    <SwipeDeckCard
-                      ref={cardRef}
-                      disabled={cardDisabled}
-                      onSwipedRight={handleSwipedRight}
-                      onSwipedLeft={handleSwipedLeft}
-                      style={[styles.cardFrame, { width: cardWidth }]}
-                    >
-                      <View
-                        style={styles.cardBody}
-                        pointerEvents={isSaving ? 'none' : 'auto'}
+
+                <View style={styles.deck}>
+                  {peekItem ? (
+                    <View style={styles.peekCardWrapper} pointerEvents="none">
+                      <PeekCard
+                        item={peekItem}
+                        index={currentIndex + 2}
+                        total={items.length}
+                        cardWidth={cardWidth}
+                        styles={styles}
+                        theme={theme}
+                      />
+                    </View>
+                  ) : null}
+                  {topItem ? (
+                    <CardEntrance key={currentIndex}>
+                      <SwipeDeckCard
+                        ref={cardRef}
+                        disabled={cardDisabled}
+                        onSwipedRight={handleSwipedRight}
+                        onSwipedLeft={handleSwipedLeft}
+                        style={[styles.cardFrame, { width: cardWidth }]}
                       >
-                        <View style={styles.cardTopRow}>
-                          <Text style={styles.expenseLabel}>
-                            Expense {currentIndex + 1} of {items.length}
-                          </Text>
-                          {isSaving ? (
-                            <ActivityIndicator
-                              size="small"
-                              color={colors.primary}
-                              style={styles.cardSpinner}
+                        <View style={styles.cardBody} pointerEvents={isSaving ? 'none' : 'auto'}>
+                          <View style={styles.cardTopRow}>
+                            <Text variant="labelSmall" style={styles.expenseLabel}>
+                              Expense {currentIndex + 1} of {items.length}
+                            </Text>
+                            {isSaving ? (
+                              <ActivityIndicator
+                                size={16}
+                                animating={true}
+                                color={theme.colors.primary}
+                                style={styles.cardSpinner}
+                              />
+                            ) : null}
+                          </View>
+
+                          {editingField === 'amount' ? (
+                            <AmountInput
+                              value={topItem.amount}
+                              onChangeValue={(v) => updateTopItem({ amount: v })}
+                              integerOnly
                             />
+                          ) : (
+                            <Pressable
+                              onPress={() => setEditingField('amount')}
+                              style={({ pressed }) => [
+                                styles.bigAmountRow,
+                                pressed && styles.pressed,
+                              ]}
+                            >
+                              <Text variant="headlineLarge" style={styles.bigAmount}>
+                                {topItem.amount
+                                  ? formatRupees(Number.parseInt(topItem.amount, 10) || 0)
+                                  : 'Rs.0'}
+                              </Text>
+                              <MaterialCommunityIcons
+                                name="pencil-outline"
+                                size={14}
+                                color={theme.colors.onSurfaceVariant}
+                              />
+                            </Pressable>
+                          )}
+
+                          {editingField === 'category' ? (
+                            <CategoryPicker
+                              selectedCategory={topItem.category}
+                              onSelectCategory={(c) => {
+                                updateTopItem({ category: c });
+                                setEditingField(null);
+                              }}
+                            />
+                          ) : (
+                            <Pressable
+                              onPress={() => setEditingField('category')}
+                              style={({ pressed }) => [styles.fieldRow, pressed && styles.pressed]}
+                            >
+                              {topItem.category ? (
+                                <CategoryChip category={topItem.category} styles={styles} />
+                              ) : (
+                                <Text variant="bodyMedium" style={styles.fieldPlaceholder}>
+                                  Tap to pick a category
+                                </Text>
+                              )}
+                            </Pressable>
+                          )}
+
+                          {editingField === 'description' ? (
+                            <Input
+                              placeholder="Add a short description"
+                              value={topItem.description}
+                              onChangeText={(v) => updateTopItem({ description: v })}
+                              multiline
+                              autoFocus
+                            />
+                          ) : (
+                            <Pressable
+                              onPress={() => setEditingField('description')}
+                              style={({ pressed }) => [styles.fieldRow, pressed && styles.pressed]}
+                            >
+                              <MaterialCommunityIcons
+                                name="text-short"
+                                size={16}
+                                color={theme.colors.onSurfaceVariant}
+                              />
+                              <Text
+                                variant="bodyMedium"
+                                style={
+                                  topItem.description ? styles.fieldText : styles.fieldPlaceholder
+                                }
+                                numberOfLines={1}
+                              >
+                                {topItem.description || 'Add a description'}
+                              </Text>
+                            </Pressable>
+                          )}
+
+                          {editingField === 'date' ? (
+                            <DatePicker
+                              value={topItem.date}
+                              onChange={(d) => updateTopItem({ date: d })}
+                            />
+                          ) : (
+                            <Pressable
+                              onPress={() => setEditingField('date')}
+                              style={({ pressed }) => [styles.fieldRow, pressed && styles.pressed]}
+                            >
+                              <MaterialCommunityIcons
+                                name="calendar-outline"
+                                size={16}
+                                color={theme.colors.onSurfaceVariant}
+                              />
+                              <Text variant="bodyMedium" style={styles.fieldText}>
+                                {formatDate(topItem.date, 'short')}
+                              </Text>
+                            </Pressable>
+                          )}
+
+                          {editingField === 'merchant' ? (
+                            <Input
+                              label="Merchant"
+                              placeholder="Merchant (optional)"
+                              value={topItem.merchant}
+                              onChangeText={(v) => updateTopItem({ merchant: v })}
+                              autoFocus
+                            />
+                          ) : (
+                            <Pressable
+                              onPress={() => setEditingField('merchant')}
+                              style={({ pressed }) => [styles.fieldRow, pressed && styles.pressed]}
+                            >
+                              <MaterialCommunityIcons
+                                name="store-outline"
+                                size={16}
+                                color={theme.colors.onSurfaceVariant}
+                              />
+                              <Text
+                                variant="bodyMedium"
+                                style={
+                                  topItem.merchant ? styles.fieldText : styles.fieldPlaceholder
+                                }
+                                numberOfLines={1}
+                              >
+                                {topItem.merchant || 'Add merchant (optional)'}
+                              </Text>
+                            </Pressable>
+                          )}
+
+                          {editingField !== null ? (
+                            <Button
+                              mode="contained"
+                              buttonColor={theme.colors.primary}
+                              textColor={theme.colors.onPrimary}
+                              onPress={() => setEditingField(null)}
+                              style={styles.doneButton}
+                            >
+                              Done
+                            </Button>
                           ) : null}
                         </View>
+                      </SwipeDeckCard>
+                    </CardEntrance>
+                  ) : null}
+                </View>
+              </>
+            )}
+          </KeyboardAvoidingView>
 
-                        {editingField === 'amount' ? (
-                          <AmountInput
-                            value={topItem.amount}
-                            onChangeValue={(v) => updateTopItem({ amount: v })}
-                            integerOnly
-                          />
-                        ) : (
-                          <Pressable
-                            onPress={() => setEditingField('amount')}
-                            style={({ pressed }) => [styles.bigAmountRow, pressed && styles.pressed]}
-                          >
-                            <Text style={styles.bigAmount}>
-                              {topItem.amount
-                                ? formatRupees(parseInt(topItem.amount, 10) || 0)
-                                : 'Rs.0'}
-                            </Text>
-                            <MaterialCommunityIcons
-                              name="pencil-outline"
-                              size={14}
-                              color={colors.onSurfaceVariant}
-                            />
-                          </Pressable>
-                        )}
-
-                        {editingField === 'category' ? (
-                          <CategoryPicker
-                            selectedCategory={topItem.category}
-                            onSelectCategory={(c) => {
-                              updateTopItem({ category: c });
-                              setEditingField(null);
-                            }}
-                          />
-                        ) : (
-                          <Pressable
-                            onPress={() => setEditingField('category')}
-                            style={({ pressed }) => [styles.fieldRow, pressed && styles.pressed]}
-                          >
-                            {topItem.category ? (
-                              <CategoryChip category={topItem.category} styles={styles} />
-                            ) : (
-                              <Text style={styles.fieldPlaceholder}>
-                                Tap to pick a category
-                              </Text>
-                            )}
-                          </Pressable>
-                        )}
-
-                        {editingField === 'description' ? (
-                          <Input
-                            placeholder="Add a short description"
-                            value={topItem.description}
-                            onChangeText={(v) => updateTopItem({ description: v })}
-                            multiline
-                            autoFocus
-                          />
-                        ) : (
-                          <Pressable
-                            onPress={() => setEditingField('description')}
-                            style={({ pressed }) => [styles.fieldRow, pressed && styles.pressed]}
-                          >
-                            <MaterialCommunityIcons
-                              name="text-short"
-                              size={16}
-                              color={colors.onSurfaceVariant}
-                            />
-                            <Text
-                              style={topItem.description ? styles.fieldText : styles.fieldPlaceholder}
-                              numberOfLines={1}
-                            >
-                              {topItem.description || 'Add a description'}
-                            </Text>
-                          </Pressable>
-                        )}
-
-                        {editingField === 'date' ? (
-                          <DatePicker
-                            value={topItem.date}
-                            onChange={(d) => updateTopItem({ date: d })}
-                          />
-                        ) : (
-                          <Pressable
-                            onPress={() => setEditingField('date')}
-                            style={({ pressed }) => [styles.fieldRow, pressed && styles.pressed]}
-                          >
-                            <MaterialCommunityIcons
-                              name="calendar-outline"
-                              size={16}
-                              color={colors.onSurfaceVariant}
-                            />
-                            <Text style={styles.fieldText}>
-                              {formatDate(topItem.date, 'short')}
-                            </Text>
-                          </Pressable>
-                        )}
-
-                        {editingField === 'merchant' ? (
-                          <Input
-                            label="Merchant"
-                            placeholder="Merchant (optional)"
-                            value={topItem.merchant}
-                            onChangeText={(v) => updateTopItem({ merchant: v })}
-                            autoFocus
-                          />
-                        ) : (
-                          <Pressable
-                            onPress={() => setEditingField('merchant')}
-                            style={({ pressed }) => [styles.fieldRow, pressed && styles.pressed]}
-                          >
-                            <MaterialCommunityIcons
-                              name="store-outline"
-                              size={16}
-                              color={colors.onSurfaceVariant}
-                            />
-                            <Text
-                              style={topItem.merchant ? styles.fieldText : styles.fieldPlaceholder}
-                              numberOfLines={1}
-                            >
-                              {topItem.merchant || 'Add merchant (optional)'}
-                            </Text>
-                          </Pressable>
-                        )}
-
-                        {editingField !== null ? (
-                          <Pressable
-                            onPress={() => setEditingField(null)}
-                            style={({ pressed }) => [styles.doneButton, pressed && styles.pressed]}
-                          >
-                            <Text style={styles.doneButtonText}>Done</Text>
-                          </Pressable>
-                        ) : null}
-                      </View>
-                    </SwipeDeckCard>
-                  </CardEntrance>
-                ) : null}
-              </View>
-            </>
-          )}
-        </KeyboardAvoidingView>
-
-        {confirmingReject ? (
-          <View style={styles.confirmOverlay}>
-            <Pressable style={styles.confirmBackdrop} onPress={handleCancelReject} />
-            <View style={styles.confirmCard}>
-              <Text style={styles.confirmTitle}>Reject this expense?</Text>
-              <Text style={styles.confirmBody}>It won't be saved.</Text>
-              <View style={styles.confirmActions}>
-                <Pressable
-                  onPress={handleCancelReject}
-                  style={({ pressed }) => [styles.confirmCancel, pressed && styles.pressed]}
-                >
-                  <Text style={styles.confirmCancelText}>Cancel</Text>
-                </Pressable>
-                <Pressable
-                  onPress={handleConfirmReject}
-                  style={({ pressed }) => [styles.confirmReject, pressed && styles.pressed]}
-                >
-                  <Text style={styles.confirmRejectText}>Reject</Text>
-                </Pressable>
-              </View>
+          {confirmingReject ? (
+            <View style={styles.confirmOverlay}>
+              <Pressable style={styles.confirmBackdrop} onPress={handleCancelReject} />
+              <Surface elevation={3} style={styles.confirmCard}>
+                <Text variant="titleMedium" style={styles.confirmTitle}>
+                  Reject this expense?
+                </Text>
+                <Text variant="bodyMedium" style={styles.confirmBody}>
+                  It won't be saved.
+                </Text>
+                <View style={styles.confirmActions}>
+                  <Button
+                    mode="outlined"
+                    onPress={handleCancelReject}
+                    style={styles.confirmActionButton}
+                    textColor={theme.colors.onSurface}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    mode="contained"
+                    buttonColor={theme.colors.error}
+                    textColor={theme.colors.onError}
+                    onPress={handleConfirmReject}
+                    style={styles.confirmActionButton}
+                  >
+                    Reject
+                  </Button>
+                </View>
+              </Surface>
             </View>
-          </View>
-        ) : null}
+          ) : null}
         </View>
       </GestureHandlerRootView>
     </Modal>
@@ -496,40 +508,45 @@ function PeekCard({
   total,
   cardWidth,
   styles,
+  theme,
 }: {
   item: DraftItem;
   index: number;
   total: number;
   cardWidth: number;
   styles: ReturnType<typeof createStyles>;
+  theme: AppTheme;
 }) {
   return (
-    <View style={[styles.cardFrame, { width: cardWidth }]}>
+    <Surface elevation={3} style={[styles.cardFrame, { width: cardWidth }]}>
       <View style={styles.cardBody}>
         <View style={styles.cardTopRow}>
-          <Text style={styles.expenseLabel}>
+          <Text variant="labelSmall" style={styles.expenseLabel}>
             Expense {index} of {total}
           </Text>
         </View>
         <View style={styles.bigAmountRow}>
-          <Text style={styles.bigAmount}>
-            {item.amount ? formatRupees(parseInt(item.amount, 10) || 0) : 'Rs.0'}
+          <Text variant="headlineLarge" style={styles.bigAmount}>
+            {item.amount ? formatRupees(Number.parseInt(item.amount, 10) || 0) : 'Rs.0'}
           </Text>
         </View>
         <View style={styles.fieldRow}>
           {item.category ? (
             <CategoryChip category={item.category} styles={styles} />
           ) : (
-            <Text style={styles.fieldPlaceholder}>Tap to pick a category</Text>
+            <Text variant="bodyMedium" style={styles.fieldPlaceholder}>
+              Tap to pick a category
+            </Text>
           )}
         </View>
         <View style={styles.fieldRow}>
           <MaterialCommunityIcons
             name="text-short"
             size={16}
-            color={styles.fieldIcon.color}
+            color={theme.colors.onSurfaceVariant}
           />
           <Text
+            variant="bodyMedium"
             style={item.description ? styles.fieldText : styles.fieldPlaceholder}
             numberOfLines={1}
           >
@@ -540,12 +557,14 @@ function PeekCard({
           <MaterialCommunityIcons
             name="calendar-outline"
             size={16}
-            color={styles.fieldIcon.color}
+            color={theme.colors.onSurfaceVariant}
           />
-          <Text style={styles.fieldText}>{formatDate(item.date, 'short')}</Text>
+          <Text variant="bodyMedium" style={styles.fieldText}>
+            {formatDate(item.date, 'short')}
+          </Text>
         </View>
       </View>
-    </View>
+    </Surface>
   );
 }
 
@@ -563,7 +582,9 @@ function CategoryChip({
       <View
         style={[
           styles.chipIconContainer,
-          { backgroundColor: config.iconBackgroundColor || `${config.color}22` },
+          {
+            backgroundColor: config.iconBackgroundColor || `${config.color}22`,
+          },
         ]}
       >
         <MaterialCommunityIcons
@@ -572,7 +593,9 @@ function CategoryChip({
           color={config.iconColor}
         />
       </View>
-      <Text style={[styles.chipText, { color: config.color }]}>{config.label}</Text>
+      <Text variant="labelMedium" style={[styles.chipText, { color: config.color }]}>
+        {config.label}
+      </Text>
     </View>
   );
 }
@@ -584,6 +607,7 @@ function SummaryView({
   onClose,
   cardWidth,
   styles,
+  theme,
 }: {
   accepted: number;
   rejected: number;
@@ -591,46 +615,44 @@ function SummaryView({
   onClose: () => void;
   cardWidth: number;
   styles: ReturnType<typeof createStyles>;
+  theme: AppTheme;
 }) {
   return (
-    <View style={[styles.summaryCard, { width: cardWidth }]}>
-      <MaterialCommunityIcons
-        name="check-decagram"
-        size={56}
-        color={styles.summaryTitle.color}
-      />
-      <Text style={styles.summaryTitle}>
-        {accepted > 0
-          ? `${accepted} expense${accepted === 1 ? '' : 's'} saved`
-          : 'Nothing saved'}
+    <Surface elevation={3} style={[styles.summaryCard, { width: cardWidth }]}>
+      <MaterialCommunityIcons name="check-decagram" size={56} color={theme.colors.primary} />
+      <Text variant="titleLarge" style={styles.summaryTitle}>
+        {accepted > 0 ? `${accepted} expense${accepted === 1 ? '' : 's'} saved` : 'Nothing saved'}
       </Text>
       {rejected > 0 ? (
-        <Text style={styles.summarySubtitle}>
-          {rejected} expense{rejected === 1 ? '' : 's'} rejected
+        <Text variant="bodyMedium" style={styles.summarySubtitle}>
+          {rejected} expense${rejected === 1 ? '' : 's'} rejected
         </Text>
       ) : null}
-      <Text style={styles.summaryBody}>
+      <Text variant="bodySmall" style={styles.summaryBody}>
         {total === 1
           ? 'Your voice note is done.'
           : `Processed ${total} expenses from your voice note.`}
       </Text>
-      <Pressable
+      <Button
+        mode="contained"
+        buttonColor={theme.colors.primary}
+        textColor={theme.colors.onPrimary}
         onPress={onClose}
-        style={({ pressed }) => [styles.summaryCloseButton, pressed && styles.pressed]}
+        style={styles.summaryCloseButton}
       >
-        <Text style={styles.summaryCloseButtonText}>Close</Text>
-      </Pressable>
-    </View>
+        Close
+      </Button>
+    </Surface>
   );
 }
 
-const createStyles = (colors: Colors) =>
+const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     overlay: {
       flex: 1,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: 'rgba(0, 0, 0, 0.72)',
+      backgroundColor: theme.colors.backdrop,
     },
     keyboardAvoidingView: {
       width: '100%',
@@ -641,12 +663,12 @@ const createStyles = (colors: Colors) =>
       paddingHorizontal: spacing.lg,
       paddingVertical: spacing.xs + 2,
       borderRadius: borderRadius.full,
-      backgroundColor: colors.surfaceContainerHigh,
+      backgroundColor: theme.colors.surfaceContainerHigh,
       borderWidth: 1,
-      borderColor: colors.outlineVariant,
+      borderColor: theme.colors.outlineVariant,
     },
     hintText: {
-      color: colors.onSurfaceVariant,
+      color: theme.colors.onSurfaceVariant,
       fontSize: typography.fontSize.sm,
       fontWeight: typography.fontWeight.medium,
     },
@@ -655,11 +677,12 @@ const createStyles = (colors: Colors) =>
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.sm,
       borderRadius: borderRadius.full,
-      backgroundColor: 'rgba(255,113,108,0.15)',
+      backgroundColor: theme.colors.errorContainer,
     },
     errorBannerText: {
-      color: colors.error,
+      color: theme.colors.onErrorContainer,
       fontSize: typography.fontSize.sm,
+      textAlign: 'center',
     },
     deck: {
       position: 'relative',
@@ -676,15 +699,11 @@ const createStyles = (colors: Colors) =>
       opacity: 0.65,
     },
     cardFrame: {
-      backgroundColor: colors.surfaceContainer,
+      backgroundColor: theme.colors.surfaceContainer,
       borderRadius: borderRadius.xl,
       borderWidth: 1,
-      borderColor: colors.outlineVariant,
-      shadowColor: '#000',
-      shadowOpacity: 0.25,
-      shadowRadius: 16,
-      shadowOffset: { width: 0, height: 8 },
-      elevation: 8,
+      borderColor: theme.colors.outlineVariant,
+      elevation: 3,
     },
     cardBody: {
       padding: spacing.lg,
@@ -701,7 +720,7 @@ const createStyles = (colors: Colors) =>
     expenseLabel: {
       fontSize: typography.fontSize.sm,
       fontWeight: typography.fontWeight.bold,
-      color: colors.primary,
+      color: theme.colors.primary,
       textTransform: 'uppercase',
       letterSpacing: 1.2,
       textAlign: 'center',
@@ -713,14 +732,14 @@ const createStyles = (colors: Colors) =>
       paddingVertical: spacing.md,
       paddingHorizontal: spacing.md,
       borderRadius: borderRadius.md,
-      backgroundColor: colors.surfaceContainerHigh,
+      backgroundColor: theme.colors.surfaceContainerHigh,
       marginBottom: spacing.md,
       gap: spacing.sm,
     },
     bigAmount: {
       fontSize: typography.fontSize.xxxl,
       fontWeight: typography.fontWeight.bold,
-      color: colors.onSurface,
+      color: theme.colors.onSurface,
       letterSpacing: -0.5,
     },
     fieldRow: {
@@ -729,22 +748,19 @@ const createStyles = (colors: Colors) =>
       paddingVertical: spacing.sm,
       paddingHorizontal: spacing.md,
       borderRadius: borderRadius.md,
-      backgroundColor: colors.surfaceContainerHigh,
+      backgroundColor: theme.colors.surfaceContainerHigh,
       marginBottom: spacing.xs,
       gap: spacing.sm,
-    },
-    fieldIcon: {
-      color: colors.onSurfaceVariant,
     },
     fieldText: {
       flex: 1,
       fontSize: typography.fontSize.md,
-      color: colors.onSurface,
+      color: theme.colors.onSurface,
     },
     fieldPlaceholder: {
       flex: 1,
       fontSize: typography.fontSize.md,
-      color: colors.onSurfaceVariant,
+      color: theme.colors.onSurfaceVariant,
       fontStyle: 'italic',
     },
     chip: {
@@ -753,7 +769,7 @@ const createStyles = (colors: Colors) =>
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.xs,
       borderRadius: borderRadius.full,
-      backgroundColor: colors.surfaceContainerHigh,
+      backgroundColor: theme.colors.surfaceContainerHigh,
       gap: spacing.sm,
     },
     chipIconContainer: {
@@ -770,58 +786,38 @@ const createStyles = (colors: Colors) =>
     doneButton: {
       alignSelf: 'center',
       marginTop: spacing.sm,
-      paddingHorizontal: spacing.lg,
-      paddingVertical: spacing.sm,
       borderRadius: borderRadius.full,
-      backgroundColor: colors.primary,
-    },
-    doneButtonText: {
-      color: '#FFFFFF',
-      fontSize: typography.fontSize.sm,
-      fontWeight: typography.fontWeight.semiBold,
     },
     summaryCard: {
       alignItems: 'center',
       padding: spacing.xl,
       borderRadius: borderRadius.xl,
-      backgroundColor: colors.surfaceContainer,
+      backgroundColor: theme.colors.surfaceContainer,
       borderWidth: 1,
-      borderColor: colors.outlineVariant,
-      shadowColor: '#000',
-      shadowOpacity: 0.25,
-      shadowRadius: 16,
-      shadowOffset: { width: 0, height: 8 },
-      elevation: 8,
+      borderColor: theme.colors.outlineVariant,
     },
     summaryTitle: {
-      color: colors.primary,
+      color: theme.colors.primary,
       fontSize: typography.fontSize.xl,
       fontWeight: typography.fontWeight.bold,
       textAlign: 'center',
       marginTop: spacing.sm,
     },
     summarySubtitle: {
-      color: colors.onSurfaceVariant,
+      color: theme.colors.onSurfaceVariant,
       fontSize: typography.fontSize.md,
       textAlign: 'center',
     },
     summaryBody: {
-      color: colors.onSurfaceVariant,
+      color: theme.colors.onSurfaceVariant,
       fontSize: typography.fontSize.sm,
       textAlign: 'center',
       marginTop: spacing.xs,
       marginBottom: spacing.md,
     },
     summaryCloseButton: {
-      paddingHorizontal: spacing.xl,
-      paddingVertical: spacing.md,
       borderRadius: borderRadius.full,
-      backgroundColor: colors.primary,
-    },
-    summaryCloseButtonText: {
-      color: '#FFFFFF',
-      fontSize: typography.fontSize.md,
-      fontWeight: typography.fontWeight.semiBold,
+      paddingHorizontal: spacing.xl,
     },
     confirmOverlay: {
       position: 'absolute',
@@ -838,26 +834,26 @@ const createStyles = (colors: Colors) =>
       left: 0,
       right: 0,
       bottom: 0,
-      backgroundColor: 'rgba(0,0,0,0.55)',
+      backgroundColor: theme.colors.backdrop,
     },
     confirmCard: {
       width: '80%',
       maxWidth: 320,
       padding: spacing.lg,
-      borderRadius: borderRadius.lg,
-      backgroundColor: colors.surfaceContainerHighest,
+      borderRadius: borderRadius.xl,
+      backgroundColor: theme.colors.surfaceContainer,
       borderWidth: 1,
-      borderColor: colors.outlineVariant,
+      borderColor: theme.colors.outlineVariant,
     },
     confirmTitle: {
-      color: colors.onSurface,
+      color: theme.colors.onSurface,
       fontSize: typography.fontSize.lg,
       fontWeight: typography.fontWeight.semiBold,
       textAlign: 'center',
     },
     confirmBody: {
       marginTop: spacing.xs,
-      color: colors.onSurfaceVariant,
+      color: theme.colors.onSurfaceVariant,
       fontSize: typography.fontSize.sm,
       textAlign: 'center',
     },
@@ -866,30 +862,9 @@ const createStyles = (colors: Colors) =>
       marginTop: spacing.lg,
       gap: spacing.sm,
     },
-    confirmCancel: {
+    confirmActionButton: {
       flex: 1,
-      paddingVertical: spacing.md,
-      borderRadius: borderRadius.md,
-      borderWidth: 1,
-      borderColor: colors.outlineVariant,
-      alignItems: 'center',
-    },
-    confirmCancelText: {
-      color: colors.onSurface,
-      fontSize: typography.fontSize.md,
-      fontWeight: typography.fontWeight.medium,
-    },
-    confirmReject: {
-      flex: 1,
-      paddingVertical: spacing.md,
-      borderRadius: borderRadius.md,
-      backgroundColor: colors.error,
-      alignItems: 'center',
-    },
-    confirmRejectText: {
-      color: '#FFFFFF',
-      fontSize: typography.fontSize.md,
-      fontWeight: typography.fontWeight.semiBold,
+      borderRadius: borderRadius.full,
     },
     pressed: {
       opacity: 0.7,

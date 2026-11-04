@@ -1,8 +1,9 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import React from 'react';
-import { Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
+import React, { useMemo } from 'react';
+import { Animated, Easing, Pressable, StyleSheet, View } from 'react-native';
+import { Text } from 'react-native-paper';
 import Svg, { Circle, Defs, Path, Pattern, Rect } from 'react-native-svg';
-import { typography } from '../../constants/theme';
+import { type AppTheme, typography, useAppTheme } from '../../constants/theme';
 import { formatRupees } from '../../utils/currency';
 
 interface HeroBudgetCardProps {
@@ -27,6 +28,9 @@ export default function HeroBudgetCard({
   weekSpent,
   onPress,
 }: HeroBudgetCardProps) {
+  const theme = useAppTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
+
   const progress = budget > 0 ? Math.min(spent / budget, 1) : 0;
   const remainingPercent = budget > 0 ? Math.max((remaining / budget) * 100, 0) : 0;
   const dashOffset = CIRCUMFERENCE * (1 - progress);
@@ -142,11 +146,16 @@ export default function HeroBudgetCard({
       </View>
 
       <View style={styles.bottomStats}>
-        <Stat label="TODAY" value={formatRupees(todaySpent)} />
-        <Hairline />
-        <Stat label="THIS WEEK" value={formatRupees(weekSpent)} />
-        <Hairline />
-        <Stat label="SAVINGS %" value={`${remainingPercent.toFixed(0)}%`} valueColor="#1DC496" />
+        <Stat label="TODAY" value={formatRupees(todaySpent)} styles={styles} />
+        <Hairline styles={styles} />
+        <Stat label="THIS WEEK" value={formatRupees(weekSpent)} styles={styles} />
+        <Hairline styles={styles} />
+        <Stat
+          label="SAVINGS %"
+          value={`${remainingPercent.toFixed(0)}%`}
+          valueColor={theme.colors.tertiary}
+          styles={styles}
+        />
       </View>
     </View>
   );
@@ -176,7 +185,17 @@ export default function HeroBudgetCard({
   );
 }
 
-function Stat({ label, value, valueColor }: { label: string; value: string; valueColor?: string }) {
+function Stat({
+  label,
+  value,
+  valueColor,
+  styles,
+}: {
+  label: string;
+  value: string;
+  valueColor?: string;
+  styles: ReturnType<typeof createStyles>;
+}) {
   return (
     <View style={styles.stat}>
       <Text style={styles.statLabel}>{label}</Text>
@@ -185,142 +204,143 @@ function Stat({ label, value, valueColor }: { label: string; value: string; valu
   );
 }
 
-function Hairline() {
+function Hairline({ styles }: { styles: ReturnType<typeof createStyles> }) {
   return <View style={styles.hairline} />;
 }
 
-const styles = StyleSheet.create({
-  pressable: {
-    borderRadius: 24,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: 'rgba(90,140,255,0.18)',
-    shadowColor: '#1A6BFF',
-    shadowOpacity: 0.12,
-    shadowRadius: 28,
-    shadowOffset: { width: 0, height: 14 },
-  },
-  gradient: {
-    borderRadius: 24,
-  },
-  content: {
-    position: 'relative',
-    borderRadius: 24,
-    paddingHorizontal: 20,
-    paddingTop: 22,
-    paddingBottom: 20,
-    gap: 20,
-    backgroundColor: '#0A0F1A',
-    overflow: 'hidden',
-    minHeight: 250,
-  },
-  topRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 18,
-  },
-  glowLayer: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(26,107,255,0.05)',
-  },
-  gridOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    opacity: 0.8,
-  },
-  leftColumn: {
-    flex: 1,
-    gap: 10,
-  },
-  eyebrow: {
-    fontSize: 11,
-    letterSpacing: 1.2,
-    color: 'rgba(120,170,255,0.7)',
-    fontWeight: typography.fontWeight.bold,
-  },
-  spentAmount: {
-    fontSize: 30,
-    lineHeight: 34,
-    color: '#FFFFFF',
-    fontWeight: typography.fontWeight.bold,
-    letterSpacing: -0.4,
-  },
-  remainingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: 6,
-  },
-  greenDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#4FD2FF',
-  },
-  remainingText: {
-    color: '#8ADFFF',
-    fontSize: 13,
-    fontWeight: typography.fontWeight.semiBold,
-  },
-  ofText: {
-    color: 'rgba(173,186,214,0.75)',
-    fontSize: 13,
-  },
-  chartWrap: {
-    width: DONUT_SIZE,
-    height: DONUT_SIZE,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#1A6BFF',
-    shadowOpacity: 0.18,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 7,
-  },
-  chartCenter: {
-    position: 'absolute',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  centerAmount: {
-    color: '#4FD2FF',
-    fontSize: 18,
-    fontWeight: typography.fontWeight.bold,
-  },
-  centerLabel: {
-    marginTop: 2,
-    color: 'rgba(181,228,255,0.72)',
-    fontSize: 11,
-    letterSpacing: 0.8,
-    fontWeight: typography.fontWeight.bold,
-  },
-  bottomStats: {
-    flexDirection: 'row',
-    alignItems: 'stretch',
-    justifyContent: 'space-between',
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(120,170,255,0.12)',
-    paddingTop: 12,
-  },
-  stat: {
-    flex: 1,
-    gap: 4,
-  },
-  statLabel: {
-    color: 'rgba(154,199,255,0.74)',
-    fontSize: 10,
-    letterSpacing: 0.9,
-    fontWeight: typography.fontWeight.bold,
-  },
-  statValue: {
-    color: '#FFFFFF',
-    fontSize: 13,
-    fontWeight: typography.fontWeight.semiBold,
-  },
-  hairline: {
-    width: 1,
-    alignSelf: 'stretch',
-    backgroundColor: 'rgba(120,170,255,0.12)',
-    marginHorizontal: 10,
-  },
-});
+const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    pressable: {
+      borderRadius: 24,
+      overflow: 'hidden',
+      borderWidth: 1,
+      borderColor: 'rgba(90,140,255,0.18)',
+      shadowColor: '#1A6BFF',
+      shadowOpacity: 0.12,
+      shadowRadius: 28,
+      shadowOffset: { width: 0, height: 14 },
+    },
+    gradient: {
+      borderRadius: 24,
+    },
+    content: {
+      position: 'relative',
+      borderRadius: 24,
+      paddingHorizontal: 20,
+      paddingTop: 22,
+      paddingBottom: 20,
+      gap: 20,
+      backgroundColor: 'transparent',
+      overflow: 'hidden',
+      minHeight: 250,
+    },
+    topRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 18,
+    },
+    glowLayer: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: 'rgba(26,107,255,0.05)',
+    },
+    gridOverlay: {
+      ...StyleSheet.absoluteFillObject,
+      opacity: 0.8,
+    },
+    leftColumn: {
+      flex: 1,
+      gap: 10,
+    },
+    eyebrow: {
+      fontSize: 11,
+      letterSpacing: 1.2,
+      color: theme.colors.secondary,
+      fontWeight: typography.fontWeight.bold,
+    },
+    spentAmount: {
+      fontSize: 30,
+      lineHeight: 34,
+      color: theme.colors.onPrimary,
+      fontWeight: typography.fontWeight.bold,
+      letterSpacing: -0.4,
+    },
+    remainingRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flexWrap: 'wrap',
+      gap: 6,
+    },
+    greenDot: {
+      width: 6,
+      height: 6,
+      borderRadius: 3,
+      backgroundColor: theme.colors.tertiary,
+    },
+    remainingText: {
+      color: theme.colors.tertiary,
+      fontSize: 13,
+      fontWeight: typography.fontWeight.semiBold,
+    },
+    ofText: {
+      color: theme.colors.onPrimaryContainer,
+      fontSize: 13,
+    },
+    chartWrap: {
+      width: DONUT_SIZE,
+      height: DONUT_SIZE,
+      alignItems: 'center',
+      justifyContent: 'center',
+      shadowColor: '#1A6BFF',
+      shadowOpacity: 0.18,
+      shadowRadius: 16,
+      shadowOffset: { width: 0, height: 6 },
+      elevation: 7,
+    },
+    chartCenter: {
+      position: 'absolute',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    centerAmount: {
+      color: theme.colors.tertiary,
+      fontSize: 18,
+      fontWeight: typography.fontWeight.bold,
+    },
+    centerLabel: {
+      marginTop: 2,
+      color: theme.colors.onPrimaryContainer,
+      fontSize: 11,
+      letterSpacing: 0.8,
+      fontWeight: typography.fontWeight.bold,
+    },
+    bottomStats: {
+      flexDirection: 'row',
+      alignItems: 'stretch',
+      justifyContent: 'space-between',
+      borderTopWidth: 1,
+      borderTopColor: 'rgba(120,170,255,0.12)',
+      paddingTop: 12,
+    },
+    stat: {
+      flex: 1,
+      gap: 4,
+    },
+    statLabel: {
+      color: theme.colors.secondary,
+      fontSize: 10,
+      letterSpacing: 0.9,
+      fontWeight: typography.fontWeight.bold,
+    },
+    statValue: {
+      color: theme.colors.onPrimary,
+      fontSize: 13,
+      fontWeight: typography.fontWeight.semiBold,
+    },
+    hairline: {
+      width: 1,
+      alignSelf: 'stretch',
+      backgroundColor: 'rgba(120,170,255,0.12)',
+      marginHorizontal: 10,
+    },
+  });

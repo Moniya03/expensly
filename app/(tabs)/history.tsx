@@ -1,17 +1,24 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import React, { useMemo } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Divider, Surface, Text, TouchableRipple } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { TransactionEditCard } from '../../components/transactions/TransactionEditCard';
 import { getCategoryColor, getCategoryConfig } from '../../constants/categories';
-import { borderRadius, type Colors, spacing, typography, useColors } from '../../constants/theme';
+import {
+  type AppTheme,
+  borderRadius,
+  spacing,
+  typography,
+  useAppTheme,
+} from '../../constants/theme';
 import { getHistoricalBudgetForMonth, useBudgets } from '../../hooks/useBudget';
-import { sentenceCase } from '../../utils/string';
 import { useAllTransactions } from '../../hooks/useTransactions';
 import { useAuthStore } from '../../stores/authStore';
 import type { Transaction } from '../../types';
 import { formatRupees } from '../../utils/currency';
 import { parseLocalDate } from '../../utils/date';
-import { TransactionEditCard } from '../../components/transactions/TransactionEditCard';
+import { sentenceCase } from '../../utils/string';
 
 type MonthItem = {
   key: string;
@@ -24,13 +31,13 @@ type MonthItem = {
 };
 
 export default function HistoryScreen() {
-  const colors = useColors();
-  const styles = useMemo(() => createStyles(colors), [colors]);
+  const theme = useAppTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const { profile } = useAuthStore();
   const { data: transactions = [], isLoading: transactionsLoading } = useAllTransactions();
   const { data: budgets = [], isLoading: budgetsLoading } = useBudgets();
 
-  const monthItems = React.useMemo<MonthItem[]>(() => {
+  const monthItems = useMemo<MonthItem[]>(() => {
     const now = new Date();
     const fallbackBudget = profile?.monthly_budget ?? 0;
 
@@ -66,10 +73,10 @@ export default function HistoryScreen() {
     });
   }, [budgets, profile?.monthly_budget, transactions]);
 
-  const [selectedKey, setSelectedKey] = React.useState<string | null>(null);
-  const [editingTransaction, setEditingTransaction] = React.useState<Transaction | null>(null);
+  const [selectedKey, setSelectedKey] = useState<string | null>(null);
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!selectedKey && monthItems.length > 0) {
       setSelectedKey(monthItems[monthItems.length - 1].key);
     }
@@ -77,190 +84,236 @@ export default function HistoryScreen() {
 
   const selectedMonth =
     monthItems.find((item) => item.key === selectedKey) ?? monthItems[monthItems.length - 1];
-  const maxValue = React.useMemo(
+  const maxValue = useMemo(
     () => Math.max(...monthItems.flatMap((item) => [item.spent, item.budget]), 1),
     [monthItems],
   );
 
   if (transactionsLoading || budgetsLoading) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
-        </View>
-      </SafeAreaView>
+      <Surface style={{ flex: 1, backgroundColor: theme.colors.surface }}>
+        <SafeAreaView style={styles.container}>
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={theme.colors.primary} />
+          </View>
+        </SafeAreaView>
+      </Surface>
     );
   }
 
   const delta = (selectedMonth?.budget ?? 0) - (selectedMonth?.spent ?? 0);
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.header}>
-          <Text style={styles.title}>History</Text>
-          <Text style={styles.subtitle}>Monthly spending across recent months</Text>
-        </View>
-
-        <View style={styles.chartCard}>
-          <View style={styles.legendRow}>
-            <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: colors.primary }]} />
-              <Text style={styles.legendText}>Spent</Text>
-            </View>
-            <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: colors.onSurfaceVariant }]} />
-              <Text style={styles.legendText}>Budget</Text>
-            </View>
+    <Surface style={{ flex: 1, backgroundColor: theme.colors.surface }}>
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+          <View style={styles.header}>
+            <Text variant="headlineMedium" style={styles.title}>
+              History
+            </Text>
+            <Text variant="bodyMedium" style={styles.subtitle}>
+              Monthly spending across recent months
+            </Text>
           </View>
 
-          <View style={styles.barChart}>
-            {monthItems.map((item) => {
-              const selected = item.key === selectedMonth?.key;
-              const spentHeight = Math.max((item.spent / maxValue) * 140, item.spent > 0 ? 10 : 4);
-
-              const budgetHeight = Math.max(
-                (item.budget / maxValue) * 140,
-                item.budget > 0 ? 10 : 4,
-              );
-
-              return (
-                <Pressable
-                  key={item.key}
-                  onPress={() => setSelectedKey(item.key)}
-                  style={[styles.monthColumn, selected && styles.monthColumnSelected]}
-                >
-                  <View style={styles.barGroup}>
-                    <View style={[styles.bar, styles.budgetBar, { height: budgetHeight }]} />
-                    <View style={[styles.bar, styles.spentBar, { height: spentHeight }]} />
-                  </View>
-                  <Text style={[styles.monthLabel, selected && styles.monthLabelSelected]}>
-                    {item.label}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        </View>
-
-        {selectedMonth ? (
-          <View style={styles.monthSection}>
-            <View style={styles.summaryCard}>
-              <Text style={styles.summaryTitle}>
-                {new Date(selectedMonth.year, selectedMonth.month - 1, 1).toLocaleDateString(
-                  'en-IN',
-                  {
-                    month: 'long',
-                    year: 'numeric',
-                  },
-                )}
-              </Text>
-
-              <View style={styles.summaryGrid}>
-                <View style={styles.summaryStat}>
-                  <Text style={styles.summaryLabel}>Spent</Text>
-                  <Text style={styles.summaryValue}>{formatRupees(selectedMonth.spent)}</Text>
-                </View>
-                <View style={styles.summaryStat}>
-                  <Text style={styles.summaryLabel}>Budget</Text>
-                  <Text style={styles.summaryValue}>{formatRupees(selectedMonth.budget)}</Text>
-                </View>
-                <View style={styles.summaryStat}>
-                  <Text style={styles.summaryLabel}>{delta >= 0 ? 'Left' : 'Over'}</Text>
-                  <Text style={[styles.summaryValue, delta < 0 && styles.overValue]}>
-                    {formatRupees(Math.abs(delta))}
-                  </Text>
-                </View>
+          <Surface elevation={1} style={styles.chartCard}>
+            <View style={styles.legendRow}>
+              <View style={styles.legendItem}>
+                <View style={[styles.legendDot, { backgroundColor: theme.colors.primary }]} />
+                <Text variant="labelSmall" style={styles.legendText}>
+                  Spent
+                </Text>
+              </View>
+              <View style={styles.legendItem}>
+                <View
+                  style={[styles.legendDot, { backgroundColor: theme.colors.onSurfaceVariant }]}
+                />
+                <Text variant="labelSmall" style={styles.legendText}>
+                  Budget
+                </Text>
               </View>
             </View>
 
-            <View style={styles.transactionsSection}>
-              <Text style={styles.transactionsTitle}>Transactions</Text>
+            <View style={styles.barChart}>
+              {monthItems.map((item) => {
+                const selected = item.key === selectedMonth?.key;
+                const spentHeight = Math.max(
+                  (item.spent / maxValue) * 140,
+                  item.spent > 0 ? 10 : 4,
+                );
 
-              {selectedMonth.transactions.length > 0 ? (
-                <View style={styles.transactionList}>
-                  {selectedMonth.transactions.map((transaction, index) => {
-                    const categoryConfig = getCategoryConfig(transaction.category);
-                    const categoryColor = getCategoryColor(transaction.category);
+                const budgetHeight = Math.max(
+                  (item.budget / maxValue) * 140,
+                  item.budget > 0 ? 10 : 4,
+                );
 
-                    return (
-                      <React.Fragment key={transaction.id}>
-                        <Pressable
-                          style={({ pressed }) => [styles.transactionItem, pressed && styles.transactionItemPressed]}
-                          onPress={() => setEditingTransaction(transaction)}
-                        >
-                          <View
-                            style={[
-                              styles.transactionIcon,
-                              {
-                                backgroundColor:
-                                  categoryConfig.iconBackgroundColor ??
-                                  `${categoryConfig.iconColor}18`,
-                              },
-                            ]}
-                          >
-                            <MaterialCommunityIcons
-                              name={
-                                categoryConfig.iconName as React.ComponentProps<
-                                  typeof MaterialCommunityIcons
-                                >['name']
-                              }
-                              size={20}
-                              color={categoryConfig.iconColor}
-                            />
-                          </View>
-
-                          <View style={styles.transactionDetails}>
-                            <Text style={styles.transactionDescription} numberOfLines={1}>
-                              {sentenceCase(transaction.description || categoryConfig.label)}
-                            </Text>
-                            <Text style={styles.transactionMeta}>
-                              {parseLocalDate(transaction.transaction_date).toLocaleDateString(
-                                'en-IN',
-                                {
-                                  day: 'numeric',
-                                  month: 'short',
-                                },
-                              )}
-                              {transaction.merchant ? ` • ${transaction.merchant}` : ''}
-                            </Text>
-                          </View>
-
-                          <Text style={[styles.transactionAmount, { color: categoryColor }]}>
-                            {formatRupees(transaction.amount)}
-                          </Text>
-                        </Pressable>
-                        {index < selectedMonth.transactions.length - 1 ? (
-                          <View style={styles.transactionSeparator} />
-                        ) : null}
-                      </React.Fragment>
-                    );
-                  })}
-                </View>
-              ) : (
-                <View style={styles.emptyCard}>
-                  <Text style={styles.emptyText}>No transactions for this month</Text>
-                </View>
-              )}
+                return (
+                  <Pressable
+                    key={item.key}
+                    onPress={() => setSelectedKey(item.key)}
+                    style={[styles.monthColumn, selected && styles.monthColumnSelected]}
+                  >
+                    <View style={styles.barGroup}>
+                      <View style={[styles.bar, styles.budgetBar, { height: budgetHeight }]} />
+                      <View style={[styles.bar, styles.spentBar, { height: spentHeight }]} />
+                    </View>
+                    <Text
+                      variant="labelSmall"
+                      style={[styles.monthLabel, selected && styles.monthLabelSelected]}
+                    >
+                      {item.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
             </View>
-          </View>
-        ) : null}
-      </ScrollView>
+          </Surface>
 
-      <TransactionEditCard
-        visible={editingTransaction !== null}
-        transaction={editingTransaction}
-        onClose={() => setEditingTransaction(null)}
-      />
-    </SafeAreaView>
+          {selectedMonth ? (
+            <View style={styles.monthSection}>
+              <Surface elevation={0} style={styles.summaryCard}>
+                <Text variant="titleMedium" style={styles.summaryTitle}>
+                  {new Date(selectedMonth.year, selectedMonth.month - 1, 1).toLocaleDateString(
+                    'en-IN',
+                    {
+                      month: 'long',
+                      year: 'numeric',
+                    },
+                  )}
+                </Text>
+
+                <View style={styles.summaryGrid}>
+                  <View style={styles.summaryStat}>
+                    <Text variant="labelSmall" style={styles.summaryLabel}>
+                      Spent
+                    </Text>
+                    <Text variant="titleMedium" style={styles.summaryValue}>
+                      {formatRupees(selectedMonth.spent)}
+                    </Text>
+                  </View>
+                  <View style={styles.summaryStat}>
+                    <Text variant="labelSmall" style={styles.summaryLabel}>
+                      Budget
+                    </Text>
+                    <Text variant="titleMedium" style={styles.summaryValue}>
+                      {formatRupees(selectedMonth.budget)}
+                    </Text>
+                  </View>
+                  <View style={styles.summaryStat}>
+                    <Text variant="labelSmall" style={styles.summaryLabel}>
+                      {delta >= 0 ? 'Left' : 'Over'}
+                    </Text>
+                    <Text
+                      variant="titleMedium"
+                      style={[styles.summaryValue, delta < 0 && styles.overValue]}
+                    >
+                      {formatRupees(Math.abs(delta))}
+                    </Text>
+                  </View>
+                </View>
+              </Surface>
+
+              <View style={styles.transactionsSection}>
+                <Text variant="labelSmall" style={styles.transactionsTitle}>
+                  Transactions
+                </Text>
+
+                {selectedMonth.transactions.length > 0 ? (
+                  <View style={styles.transactionList}>
+                    {selectedMonth.transactions.map((transaction, index) => {
+                      const categoryConfig = getCategoryConfig(transaction.category);
+                      const categoryColor = getCategoryColor(transaction.category);
+
+                      return (
+                        <React.Fragment key={transaction.id}>
+                          <TouchableRipple
+                            style={styles.transactionItem}
+                            onPress={() => setEditingTransaction(transaction)}
+                          >
+                            <View style={styles.transactionRow}>
+                              <View
+                                style={[
+                                  styles.transactionIcon,
+                                  {
+                                    backgroundColor:
+                                      categoryConfig.iconBackgroundColor ??
+                                      `${categoryConfig.iconColor}18`,
+                                  },
+                                ]}
+                              >
+                                <MaterialCommunityIcons
+                                  name={
+                                    categoryConfig.iconName as React.ComponentProps<
+                                      typeof MaterialCommunityIcons
+                                    >['name']
+                                  }
+                                  size={20}
+                                  color={categoryConfig.iconColor}
+                                />
+                              </View>
+
+                              <View style={styles.transactionDetails}>
+                                <Text
+                                  variant="bodyMedium"
+                                  style={styles.transactionDescription}
+                                  numberOfLines={1}
+                                >
+                                  {sentenceCase(transaction.description || categoryConfig.label)}
+                                </Text>
+                                <Text variant="bodySmall" style={styles.transactionMeta}>
+                                  {parseLocalDate(transaction.transaction_date).toLocaleDateString(
+                                    'en-IN',
+                                    {
+                                      day: 'numeric',
+                                      month: 'short',
+                                    },
+                                  )}
+                                  {transaction.merchant ? ` • ${transaction.merchant}` : ''}
+                                </Text>
+                              </View>
+
+                              <Text
+                                variant="titleMedium"
+                                style={[styles.transactionAmount, { color: categoryColor }]}
+                              >
+                                {formatRupees(transaction.amount)}
+                              </Text>
+                            </View>
+                          </TouchableRipple>
+                          {index < selectedMonth.transactions.length - 1 ? (
+                            <Divider style={styles.transactionSeparator} />
+                          ) : null}
+                        </React.Fragment>
+                      );
+                    })}
+                  </View>
+                ) : (
+                  <View style={styles.emptyCard}>
+                    <Text variant="bodyMedium" style={styles.emptyText}>
+                      No transactions for this month
+                    </Text>
+                  </View>
+                )}
+              </View>
+            </View>
+          ) : null}
+        </ScrollView>
+
+        <TransactionEditCard
+          visible={editingTransaction !== null}
+          transaction={editingTransaction}
+          onClose={() => setEditingTransaction(null)}
+        />
+      </SafeAreaView>
+    </Surface>
   );
 }
 
-const createStyles = (colors: Colors) =>
+const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: colors.surface,
+      backgroundColor: theme.colors.surface,
     },
     loadingContainer: {
       flex: 1,
@@ -276,19 +329,17 @@ const createStyles = (colors: Colors) =>
       gap: 6,
     },
     title: {
-      fontSize: typography.fontSize.xxxl,
       fontWeight: typography.fontWeight.bold,
-      color: colors.onSurface,
+      color: theme.colors.onSurface,
     },
     subtitle: {
-      fontSize: typography.fontSize.md,
-      color: colors.onSurfaceVariant,
+      color: theme.colors.onSurfaceVariant,
     },
     chartCard: {
-      backgroundColor: colors.surfaceContainerHigh,
-      borderRadius: borderRadius.md,
+      backgroundColor: theme.colors.surfaceContainer,
+      borderRadius: borderRadius.lg,
       borderWidth: 1,
-      borderColor: colors.outlineVariant,
+      borderColor: theme.colors.outlineVariant,
       padding: spacing.md,
       gap: spacing.md,
     },
@@ -307,8 +358,7 @@ const createStyles = (colors: Colors) =>
       borderRadius: borderRadius.full,
     },
     legendText: {
-      color: colors.onSurfaceVariant,
-      fontSize: typography.fontSize.xs,
+      color: theme.colors.onSurfaceVariant,
     },
     barChart: {
       flexDirection: 'row',
@@ -325,7 +375,7 @@ const createStyles = (colors: Colors) =>
       paddingHorizontal: 2,
     },
     monthColumnSelected: {
-      backgroundColor: colors.surfaceContainerHighest,
+      backgroundColor: theme.colors.surfaceContainerHighest,
     },
     barGroup: {
       height: 148,
@@ -340,19 +390,18 @@ const createStyles = (colors: Colors) =>
       borderRadius: borderRadius.sm,
     },
     spentBar: {
-      backgroundColor: colors.primary,
+      backgroundColor: theme.colors.primary,
     },
     budgetBar: {
-      backgroundColor: colors.onSurfaceVariant,
+      backgroundColor: theme.colors.onSurfaceVariant,
       opacity: 0.3,
     },
     monthLabel: {
       marginTop: spacing.sm,
-      fontSize: typography.fontSize.xs,
-      color: colors.onSurfaceVariant,
+      color: theme.colors.onSurfaceVariant,
     },
     monthLabelSelected: {
-      color: colors.onSurface,
+      color: theme.colors.onSurface,
       fontWeight: typography.fontWeight.semiBold,
     },
     summaryCard: {
@@ -360,15 +409,14 @@ const createStyles = (colors: Colors) =>
       padding: spacing.md,
       gap: spacing.md,
       borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: colors.outlineVariant,
+      borderBottomColor: theme.colors.outlineVariant,
     },
     monthSection: {
       gap: spacing.md,
     },
     summaryTitle: {
-      fontSize: typography.fontSize.xl,
       fontWeight: typography.fontWeight.bold,
-      color: colors.onSurface,
+      color: theme.colors.onSurface,
     },
     summaryGrid: {
       flexDirection: 'row',
@@ -380,43 +428,39 @@ const createStyles = (colors: Colors) =>
       gap: 4,
     },
     summaryLabel: {
-      fontSize: typography.fontSize.xs,
-      color: colors.onSurfaceVariant,
+      color: theme.colors.onSurfaceVariant,
     },
     summaryValue: {
-      fontSize: typography.fontSize.md,
-      color: colors.onSurface,
+      color: theme.colors.onSurface,
       fontWeight: typography.fontWeight.bold,
     },
     overValue: {
-      color: colors.error,
+      color: theme.colors.error,
     },
     transactionsSection: {
       gap: spacing.md,
     },
     transactionsTitle: {
-      fontSize: 10,
       fontWeight: typography.fontWeight.semiBold,
-      color: colors.onSurfaceVariant,
+      color: theme.colors.onSurfaceVariant,
       textTransform: 'uppercase',
       letterSpacing: 1,
     },
     transactionList: {
       borderTopWidth: StyleSheet.hairlineWidth,
-      borderTopColor: colors.outlineVariant,
+      borderTopColor: theme.colors.outlineVariant,
     },
     transactionItem: {
+      borderRadius: borderRadius.sm,
+    },
+    transactionRow: {
       flexDirection: 'row',
       alignItems: 'center',
       paddingVertical: spacing.md,
     },
-    transactionItemPressed: {
-      opacity: 0.6,
-    },
     transactionSeparator: {
-      height: StyleSheet.hairlineWidth,
-      backgroundColor: colors.outlineVariant,
       marginLeft: 58,
+      backgroundColor: theme.colors.outlineVariant,
     },
     transactionIcon: {
       width: 42,
@@ -426,24 +470,18 @@ const createStyles = (colors: Colors) =>
       justifyContent: 'center',
       marginRight: spacing.md,
     },
-    transactionEmoji: {
-      fontSize: 18,
-    },
     transactionDetails: {
       flex: 1,
     },
     transactionDescription: {
-      fontSize: typography.fontSize.md,
-      color: colors.onSurface,
+      color: theme.colors.onSurface,
       fontWeight: typography.fontWeight.medium,
     },
     transactionMeta: {
       marginTop: 2,
-      fontSize: typography.fontSize.xs,
-      color: colors.onSurfaceVariant,
+      color: theme.colors.onSurfaceVariant,
     },
     transactionAmount: {
-      fontSize: typography.fontSize.md,
       fontWeight: typography.fontWeight.bold,
       marginLeft: spacing.sm,
     },
@@ -451,10 +489,9 @@ const createStyles = (colors: Colors) =>
       paddingVertical: spacing.lg,
       alignItems: 'center',
       borderTopWidth: StyleSheet.hairlineWidth,
-      borderTopColor: colors.outlineVariant,
+      borderTopColor: theme.colors.outlineVariant,
     },
     emptyText: {
-      fontSize: typography.fontSize.md,
-      color: colors.onSurfaceVariant,
+      color: theme.colors.onSurfaceVariant,
     },
   });

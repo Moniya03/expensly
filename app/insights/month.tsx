@@ -1,15 +1,29 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useMemo } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useMemo, useState } from 'react';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Divider,
+  IconButton,
+  Surface,
+  Text,
+  TouchableRipple,
+} from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getCategoryColor, getCategoryConfig } from '../../constants/categories';
-import { borderRadius, type Colors, spacing, typography, useColors } from '../../constants/theme';
+import {
+  type AppTheme,
+  borderRadius,
+  spacing,
+  typography,
+  useAppTheme,
+} from '../../constants/theme';
 import { useMonthlyTransactions } from '../../hooks/useTransactions';
-import { sentenceCase } from '../../utils/string';
 import { useAuthStore } from '../../stores/authStore';
 import type { Category, Transaction } from '../../types';
 import { formatRupees } from '../../utils/currency';
+import { sentenceCase } from '../../utils/string';
 
 type GroupedCategory = {
   category: Category;
@@ -28,15 +42,15 @@ function getGroupLabel(transaction: Transaction) {
 }
 
 export default function MonthlyInsightsScreen() {
-  const colors = useColors();
-  const styles = useMemo(() => createStyles(colors), [colors]);
+  const theme = useAppTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const router = useRouter();
   const { profile } = useAuthStore();
   const { data: monthlyTransactions = [], isLoading } = useMonthlyTransactions();
-  const [expandedCategories, setExpandedCategories] = React.useState<Record<string, boolean>>({});
+  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
 
   const budget = profile?.monthly_budget ?? 0;
-  const monthLabel = React.useMemo(
+  const monthLabel = useMemo(
     () =>
       new Date().toLocaleDateString('en-IN', {
         month: 'long',
@@ -45,12 +59,12 @@ export default function MonthlyInsightsScreen() {
     [],
   );
 
-  const totalSpent = React.useMemo(
+  const totalSpent = useMemo(
     () => monthlyTransactions.reduce((sum, transaction) => sum + transaction.amount, 0),
     [monthlyTransactions],
   );
 
-  const categoryBreakdown = React.useMemo<GroupedCategory[]>(() => {
+  const categoryBreakdown = useMemo<GroupedCategory[]>(() => {
     const grouped = monthlyTransactions.reduce<Record<string, GroupedCategory>>(
       (acc, transaction) => {
         const key = transaction.category;
@@ -100,104 +114,140 @@ export default function MonthlyInsightsScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
-        </View>
-      </SafeAreaView>
+      <Surface style={styles.root}>
+        <SafeAreaView style={styles.container}>
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={theme.colors.primary} />
+          </View>
+        </SafeAreaView>
+      </Surface>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={20} color={colors.onSurface} />
-        </Pressable>
+    <Surface style={styles.root}>
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <View style={styles.header}>
+          <IconButton
+            icon="arrow-left"
+            iconColor={theme.colors.onSurface}
+            containerColor={theme.colors.surfaceContainer}
+            size={20}
+            onPress={() => router.back()}
+            style={styles.backButton}
+          />
 
-        <View style={styles.headerTextWrap}>
-          <Text style={styles.title}>Where money is going</Text>
-          <Text style={styles.subtitle}>{monthLabel}</Text>
+          <View style={styles.headerTextWrap}>
+            <Text variant="headlineMedium" style={styles.title}>
+              Where money is going
+            </Text>
+            <Text variant="bodyMedium" style={styles.subtitle}>
+              {monthLabel}
+            </Text>
+          </View>
         </View>
-      </View>
 
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.summaryBlock}>
-          <Text style={styles.summaryLabel}>Spent this month</Text>
-          <Text style={styles.summaryAmount}>{formatRupees(totalSpent)}</Text>
-          <Text style={styles.summaryMeta}>
-            {budget > 0
-              ? `${formatRupees(Math.abs(budget - totalSpent))} ${totalSpent > budget ? 'over' : 'left'} of ${formatRupees(budget)}`
-              : 'No monthly budget set'}
-          </Text>
-        </View>
+        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+          <Surface elevation={1} style={styles.summaryBlock}>
+            <Text variant="bodyMedium" style={styles.summaryLabel}>
+              Spent this month
+            </Text>
+            <Text variant="headlineLarge" style={styles.summaryAmount}>
+              {formatRupees(totalSpent)}
+            </Text>
+            <Text variant="bodyMedium" style={styles.summaryMeta}>
+              {budget > 0
+                ? `${formatRupees(Math.abs(budget - totalSpent))} ${totalSpent > budget ? 'over' : 'left'} of ${formatRupees(budget)}`
+                : 'No monthly budget set'}
+            </Text>
+          </Surface>
 
-        <View style={styles.section}>
-          {categoryBreakdown.length > 0 ? (
-            categoryBreakdown.map((item) => {
-              const config = getCategoryConfig(item.category);
-              const isExpanded = !!expandedCategories[item.category];
+          <View style={styles.section}>
+            {categoryBreakdown.length > 0 ? (
+              categoryBreakdown.map((item) => {
+                const config = getCategoryConfig(item.category);
+                const isExpanded = !!expandedCategories[item.category];
 
-              return (
-                <View key={item.category} style={styles.categoryBlock}>
-                  <Pressable
-                    onPress={() => toggleCategory(item.category)}
-                    style={({ pressed }) => [styles.categoryRow, pressed && styles.pressed]}
-                  >
-                    <View style={styles.categoryInfo}>
-                      <View
-                        style={[
-                          styles.categoryDot,
-                          { backgroundColor: getCategoryColor(item.category) },
-                        ]}
-                      />
-                      <Text style={styles.categoryLabel}>{config.label}</Text>
-                    </View>
-
-                    <View style={styles.categoryAmountWrap}>
-                      <Text style={styles.categoryAmount}>{formatRupees(item.total)}</Text>
-                      <Ionicons
-                        name={isExpanded ? 'chevron-up' : 'chevron-down'}
-                        size={18}
-                        color={colors.onSurfaceVariant}
-                      />
-                    </View>
-                  </Pressable>
-
-                  {isExpanded ? (
-                    <View style={styles.groupList}>
-                      {item.groups.map((group) => (
-                        <View key={group.key} style={styles.groupRow}>
-                          <Text style={styles.groupLabel} numberOfLines={1}>
-                            {group.label}
+                return (
+                  <View key={item.category} style={styles.categoryBlock}>
+                    <TouchableRipple
+                      onPress={() => toggleCategory(item.category)}
+                      style={styles.categoryRow}
+                      rippleColor={theme.colors.surfaceContainerHighest}
+                    >
+                      <View style={styles.categoryRowContent}>
+                        <View style={styles.categoryInfo}>
+                          <View
+                            style={[
+                              styles.categoryDot,
+                              { backgroundColor: getCategoryColor(item.category) },
+                            ]}
+                          />
+                          <Text variant="titleMedium" style={styles.categoryLabel}>
+                            {config.label}
                           </Text>
-                          <Text style={styles.groupAmount}>{formatRupees(group.total)}</Text>
                         </View>
-                      ))}
-                    </View>
-                  ) : null}
-                </View>
-              );
-            })
-          ) : (
-            <View style={styles.emptyState}>
-              <Text style={styles.emptyTitle}>No spends yet this month</Text>
-              <Text style={styles.emptySubtitle}>
-                Your current-month category breakdown will appear here.
-              </Text>
-            </View>
-          )}
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+
+                        <View style={styles.categoryAmountWrap}>
+                          <Text variant="titleMedium" style={styles.categoryAmount}>
+                            {formatRupees(item.total)}
+                          </Text>
+                          <Ionicons
+                            name={isExpanded ? 'chevron-up' : 'chevron-down'}
+                            size={18}
+                            color={theme.colors.onSurfaceVariant}
+                          />
+                        </View>
+                      </View>
+                    </TouchableRipple>
+
+                    {isExpanded ? (
+                      <View style={styles.groupList}>
+                        {item.groups.map((group, groupIndex) => (
+                          <View key={group.key}>
+                            {groupIndex > 0 && <Divider style={styles.groupDivider} />}
+                            <View style={styles.groupRow}>
+                              <Text variant="bodySmall" style={styles.groupLabel} numberOfLines={1}>
+                                {group.label}
+                              </Text>
+                              <Text variant="bodySmall" style={styles.groupAmount}>
+                                {formatRupees(group.total)}
+                              </Text>
+                            </View>
+                          </View>
+                        ))}
+                      </View>
+                    ) : null}
+                    <Divider style={styles.categoryDivider} />
+                  </View>
+                );
+              })
+            ) : (
+              <View style={styles.emptyState}>
+                <Divider style={styles.categoryDivider} />
+                <Text variant="titleMedium" style={styles.emptyTitle}>
+                  No spends yet this month
+                </Text>
+                <Text variant="bodyMedium" style={styles.emptySubtitle}>
+                  Your current-month category breakdown will appear here.
+                </Text>
+              </View>
+            )}
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    </Surface>
   );
 }
 
-const createStyles = (colors: Colors) =>
+const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
+    root: {
+      flex: 1,
+      backgroundColor: theme.colors.surface,
+    },
     container: {
       flex: 1,
-      backgroundColor: colors.surface,
     },
     loadingContainer: {
       flex: 1,
@@ -208,31 +258,22 @@ const createStyles = (colors: Colors) =>
       flexDirection: 'row',
       alignItems: 'center',
       paddingHorizontal: spacing.md,
-      paddingBottom: spacing.md,
-      gap: spacing.md,
+      paddingBottom: spacing.sm,
+      gap: spacing.xs,
     },
     backButton: {
-      width: 40,
-      height: 40,
-      borderRadius: borderRadius.full,
-      backgroundColor: colors.surfaceContainerHigh,
-      borderWidth: 1,
-      borderColor: colors.outlineVariant,
-      alignItems: 'center',
-      justifyContent: 'center',
+      marginRight: spacing.xs,
     },
     headerTextWrap: {
       flex: 1,
     },
     title: {
-      fontSize: typography.fontSize.xxl,
       fontWeight: typography.fontWeight.bold,
-      color: colors.onSurface,
+      color: theme.colors.onSurface,
     },
     subtitle: {
       marginTop: 2,
-      fontSize: typography.fontSize.sm,
-      color: colors.onSurfaceVariant,
+      color: theme.colors.onSurfaceVariant,
     },
     content: {
       paddingHorizontal: spacing.md,
@@ -240,39 +281,37 @@ const createStyles = (colors: Colors) =>
       gap: spacing.md,
     },
     summaryBlock: {
+      backgroundColor: theme.colors.surfaceContainer,
+      borderRadius: borderRadius.lg,
+      padding: spacing.lg,
       gap: spacing.xs,
-      paddingVertical: spacing.xs,
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: colors.outlineVariant,
-      paddingBottom: spacing.md,
     },
     summaryLabel: {
-      fontSize: typography.fontSize.sm,
-      color: '#8B9CC7',
+      color: theme.colors.onSurfaceVariant,
       fontWeight: typography.fontWeight.medium,
     },
     summaryAmount: {
-      fontSize: typography.fontSize.xxxl,
       fontWeight: typography.fontWeight.bold,
-      color: colors.onSurface,
+      color: theme.colors.onSurface,
     },
     summaryMeta: {
-      fontSize: typography.fontSize.sm,
-      color: colors.onSurfaceVariant,
+      color: theme.colors.onSurfaceVariant,
     },
     section: {
-      gap: spacing.sm,
+      gap: spacing.xs,
     },
     categoryBlock: {
-      paddingVertical: spacing.xs,
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: colors.outlineVariant,
+      overflow: 'hidden',
     },
     categoryRow: {
+      borderRadius: borderRadius.sm,
+    },
+    categoryRowContent: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
       paddingVertical: spacing.md,
+      paddingHorizontal: spacing.xs,
       gap: spacing.md,
     },
     categoryInfo: {
@@ -287,9 +326,8 @@ const createStyles = (colors: Colors) =>
       borderRadius: borderRadius.full,
     },
     categoryLabel: {
-      fontSize: typography.fontSize.md,
       fontWeight: typography.fontWeight.semiBold,
-      color: colors.onSurface,
+      color: theme.colors.onSurface,
     },
     categoryAmountWrap: {
       flexDirection: 'row',
@@ -297,49 +335,45 @@ const createStyles = (colors: Colors) =>
       gap: spacing.sm,
     },
     categoryAmount: {
-      fontSize: typography.fontSize.md,
       fontWeight: typography.fontWeight.bold,
-      color: colors.onSurface,
+      color: theme.colors.onSurface,
     },
     groupList: {
       paddingBottom: spacing.sm,
+    },
+    groupDivider: {
+      marginLeft: spacing.xl + spacing.sm,
     },
     groupRow: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
       paddingVertical: spacing.sm,
+      paddingLeft: spacing.xl + spacing.sm,
+      paddingRight: spacing.xs,
       gap: spacing.md,
-      borderTopWidth: StyleSheet.hairlineWidth,
-      borderTopColor: colors.outlineVariant,
-      marginLeft: 20,
     },
     groupLabel: {
       flex: 1,
-      fontSize: typography.fontSize.sm,
-      color: colors.onSurfaceVariant,
+      color: theme.colors.onSurfaceVariant,
     },
     groupAmount: {
-      fontSize: typography.fontSize.sm,
       fontWeight: typography.fontWeight.semiBold,
-      color: colors.onSurface,
+      color: theme.colors.onSurface,
+    },
+    categoryDivider: {
+      marginTop: spacing.xs,
     },
     emptyState: {
       paddingVertical: spacing.lg,
       gap: spacing.xs,
-      borderTopWidth: StyleSheet.hairlineWidth,
-      borderTopColor: colors.outlineVariant,
     },
     emptyTitle: {
-      fontSize: typography.fontSize.lg,
       fontWeight: typography.fontWeight.bold,
-      color: colors.onSurface,
+      color: theme.colors.onSurface,
+      marginTop: spacing.md,
     },
     emptySubtitle: {
-      fontSize: typography.fontSize.sm,
-      color: colors.onSurfaceVariant,
-    },
-    pressed: {
-      opacity: 0.72,
+      color: theme.colors.onSurfaceVariant,
     },
   });

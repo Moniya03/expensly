@@ -1,9 +1,10 @@
 import type React from 'react';
 import { useMemo } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { Text } from 'react-native-paper';
 import Svg, { Circle, G } from 'react-native-svg';
 import { getCategoryColor } from '../../constants/categories';
-import { type Colors, typography, useColors } from '../../constants/theme';
+import { type AppTheme, typography, useAppTheme } from '../../constants/theme';
 import type { Category } from '../../types';
 import { formatRupees } from '../../utils/currency';
 
@@ -20,8 +21,8 @@ const RADIUS = CENTER - STROKE_WIDTH / 2;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
 export const SpendingRing: React.FC<SpendingRingProps> = ({ budget, spent, categoryBreakdown }) => {
-  const colors = useColors();
-  const styles = useMemo(() => createStyles(colors), [colors]);
+  const theme = useAppTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
 
   const isOverBudget = spent > budget;
   const remaining = isOverBudget ? spent - budget : budget - spent;
@@ -63,7 +64,7 @@ export const SpendingRing: React.FC<SpendingRingProps> = ({ budget, spent, categ
             cx={CENTER}
             cy={CENTER}
             r={RADIUS}
-            stroke={colors.outlineVariant}
+            stroke={theme.colors.surfaceContainerHighest}
             strokeWidth={STROKE_WIDTH}
             fill="none"
           />
@@ -97,7 +98,7 @@ export const SpendingRing: React.FC<SpendingRingProps> = ({ budget, spent, categ
   );
 };
 
-const createStyles = (colors: Colors) =>
+const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     container: {
       width: RING_SIZE,
@@ -114,21 +115,21 @@ const createStyles = (colors: Colors) =>
     amountText: {
       fontSize: typography.fontSize.xxl,
       fontWeight: typography.fontWeight.bold,
-      color: colors.onSurface,
+      color: theme.colors.onSurface,
       marginBottom: 4,
     },
     labelText: {
       fontSize: typography.fontSize.sm,
       fontWeight: typography.fontWeight.medium,
-      color: colors.onSurfaceVariant,
+      color: theme.colors.onSurfaceVariant,
       textTransform: 'uppercase',
       letterSpacing: 0.5,
     },
     overBudgetText: {
-      color: colors.error,
+      color: theme.colors.error,
     },
     overBudgetLabel: {
-      color: colors.error,
+      color: theme.colors.error,
       opacity: 0.8,
     },
   });

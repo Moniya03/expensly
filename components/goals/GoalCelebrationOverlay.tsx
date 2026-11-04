@@ -1,7 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useMemo, useRef } from 'react';
-import { Animated, Dimensions, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
-import { borderRadius, type Colors, spacing, typography, useColors } from '../../constants/theme';
+import { Animated, Dimensions, Modal, Pressable, StyleSheet, View } from 'react-native';
+import { Button, Text } from 'react-native-paper';
+import {
+  type AppTheme,
+  borderRadius,
+  spacing,
+  typography,
+  useAppTheme,
+} from '../../constants/theme';
 import type { Goal } from '../../types';
 import { formatRupees } from '../../utils/currency';
 import { parseLocalDate } from '../../utils/date';
@@ -31,8 +38,8 @@ type Props = {
 };
 
 export function GoalCelebrationOverlay({ visible, goal, onDone }: Props) {
-  const colors = useColors();
-  const styles = useMemo(() => createStyles(colors), [colors]);
+  const theme = useAppTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const screen = Dimensions.get('window');
   const fade = useRef(new Animated.Value(0)).current;
   const cardScale = useRef(new Animated.Value(0.94)).current;
@@ -60,7 +67,14 @@ export function GoalCelebrationOverlay({ visible, goal, onDone }: Props) {
   const sparkleValues = useRef(sparkles.map(() => new Animated.Value(0))).current;
 
   const confetti = useMemo(() => {
-    const colors = ['#4D9FFF', '#2DE2FF', '#B48CFF', '#F5A623', '#FF716C', '#F472B6'];
+    const festiveColors = [
+      theme.colors.primary,
+      theme.colors.secondary,
+      theme.colors.tertiary,
+      theme.colors.error,
+      '#B48CFF',
+      '#F5A623',
+    ];
     const count = 22;
     return Array.from({ length: count }, (_, index) => ({
       id: `confetti-${goal?.id ?? 'goal'}-${index}`,
@@ -68,10 +82,10 @@ export function GoalCelebrationOverlay({ visible, goal, onDone }: Props) {
       size: 6 + Math.random() * 6,
       duration: 1600 + Math.random() * 1600,
       delay: index * 60 + Math.random() * 300,
-      color: colors[Math.floor(Math.random() * colors.length)],
+      color: festiveColors[Math.floor(Math.random() * festiveColors.length)],
       rotation: (Math.random() - 0.5) * 720,
     }));
-  }, [goal?.id, screen.width]);
+  }, [goal?.id, screen.width, theme.colors]);
 
   const confettiValues = useRef(confetti.map(() => new Animated.Value(0))).current;
 
@@ -296,22 +310,28 @@ export function GoalCelebrationOverlay({ visible, goal, onDone }: Props) {
             <Pressable style={styles.card} onPress={(event) => event.stopPropagation()}>
               <View style={styles.badgeRow}>
                 <View style={styles.badge}>
-                  <Ionicons name="sparkles" size={14} color={colors.secondary} />
-                  <Text style={styles.badgeText}>Goal achieved</Text>
+                  <Ionicons name="sparkles" size={14} color={theme.colors.secondary} />
+                  <Text variant="labelSmall" style={styles.badgeText}>
+                    Goal achieved
+                  </Text>
                 </View>
               </View>
 
               <View style={styles.goalRow}>
                 <Animated.View style={[styles.iconWrap, { transform: [{ scale: iconBounce }] }]}>
-                  <Ionicons name={Icon} size={26} color={colors.onSurface} />
+                  <Ionicons name={Icon} size={26} color={theme.colors.onSurface} />
                 </Animated.View>
                 <View style={styles.goalMeta}>
-                  <Text style={styles.goalName} numberOfLines={1}>
+                  <Text variant="titleLarge" style={styles.goalName} numberOfLines={1}>
                     {goal.name}
                   </Text>
-                  <Text style={styles.goalDeadline}>{deadline}</Text>
+                  <Text variant="bodySmall" style={styles.goalDeadline}>
+                    {deadline}
+                  </Text>
                 </View>
-                <Text style={styles.goalPercent}>100%</Text>
+                <Text variant="titleLarge" style={styles.goalPercent}>
+                  100%
+                </Text>
               </View>
 
               <View style={styles.progressTrack}>
@@ -320,27 +340,49 @@ export function GoalCelebrationOverlay({ visible, goal, onDone }: Props) {
 
               <View style={styles.statsRow}>
                 <View style={styles.statCard}>
-                  <Text style={styles.statLabel}>Saved</Text>
-                  <Text style={styles.statValue}>{formatRupees(goal.saved_amount)}</Text>
+                  <Text variant="labelSmall" style={styles.statLabel}>
+                    Saved
+                  </Text>
+                  <Text variant="bodyMedium" style={styles.statValue}>
+                    {formatRupees(goal.saved_amount)}
+                  </Text>
                 </View>
                 <View style={styles.statCard}>
-                  <Text style={styles.statLabel}>Target</Text>
-                  <Text style={styles.statValue}>{formatRupees(goal.target_amount)}</Text>
+                  <Text variant="labelSmall" style={styles.statLabel}>
+                    Target
+                  </Text>
+                  <Text variant="bodyMedium" style={styles.statValue}>
+                    {formatRupees(goal.target_amount)}
+                  </Text>
                 </View>
                 <View style={styles.statCard}>
-                  <Text style={styles.statLabel}>Remaining</Text>
-                  <Text style={styles.statValue}>{formatRupees(remaining)}</Text>
+                  <Text variant="labelSmall" style={styles.statLabel}>
+                    Remaining
+                  </Text>
+                  <Text variant="bodyMedium" style={styles.statValue}>
+                    {formatRupees(remaining)}
+                  </Text>
                 </View>
               </View>
 
               <View style={styles.appreciationCard}>
-                <Text style={styles.appreciationLabel}>A note for you</Text>
-                <Text style={styles.appreciationText}>{appreciation}</Text>
+                <Text variant="labelSmall" style={styles.appreciationLabel}>
+                  A note for you
+                </Text>
+                <Text variant="bodyMedium" style={styles.appreciationText}>
+                  {appreciation}
+                </Text>
               </View>
 
-              <Pressable style={styles.doneButton} onPress={onDone}>
-                <Text style={styles.doneText}>Done</Text>
-              </Pressable>
+              <Button
+                mode="contained"
+                onPress={onDone}
+                style={styles.doneButton}
+                contentStyle={styles.doneButtonContent}
+                labelStyle={styles.doneButtonLabel}
+              >
+                Done
+              </Button>
             </Pressable>
           </Animated.View>
         </Pressable>
@@ -349,7 +391,7 @@ export function GoalCelebrationOverlay({ visible, goal, onDone }: Props) {
   );
 }
 
-const createStyles = (colors: Colors) =>
+const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     root: {
       flex: 1,
@@ -378,7 +420,7 @@ const createStyles = (colors: Colors) =>
       position: 'absolute',
       color: 'rgba(255, 255, 255, 0.9)',
       fontSize: 18,
-      textShadowColor: 'rgba(45, 226, 255, 0.25)',
+      textShadowColor: `${theme.colors.tertiary}40`,
       textShadowRadius: 10,
     },
     dismissArea: {
@@ -396,17 +438,17 @@ const createStyles = (colors: Colors) =>
       right: 18,
       bottom: 18,
       borderRadius: borderRadius.xl + 8,
-      backgroundColor: 'rgba(26, 107, 255, 0.18)',
-      shadowColor: colors.primary,
+      backgroundColor: `${theme.colors.primary}2E`,
+      shadowColor: theme.colors.primary,
       shadowOpacity: 0.4,
       shadowRadius: 30,
       shadowOffset: { width: 0, height: 0 },
     },
     card: {
       borderRadius: borderRadius.xl,
-      backgroundColor: colors.surfaceContainerHigh,
+      backgroundColor: theme.colors.surfaceContainerHigh,
       borderWidth: 1,
-      borderColor: 'rgba(255,255,255,0.12)',
+      borderColor: theme.colors.outlineVariant,
       padding: spacing.md,
       gap: spacing.md,
       shadowColor: '#000',
@@ -415,7 +457,10 @@ const createStyles = (colors: Colors) =>
       shadowOffset: { width: 0, height: 12 },
       elevation: 12,
     },
-    badgeRow: { flexDirection: 'row', justifyContent: 'center' },
+    badgeRow: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+    },
     badge: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -423,98 +468,106 @@ const createStyles = (colors: Colors) =>
       paddingHorizontal: 12,
       paddingVertical: 8,
       borderRadius: borderRadius.full,
-      backgroundColor: 'rgba(0, 212, 170, 0.1)',
+      backgroundColor: theme.colors.secondaryContainer,
       borderWidth: 1,
-      borderColor: 'rgba(0, 212, 170, 0.2)',
+      borderColor: `${theme.colors.secondary}33`,
     },
     badgeText: {
-      color: colors.secondary,
+      color: theme.colors.onSecondaryContainer,
       fontSize: typography.fontSize.xs,
       fontWeight: typography.fontWeight.semiBold,
     },
-    goalRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+    goalRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
     iconWrap: {
       width: 52,
       height: 52,
       borderRadius: borderRadius.full,
-      backgroundColor: colors.surfaceContainer,
+      backgroundColor: theme.colors.surfaceContainer,
       alignItems: 'center',
       justifyContent: 'center',
     },
-    goalMeta: { flex: 1, gap: 3 },
+    goalMeta: {
+      flex: 1,
+      gap: 3,
+    },
     goalName: {
-      color: colors.onSurface,
+      color: theme.colors.onSurface,
       fontSize: typography.fontSize.xl,
       fontWeight: typography.fontWeight.bold,
     },
     goalDeadline: {
-      color: colors.onSurfaceVariant,
+      color: theme.colors.onSurfaceVariant,
       fontSize: typography.fontSize.sm,
     },
     goalPercent: {
-      color: colors.secondary,
+      color: theme.colors.secondary,
       fontSize: typography.fontSize.lg,
       fontWeight: typography.fontWeight.bold,
     },
     progressTrack: {
       height: 8,
       borderRadius: 999,
-      backgroundColor: colors.surfaceContainer,
+      backgroundColor: theme.colors.surfaceContainerHighest,
       overflow: 'hidden',
     },
     progressFill: {
       width: '100%',
       height: '100%',
-      backgroundColor: colors.secondary,
+      backgroundColor: theme.colors.secondary,
     },
-    statsRow: { flexDirection: 'row', gap: spacing.sm },
+    statsRow: {
+      flexDirection: 'row',
+      gap: spacing.sm,
+    },
     statCard: {
       flex: 1,
       padding: spacing.sm,
       borderRadius: borderRadius.lg,
-      backgroundColor: colors.surfaceContainer,
+      backgroundColor: theme.colors.surfaceContainer,
       borderWidth: 1,
-      borderColor: colors.outlineVariant,
+      borderColor: theme.colors.outlineVariant,
       gap: 4,
     },
     statLabel: {
-      color: colors.onSurfaceVariant,
+      color: theme.colors.onSurfaceVariant,
       fontSize: typography.fontSize.xs,
     },
     statValue: {
-      color: colors.onSurface,
+      color: theme.colors.onSurface,
       fontSize: typography.fontSize.sm,
       fontWeight: typography.fontWeight.semiBold,
     },
     appreciationCard: {
       padding: spacing.md,
       borderRadius: borderRadius.lg,
-      backgroundColor: 'rgba(255, 255, 255, 0.03)',
+      backgroundColor: theme.colors.surfaceContainer,
       borderWidth: 1,
-      borderColor: 'rgba(255, 255, 255, 0.08)',
+      borderColor: theme.colors.outlineVariant,
       gap: 6,
     },
     appreciationLabel: {
-      color: colors.onSurfaceVariant,
+      color: theme.colors.onSurfaceVariant,
       fontSize: typography.fontSize.xs,
       textTransform: 'uppercase',
       letterSpacing: 0.7,
     },
     appreciationText: {
-      color: colors.onSurface,
+      color: theme.colors.onSurface,
       fontSize: typography.fontSize.md,
       lineHeight: 22,
       fontWeight: typography.fontWeight.medium,
     },
     doneButton: {
-      minHeight: 50,
       borderRadius: borderRadius.lg,
-      backgroundColor: colors.primary,
-      alignItems: 'center',
-      justifyContent: 'center',
     },
-    doneText: {
-      color: colors.onAccent,
+    doneButtonContent: {
+      minHeight: 48,
+    },
+    doneButtonLabel: {
       fontSize: typography.fontSize.md,
       fontWeight: typography.fontWeight.semiBold,
     },

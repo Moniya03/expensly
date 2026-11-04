@@ -1,101 +1,39 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import React from 'react';
-
 /**
- * Expensly Theme Constants
- * Design System: Sonic Architect
- * Primary Font: Plus Jakarta Sans
+ * Expensly Material Design 3 (MD3) Theme System
+ *
+ * ## Architecture Overview
+ * Expensly uses Google Material Design 3 (Material You) powered by `react-native-paper` (MD3)
+ * combined with `@pchmn/expo-material3-theme` for dynamic color scheme generation.
+ *
+ * ### 1. Core Principles
+ * - **Dynamic & Accessible Schemes**: Color palettes derive from dynamic Material 3 schemes
+ *   with accessible contrast ratios for both light and dark modes.
+ * - **Single Source of Truth**: The `MD3ThemeProvider` wraps the application root in `app/_layout.tsx`.
+ *   It persists the user's active theme mode (`'dark'` or `'light'`) in AsyncStorage and supplies
+ *   the fully configured `AppTheme` to React Native Paper's `PaperProvider`.
+ * - **Direct Component Consumption**:
+ *   - Use `useAppTheme()` to access MD3 color tokens (`theme.colors.surface`, `theme.colors.primary`,
+ *     `theme.colors.onSurface`, `theme.colors.surfaceContainer`, etc.) and Paper's typography & elevations.
+ *   - Use `useThemeMode()` to read or change the current mode (`mode`, `setMode`, `toggleMode`).
+ *   - Use `useColors()` as a backward-compatibility helper providing the flattened `Colors` palette.
+ * - **Layout & Style Scale**: Fixed design tokens such as `spacing`, `typography`, `borderRadius`,
+ *   and `gradient` are exported below as shared layout constants across all screens and components.
  */
 
-/**
- * Dark color palette (default) based on Sonic Architect design system
- */
-const darkColors = {
-  // Primary colors
-  primary: '#1A6BFF',
-  secondary: '#4D9FFF',
-  tertiary: '#2DE2FF',
-
-  // Surface colors (backgrounds)
-  surface: '#0b0e14',
-  surfaceContainer: '#161a21',
-  surfaceContainerHigh: '#1c2028',
-  surfaceContainerHighest: '#22262f',
-
-  // Text colors
-  onSurface: '#ecedf6',
-  onSurfaceVariant: '#a9abb3',
-
-  // Border and divider colors
-  outline: '#73757d',
-  outlineVariant: '#45484f',
-
-  // Status colors
-  error: '#ff716c',
-
-  // Text/icons on top of a colored surface (primary buttons, blue gradient
-  // hero, dark tint cards, error buttons). Always white in BOTH modes.
-  onAccent: '#FFFFFF',
-} as const;
+// Re-export all MD3 theme runtime hooks, types, and providers from ./md3-theme
+export {
+  type AppTheme,
+  type ColorMode,
+  type Colors,
+  MD3ThemeProvider,
+  MD3ThemeProvider as ThemeProvider,
+  useAppTheme,
+  useColors,
+  useThemeMode,
+} from './md3-theme';
 
 /**
- * Light color palette
- */
-const lightColors = {
-  // Primary colors
-  primary: '#1A6BFF',
-  secondary: '#2E86FF',
-  tertiary: '#00A8CC',
-
-  // Surface colors (backgrounds)
-  surface: '#F6F7FB',
-  surfaceContainer: '#FFFFFF',
-  surfaceContainerHigh: '#EDEFF5',
-  surfaceContainerHighest: '#E2E5EE',
-
-  // Text colors
-  onSurface: '#0E1320',
-  onSurfaceVariant: '#5A6072',
-
-  // Border and divider colors
-  outline: '#8B90A0',
-  outlineVariant: '#D8DBE4',
-
-  // Status colors
-  error: '#D94343',
-
-  // Text/icons on top of a colored surface (primary buttons, blue gradient
-  // hero, dark tint cards, error buttons). Always white in BOTH modes.
-  onAccent: '#FFFFFF',
-} as const;
-
-export type ColorMode = 'dark' | 'light';
-
-type Palette = {
-  primary: string;
-  secondary: string;
-  tertiary: string;
-  surface: string;
-  surfaceContainer: string;
-  surfaceContainerHigh: string;
-  surfaceContainerHighest: string;
-  onSurface: string;
-  onSurfaceVariant: string;
-  outline: string;
-  outlineVariant: string;
-  error: string;
-  onAccent: string;
-};
-
-export type Colors = Palette;
-
-const palettes: Record<ColorMode, Palette> = {
-  dark: darkColors,
-  light: lightColors,
-};
-
-/**
- * Gradient configuration for primary gradient effect
+ * Gradient configuration for primary brand accents
  * Direction: 135deg from primary to secondary
  */
 export const gradient = {
@@ -106,7 +44,7 @@ export const gradient = {
 } as const;
 
 /**
- * Spacing scale for consistent layout spacing
+ * Spacing scale for consistent layout spacing throughout the app
  */
 export const spacing = {
   xs: 4,
@@ -151,7 +89,7 @@ export const typography = {
 } as const;
 
 /**
- * Border radius values for consistent rounded corners
+ * Border radius scale for consistent rounded corners across cards, buttons, and inputs
  */
 export const borderRadius = {
   sm: 8,
@@ -161,98 +99,47 @@ export const borderRadius = {
   full: 9999,
 } as const;
 
+/**
+ * Static dark color reference palette based on the Sonic Architect design system.
+ * For dynamic runtime colors, prefer `useAppTheme().colors`.
+ */
+export const darkColors = {
+  primary: '#1A6BFF',
+  secondary: '#4D9FFF',
+  tertiary: '#2DE2FF',
+  surface: '#0b0e14',
+  surfaceContainer: '#161a21',
+  surfaceContainerHigh: '#1c2028',
+  surfaceContainerHighest: '#22262f',
+  onSurface: '#ecedf6',
+  onSurfaceVariant: '#a9abb3',
+  outline: '#73757d',
+  outlineVariant: '#45484f',
+  error: '#ff716c',
+  onAccent: '#FFFFFF',
+} as const;
+
+/**
+ * Static light color reference palette.
+ * For dynamic runtime colors, prefer `useAppTheme().colors`.
+ */
+export const lightColors = {
+  primary: '#1A6BFF',
+  secondary: '#2E86FF',
+  tertiary: '#00A8CC',
+  surface: '#F6F7FB',
+  surfaceContainer: '#FFFFFF',
+  surfaceContainerHigh: '#EDEFF5',
+  surfaceContainerHighest: '#E2E5EE',
+  onSurface: '#0E1320',
+  onSurfaceVariant: '#5A6072',
+  outline: '#8B90A0',
+  outlineVariant: '#D8DBE4',
+  error: '#D94343',
+  onAccent: '#FFFFFF',
+} as const;
+
 export type Gradient = typeof gradient;
 export type Spacing = typeof spacing;
 export type Typography = typeof typography;
 export type BorderRadius = typeof borderRadius;
-
-/* ------------------------------------------------------------------ */
-/* Theme state + provider                                               */
-/* ------------------------------------------------------------------ */
-
-const THEME_STORAGE_KEY = 'expensly:theme-mode';
-
-type ThemeContextValue = {
-  mode: ColorMode;
-  colors: Colors;
-  setMode: (mode: ColorMode) => void;
-  toggleMode: () => void;
-};
-
-const ThemeContext = React.createContext<ThemeContextValue>({
-  mode: 'dark',
-  colors: darkColors,
-  setMode: () => {},
-  toggleMode: () => {},
-});
-
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [mode, setModeState] = React.useState<ColorMode>('dark');
-  const [hydrated, setHydrated] = React.useState(false);
-
-  // Restore persisted preference on mount.
-  React.useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const stored = await AsyncStorage.getItem(THEME_STORAGE_KEY);
-        if (!cancelled && (stored === 'light' || stored === 'dark')) {
-          setModeState(stored);
-        }
-      } catch {
-        // ignore storage errors, stay dark
-      } finally {
-        if (!cancelled) setHydrated(true);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const setMode = React.useCallback((next: ColorMode) => {
-    setModeState(next);
-    AsyncStorage.setItem(THEME_STORAGE_KEY, next).catch(() => {});
-  }, []);
-
-  const toggleMode = React.useCallback(() => {
-    setModeState((prev) => {
-      const next: ColorMode = prev === 'dark' ? 'light' : 'dark';
-      AsyncStorage.setItem(THEME_STORAGE_KEY, next).catch(() => {});
-      return next;
-    });
-  }, []);
-
-  // Block render until the persisted preference is read to avoid a flash.
-  if (!hydrated) {
-    return <>{children}</>;
-  }
-
-  return (
-    <ThemeContext.Provider
-      value={{
-        mode,
-        colors: palettes[mode],
-        setMode,
-        toggleMode,
-      }}
-    >
-      {children}
-    </ThemeContext.Provider>
-  );
-}
-
-/**
- * Access the active color palette inside a component.
- * Re-renders automatically when the theme mode changes.
- */
-export function useColors(): Colors {
-  return React.useContext(ThemeContext).colors;
-}
-
-/**
- * Access the theme mode + controls inside a component.
- */
-export function useThemeMode() {
-  return React.useContext(ThemeContext);
-}

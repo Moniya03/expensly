@@ -1,9 +1,16 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import type React from 'react';
 import { useMemo } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { Surface, Text } from 'react-native-paper';
 import { getCategoryColor, getCategoryConfig } from '../../constants/categories';
-import { borderRadius, type Colors, spacing, typography, useColors } from '../../constants/theme';
+import {
+  type AppTheme,
+  borderRadius,
+  spacing,
+  typography,
+  useAppTheme,
+} from '../../constants/theme';
 import type { Category } from '../../types';
 import { formatRupees } from '../../utils/currency';
 
@@ -12,8 +19,8 @@ interface CategorySpendingBarsProps {
 }
 
 export default function CategorySpendingBars({ byCategory }: CategorySpendingBarsProps) {
-  const colors = useColors();
-  const styles = useMemo(() => createStyles(colors), [colors]);
+  const theme = useAppTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
 
   const items = useMemo(() => {
     const entries = Object.entries(byCategory)
@@ -81,15 +88,15 @@ export default function CategorySpendingBars({ byCategory }: CategorySpendingBar
           })}
         </View>
       ) : (
-        <View style={styles.emptyState}>
+        <Surface style={styles.emptyState} elevation={0}>
           <Text style={styles.emptyText}>No category spend yet this month.</Text>
-        </View>
+        </Surface>
       )}
     </View>
   );
 }
 
-const createStyles = (colors: Colors) =>
+const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     container: {
       gap: spacing.md,
@@ -97,7 +104,7 @@ const createStyles = (colors: Colors) =>
     title: {
       fontSize: typography.fontSize.xl,
       fontWeight: typography.fontWeight.bold,
-      color: colors.onSurface,
+      color: theme.colors.onSurface,
     },
     list: {
       gap: spacing.md,
@@ -125,7 +132,7 @@ const createStyles = (colors: Colors) =>
     label: {
       fontSize: typography.fontSize.sm,
       fontWeight: typography.fontWeight.semiBold,
-      color: colors.onSurface,
+      color: theme.colors.onSurface,
     },
     amountGroup: {
       flexDirection: 'row',
@@ -135,17 +142,17 @@ const createStyles = (colors: Colors) =>
     amount: {
       fontSize: typography.fontSize.sm,
       fontWeight: typography.fontWeight.bold,
-      color: colors.onSurface,
+      color: theme.colors.onSurface,
     },
     percentage: {
       fontSize: typography.fontSize.xs,
-      color: colors.onSurfaceVariant,
+      color: theme.colors.onSurfaceVariant,
     },
     track: {
       width: '100%',
       height: 6,
       borderRadius: borderRadius.full,
-      backgroundColor: colors.surfaceContainer,
+      backgroundColor: theme.colors.surfaceContainerHighest,
       overflow: 'hidden',
     },
     fill: {
@@ -153,14 +160,14 @@ const createStyles = (colors: Colors) =>
       borderRadius: borderRadius.full,
     },
     emptyState: {
-      backgroundColor: colors.surfaceContainerHigh,
+      backgroundColor: theme.colors.surfaceContainerHigh,
       borderRadius: borderRadius.md,
       borderWidth: 1,
-      borderColor: colors.outlineVariant,
+      borderColor: theme.colors.outlineVariant,
       padding: spacing.md,
     },
     emptyText: {
       fontSize: typography.fontSize.sm,
-      color: colors.onSurfaceVariant,
+      color: theme.colors.onSurfaceVariant,
     },
   });

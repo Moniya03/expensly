@@ -1,34 +1,50 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
-import { View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { Surface } from 'react-native-paper';
 import VoiceFAB from '../../components/VoiceFAB';
-import { useColors } from '../../constants/theme';
+import { useAppTheme } from '../../constants/theme';
 
 export default function TabsLayout() {
-  const colors = useColors();
+  const theme = useAppTheme();
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.surface }}>
+    <Surface style={{ flex: 1, backgroundColor: theme.colors.surface }}>
       <Tabs
         screenOptions={{
           headerShown: false,
           tabBarStyle: {
-            backgroundColor: colors.surfaceContainer,
+            backgroundColor: theme.colors.surfaceContainer,
             borderTopWidth: 0,
-            height: 72,
-            paddingBottom: 10,
+            elevation: 2,
+            height: 74,
+            paddingBottom: 8,
             paddingTop: 8,
           },
-          tabBarActiveTintColor: colors.primary,
-          tabBarInactiveTintColor: colors.onSurfaceVariant,
+          tabBarActiveTintColor: theme.colors.onSecondaryContainer,
+          tabBarInactiveTintColor: theme.colors.onSurfaceVariant,
+          tabBarLabelStyle: { fontSize: 12, fontWeight: '500' },
         }}
       >
         <Tabs.Screen
           name="home"
           options={{
             title: 'Home',
-            tabBarIcon: ({ focused, color }) => (
-              <Ionicons name={focused ? 'home' : 'home-outline'} size={24} color={color} />
+            tabBarIcon: ({ focused }) => (
+              <View
+                style={[
+                  styles.pill,
+                  focused && { backgroundColor: theme.colors.secondaryContainer },
+                ]}
+              >
+                <Ionicons
+                  name={focused ? 'home' : 'home-outline'}
+                  size={22}
+                  color={
+                    focused ? theme.colors.onSecondaryContainer : theme.colors.onSurfaceVariant
+                  }
+                />
+              </View>
             ),
           }}
         />
@@ -36,8 +52,21 @@ export default function TabsLayout() {
           name="goals"
           options={{
             title: 'Goals',
-            tabBarIcon: ({ focused, color }) => (
-              <Ionicons name={focused ? 'flag' : 'flag-outline'} size={24} color={color} />
+            tabBarIcon: ({ focused }) => (
+              <View
+                style={[
+                  styles.pill,
+                  focused && { backgroundColor: theme.colors.secondaryContainer },
+                ]}
+              >
+                <Ionicons
+                  name={focused ? 'flag' : 'flag-outline'}
+                  size={22}
+                  color={
+                    focused ? theme.colors.onSecondaryContainer : theme.colors.onSurfaceVariant
+                  }
+                />
+              </View>
             ),
           }}
         />
@@ -57,8 +86,21 @@ export default function TabsLayout() {
           name="history"
           options={{
             title: 'History',
-            tabBarIcon: ({ focused, color }) => (
-              <Ionicons name={focused ? 'time' : 'time-outline'} size={24} color={color} />
+            tabBarIcon: ({ focused }) => (
+              <View
+                style={[
+                  styles.pill,
+                  focused && { backgroundColor: theme.colors.secondaryContainer },
+                ]}
+              >
+                <Ionicons
+                  name={focused ? 'time' : 'time-outline'}
+                  size={22}
+                  color={
+                    focused ? theme.colors.onSecondaryContainer : theme.colors.onSurfaceVariant
+                  }
+                />
+              </View>
             ),
           }}
         />
@@ -66,13 +108,36 @@ export default function TabsLayout() {
           name="profile"
           options={{
             title: 'Profile',
-            tabBarIcon: ({ focused, color }) => (
-              <Ionicons name={focused ? 'person' : 'person-outline'} size={24} color={color} />
+            tabBarIcon: ({ focused }) => (
+              <View
+                style={[
+                  styles.pill,
+                  focused && { backgroundColor: theme.colors.secondaryContainer },
+                ]}
+              >
+                <Ionicons
+                  name={focused ? 'person' : 'person-outline'}
+                  size={22}
+                  color={
+                    focused ? theme.colors.onSecondaryContainer : theme.colors.onSurfaceVariant
+                  }
+                />
+              </View>
             ),
           }}
         />
       </Tabs>
       <VoiceFAB />
-    </View>
+    </Surface>
   );
 }
+
+const styles = StyleSheet.create({
+  pill: {
+    width: 56,
+    height: 30,
+    borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});

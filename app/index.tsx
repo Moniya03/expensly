@@ -2,7 +2,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { Dimensions, StyleSheet, Text, View } from 'react-native';
+import { Dimensions, StyleSheet, View } from 'react-native';
+import { Surface, Text } from 'react-native-paper';
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -14,15 +15,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { FloatingParticles } from '../components/ui/FloatingParticles';
 import { GlassmorphicCard } from '../components/ui/GlassmorphicCard';
 import { GradientText } from '../components/ui/GradientText';
-import { type Colors, spacing, typography, useColors } from '../constants/theme';
+import { type AppTheme, spacing, typography, useAppTheme } from '../constants/theme';
 import { useAuthStore } from '../stores/authStore';
 import { consumeOnboardingReplay, shouldReplayOnboarding } from '../utils/devOnboardingReplay';
 
 const { width } = Dimensions.get('window');
 
 export default function Index() {
-  const colors = useColors();
-  const styles = useMemo(() => createStyles(colors), [colors]);
+  const theme = useAppTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const router = useRouter();
   const { session, profile, isInitialized, hasResolvedProfile } = useAuthStore();
   const [showSplash, setShowSplash] = useState(true);
@@ -55,7 +56,7 @@ export default function Index() {
     }, 4000);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [innerScale, middleScale, outerScale]);
 
   const outerRingStyle = useAnimatedStyle(() => ({
     transform: [{ scale: outerScale.value }],
@@ -105,55 +106,59 @@ export default function Index() {
   ]);
 
   return (
-    <SafeAreaView style={styles.container}>
-      <FloatingParticles count={15} />
-      {/* Background Ambient Glow */}
-      <View style={styles.ambientGlow} />
+    <Surface style={[styles.surface, { backgroundColor: theme.colors.surface }]}>
+      <SafeAreaView style={styles.container}>
+        <FloatingParticles count={15} />
+        {/* Background Ambient Glow */}
+        <View style={styles.ambientGlow} />
 
-      {/* Hero Section: Voice Ripple */}
-      <View style={styles.heroSection}>
-        <Animated.View style={[styles.ring, styles.ringOuter, outerRingStyle]} />
-        <Animated.View style={[styles.ring, styles.ringMiddle, middleRingStyle]} />
-        <Animated.View style={[styles.ring, styles.ringInner, innerRingStyle]} />
+        {/* Hero Section: Voice Ripple */}
+        <View style={styles.heroSection}>
+          <Animated.View style={[styles.ring, styles.ringOuter, outerRingStyle]} />
+          <Animated.View style={[styles.ring, styles.ringMiddle, middleRingStyle]} />
+          <Animated.View style={[styles.ring, styles.ringInner, innerRingStyle]} />
 
-        <LinearGradient
-          colors={[colors.primary, colors.secondary]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.coreButton}
-        >
-          <Ionicons name="mic" size={42} color={colors.onSurface} />
-        </LinearGradient>
-      </View>
-
-      {/* Brand & Content Section */}
-      <View style={styles.contentSection}>
-        {/* Badge */}
-        <GlassmorphicCard intensity={15} style={styles.badgeContainer}>
-          <Text style={styles.badgeText}>voice-first</Text>
-        </GlassmorphicCard>
-
-        {/* Title */}
-        <Text style={styles.title}>Expensly</Text>
-
-        {/* Tagline */}
-        <View style={styles.taglineContainer}>
-          <Text style={styles.taglineWhite}>Track your spend,</Text>
-          <GradientText style={styles.taglineHighlight}>just say it.</GradientText>
+          <LinearGradient
+            colors={[theme.colors.primary, theme.colors.secondary]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.coreButton}
+          >
+            <Ionicons name="mic" size={42} color={theme.colors.onSurface} />
+          </LinearGradient>
         </View>
-      </View>
 
-      {/* Empty Action Section to maintain layout matching welcome screen */}
-      <View style={styles.actionSection} />
-    </SafeAreaView>
+        {/* Brand & Content Section */}
+        <View style={styles.contentSection}>
+          {/* Badge */}
+          <GlassmorphicCard intensity={15} style={styles.badgeContainer}>
+            <Text style={styles.badgeText}>voice-first</Text>
+          </GlassmorphicCard>
+
+          {/* Title */}
+          <Text style={styles.title}>Expensly</Text>
+
+          {/* Tagline */}
+          <View style={styles.taglineContainer}>
+            <Text style={styles.taglineWhite}>Track your spend,</Text>
+            <GradientText style={styles.taglineHighlight}>just say it.</GradientText>
+          </View>
+        </View>
+
+        {/* Empty Action Section to maintain layout matching welcome screen */}
+        <View style={styles.actionSection} />
+      </SafeAreaView>
+    </Surface>
   );
 }
 
-const createStyles = (colors: Colors) =>
+const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
+    surface: {
+      flex: 1,
+    },
     container: {
       flex: 1,
-      backgroundColor: colors.surface,
       alignItems: 'center',
       justifyContent: 'space-between',
       paddingVertical: spacing.lg,
@@ -164,7 +169,7 @@ const createStyles = (colors: Colors) =>
       width: width * 1.5,
       height: width * 1.5,
       borderRadius: width * 0.75,
-      backgroundColor: `${colors.primary}0D`,
+      backgroundColor: `${theme.colors.primary}0D`,
       transform: [{ scale: 1.2 }],
     },
     heroSection: {
@@ -183,25 +188,25 @@ const createStyles = (colors: Colors) =>
       width: 240,
       height: 240,
       borderRadius: 120,
-      backgroundColor: `${colors.primary}0D`,
+      backgroundColor: `${theme.colors.primary}0D`,
       borderWidth: 1,
-      borderColor: `${colors.primary}1A`,
+      borderColor: `${theme.colors.primary}1A`,
     },
     ringMiddle: {
       width: 180,
       height: 180,
       borderRadius: 90,
-      backgroundColor: `${colors.primary}1A`,
+      backgroundColor: `${theme.colors.primary}1A`,
       borderWidth: 1,
-      borderColor: `${colors.primary}33`,
+      borderColor: `${theme.colors.primary}33`,
     },
     ringInner: {
       width: 120,
       height: 120,
       borderRadius: 60,
-      backgroundColor: `${colors.primary}33`,
+      backgroundColor: `${theme.colors.primary}33`,
       borderWidth: 1,
-      borderColor: `${colors.primary}4D`,
+      borderColor: `${theme.colors.primary}4D`,
     },
     coreButton: {
       width: 96,
@@ -209,7 +214,7 @@ const createStyles = (colors: Colors) =>
       borderRadius: 48,
       justifyContent: 'center',
       alignItems: 'center',
-      shadowColor: colors.primary,
+      shadowColor: theme.colors.primary,
       shadowOffset: { width: 0, height: 8 },
       shadowOpacity: 0.5,
       shadowRadius: 16,
@@ -226,7 +231,7 @@ const createStyles = (colors: Colors) =>
       borderRadius: 20,
     },
     badgeText: {
-      color: colors.primary,
+      color: theme.colors.primary,
       fontSize: typography.fontSize.sm,
       fontWeight: typography.fontWeight.semiBold,
       textTransform: 'lowercase',
@@ -235,7 +240,7 @@ const createStyles = (colors: Colors) =>
     title: {
       fontSize: typography.fontSize.xxxl + 4,
       fontWeight: typography.fontWeight.bold,
-      color: colors.onSurface,
+      color: theme.colors.onSurface,
       marginBottom: spacing.md,
       letterSpacing: -0.5,
     },
@@ -245,13 +250,13 @@ const createStyles = (colors: Colors) =>
     taglineWhite: {
       fontSize: typography.fontSize.xxl,
       fontWeight: typography.fontWeight.regular,
-      color: colors.onSurface,
+      color: theme.colors.onSurface,
       opacity: 0.9,
     },
     taglineHighlight: {
       fontSize: typography.fontSize.xxl,
       fontWeight: typography.fontWeight.semiBold,
-      color: colors.secondary,
+      color: theme.colors.secondary,
       marginTop: 4,
     },
     actionSection: {

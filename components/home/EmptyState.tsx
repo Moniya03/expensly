@@ -1,11 +1,25 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useMemo } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import { type Colors, spacing, typography, useColors } from '../../constants/theme';
+import { StyleSheet, View } from 'react-native';
+import { Text } from 'react-native-paper';
+import { type AppTheme, spacing, typography, useAppTheme } from '../../constants/theme';
+
+function hexToRgba(color: string, alpha: number): string {
+  if (color.startsWith('#')) {
+    const raw = color.slice(1);
+    if (raw.length === 6) {
+      const r = Number.parseInt(raw.slice(0, 2), 16);
+      const g = Number.parseInt(raw.slice(2, 4), 16);
+      const b = Number.parseInt(raw.slice(4, 6), 16);
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+  }
+  return color;
+}
 
 export default function EmptyState() {
-  const colors = useColors();
-  const styles = useMemo(() => createStyles(colors), [colors]);
+  const theme = useAppTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
 
   return (
     <View style={styles.container}>
@@ -17,18 +31,22 @@ export default function EmptyState() {
 
         {/* Mic Icon Core */}
         <View style={styles.iconCore}>
-          <Ionicons name="mic" size={48} color={colors.primary} />
+          <Ionicons name="mic" size={48} color={theme.colors.primary} />
         </View>
       </View>
 
       {/* Text Content */}
-      <Text style={styles.title}>No expenses yet</Text>
-      <Text style={styles.subtitle}>Tap the mic to add your first expense</Text>
+      <Text variant="headlineSmall" style={styles.title}>
+        No expenses yet
+      </Text>
+      <Text variant="bodyMedium" style={styles.subtitle}>
+        Tap the mic to add your first expense
+      </Text>
     </View>
   );
 }
 
-const createStyles = (colors: Colors) =>
+const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     container: {
       flex: 1,
@@ -50,47 +68,45 @@ const createStyles = (colors: Colors) =>
       width: 180,
       height: 180,
       borderRadius: 90,
-      backgroundColor: `${colors.primary}0D`,
+      backgroundColor: hexToRgba(theme.colors.primary, 0.05),
       borderWidth: 1,
-      borderColor: `${colors.primary}1A`,
+      borderColor: hexToRgba(theme.colors.primary, 0.1),
     },
     ringMiddle: {
       width: 130,
       height: 130,
       borderRadius: 65,
-      backgroundColor: `${colors.primary}1A`,
+      backgroundColor: hexToRgba(theme.colors.primary, 0.1),
       borderWidth: 1,
-      borderColor: `${colors.primary}33`,
+      borderColor: hexToRgba(theme.colors.primary, 0.2),
     },
     ringInner: {
       width: 90,
       height: 90,
       borderRadius: 45,
-      backgroundColor: `${colors.primary}33`,
+      backgroundColor: hexToRgba(theme.colors.primary, 0.2),
       borderWidth: 1,
-      borderColor: `${colors.primary}4D`,
+      borderColor: hexToRgba(theme.colors.primary, 0.3),
     },
     iconCore: {
       width: 72,
       height: 72,
       borderRadius: 36,
-      backgroundColor: colors.surfaceContainerHigh,
+      backgroundColor: theme.colors.surfaceContainerHigh,
       justifyContent: 'center',
       alignItems: 'center',
       borderWidth: 2,
-      borderColor: `${colors.primary}4D`,
+      borderColor: theme.colors.outlineVariant,
     },
     title: {
-      fontSize: typography.fontSize.xxl,
       fontWeight: typography.fontWeight.bold,
-      color: colors.onSurface,
+      color: theme.colors.onSurface,
       marginBottom: spacing.sm,
       textAlign: 'center',
     },
     subtitle: {
-      fontSize: typography.fontSize.md,
       fontWeight: typography.fontWeight.regular,
-      color: colors.onSurfaceVariant,
+      color: theme.colors.onSurfaceVariant,
       textAlign: 'center',
       paddingHorizontal: spacing.lg,
     },

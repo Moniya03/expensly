@@ -1,6 +1,6 @@
 import type React from 'react';
 import { StyleSheet, Text, type TextProps } from 'react-native';
-import { typography, useColors } from '../../constants/theme';
+import { typography, useAppTheme } from '../../constants/theme';
 
 interface GradientTextProps extends TextProps {
   colors?: [string, string];
@@ -12,8 +12,8 @@ export const GradientText: React.FC<GradientTextProps> = ({
   style,
   ...props
 }) => {
-  const palette = useColors();
-  const [start, end] = colors ?? [palette.primary, palette.secondary];
+  const theme = useAppTheme();
+  const [start, end] = colors ?? [theme.colors.primary, theme.colors.secondary];
 
   return (
     <Text

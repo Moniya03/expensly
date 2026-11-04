@@ -1,14 +1,14 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useMemo } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { Button, HelperText, Text, TextInput } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { borderRadius, type Colors, spacing, typography, useColors } from '../../constants/theme';
+import { type AppTheme, spacing, typography, useAppTheme } from '../../constants/theme';
 import { useUpdateProfile } from '../../hooks/useProfile';
 
 export default function NameOnboardingScreen() {
-  const colors = useColors();
-  const styles = useMemo(() => createStyles(colors), [colors]);
+  const theme = useAppTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const router = useRouter();
   const { mutateAsync: updateProfile, isPending } = useUpdateProfile();
 
@@ -41,62 +41,63 @@ export default function NameOnboardingScreen() {
 
       <View style={styles.content}>
         <View style={styles.header}>
-          <Text style={styles.eyebrow}>Step 1 of 2</Text>
-          <Text style={styles.title}>What should we call you?</Text>
-          <Text style={styles.subtitle}>This is how we&apos;ll address you in the app.</Text>
+          <Text variant="labelLarge" style={styles.eyebrow}>
+            Step 1 of 2
+          </Text>
+          <Text variant="headlineMedium" style={styles.title}>
+            What should we call you?
+          </Text>
+          <Text variant="bodyLarge" style={styles.subtitle}>
+            This is how we&apos;ll address you in the app.
+          </Text>
         </View>
 
-        <View style={[styles.inputWrap, error ? styles.inputWrapError : null]}>
-          <TextInput
-            style={styles.input}
-            placeholder="Your name"
-            placeholderTextColor={`${colors.onSurfaceVariant}80`}
-            value={name}
-            onChangeText={(value) => {
-              setName(value);
-              if (error) setError(null);
-            }}
-            autoCapitalize="words"
-            autoCorrect={false}
-            editable={!isPending}
-            autoFocus
-            cursorColor={colors.primary}
-          />
-        </View>
-
-        {error ? (
-          <View style={styles.errorContainer}>
-            <Ionicons name="alert-circle" size={16} color={colors.error} />
-            <Text style={styles.errorText}>{error}</Text>
-          </View>
-        ) : null}
+        <TextInput
+          mode="outlined"
+          label="Your name"
+          value={name}
+          onChangeText={(value) => {
+            setName(value);
+            if (error) setError(null);
+          }}
+          autoFocus
+          error={Boolean(error)}
+          autoCapitalize="words"
+          autoCorrect={false}
+          editable={!isPending}
+          returnKeyType="done"
+          onSubmitEditing={handleContinue}
+          style={styles.input}
+        />
+        <HelperText type="error" visible={Boolean(error)}>
+          {error}
+        </HelperText>
       </View>
 
       <View style={styles.footer}>
-        <Pressable
-          style={[styles.primaryButton, (!name.trim() || isPending) && styles.buttonDisabled]}
-          onPress={handleContinue}
+        <Button
+          mode="contained"
+          buttonColor={theme.colors.primary}
+          textColor={theme.colors.onPrimary}
+          loading={isPending}
           disabled={!name.trim() || isPending}
+          icon="arrow-right"
+          contentStyle={styles.buttonContent}
+          style={styles.primaryButton}
+          onPress={handleContinue}
         >
-          {isPending ? (
-            <ActivityIndicator size="small" color="#000000" />
-          ) : (
-            <>
-              <Text style={styles.primaryButtonText}>Continue</Text>
-              <Ionicons name="arrow-forward" size={20} color="#000000" style={styles.buttonIcon} />
-            </>
-          )}
-        </Pressable>
+          Continue
+        </Button>
       </View>
     </SafeAreaView>
   );
 }
 
-const createStyles = (colors: Colors) =>
+const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: colors.surface,
+      backgroundColor: theme.colors.surface,
     },
     ambientGlow: {
       position: 'absolute',
@@ -105,7 +106,7 @@ const createStyles = (colors: Colors) =>
       width: 300,
       height: 300,
       borderRadius: 150,
-      backgroundColor: `${colors.primary}0D`,
+      backgroundColor: `${theme.colors.primary}0D`,
       transform: [{ scale: 1.2 }],
     },
     content: {
@@ -118,86 +119,32 @@ const createStyles = (colors: Colors) =>
       marginTop: spacing.xl,
     },
     eyebrow: {
-      color: colors.primary,
-      fontSize: typography.fontSize.sm,
-      fontWeight: typography.fontWeight.semiBold,
+      color: theme.colors.primary,
       textTransform: 'lowercase',
       letterSpacing: 0.5,
       marginBottom: spacing.sm,
     },
     title: {
-      color: colors.onSurface,
-      fontSize: typography.fontSize.xxl + 4,
+      color: theme.colors.onSurface,
       fontWeight: typography.fontWeight.bold,
       marginBottom: spacing.xs,
       letterSpacing: -0.5,
     },
     subtitle: {
-      color: colors.onSurfaceVariant,
-      fontSize: typography.fontSize.md,
+      color: theme.colors.onSurfaceVariant,
       lineHeight: 24,
     },
-    inputWrap: {
-      borderBottomWidth: 1.5,
-      borderBottomColor: `${colors.primary}4D`,
-      paddingVertical: spacing.md,
-      marginTop: spacing.sm,
-    },
-    inputWrapError: {
-      borderBottomColor: colors.error,
-    },
     input: {
-      color: colors.onSurface,
-      fontSize: typography.fontSize.xxl,
-      fontWeight: typography.fontWeight.medium,
-      padding: 0,
-      letterSpacing: -0.5,
-    },
-    errorContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      backgroundColor: `${colors.error}15`,
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.sm,
-      borderRadius: borderRadius.sm,
-      marginTop: spacing.lg,
-      borderWidth: 1,
-      borderColor: `${colors.error}30`,
-    },
-    errorText: {
-      color: colors.error,
-      fontSize: typography.fontSize.sm,
-      marginLeft: spacing.xs,
+      backgroundColor: theme.colors.surface,
     },
     footer: {
       paddingHorizontal: spacing.xl,
       paddingBottom: spacing.xl,
     },
     primaryButton: {
-      minHeight: 56,
-      borderRadius: borderRadius.md,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: colors.primary,
-      paddingHorizontal: spacing.xl,
-      shadowColor: colors.primary,
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.2,
-      shadowRadius: 8,
-      elevation: 4,
+      borderRadius: 28,
     },
-    primaryButtonText: {
-      color: colors.onAccent,
-      fontSize: typography.fontSize.lg,
-      fontWeight: typography.fontWeight.semiBold,
-    },
-    buttonIcon: {
-      marginLeft: spacing.sm,
-    },
-    buttonDisabled: {
-      opacity: 0.5,
-      shadowOpacity: 0,
-      elevation: 0,
+    buttonContent: {
+      height: 56,
     },
   });

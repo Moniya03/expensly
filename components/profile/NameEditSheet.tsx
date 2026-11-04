@@ -1,15 +1,13 @@
-import { Ionicons } from '@expo/vector-icons';
-import React, { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
+import { Button, HelperText, Modal, Portal, Surface, Text, TextInput } from 'react-native-paper';
 import {
-  ActivityIndicator,
-  Modal,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
-import { borderRadius, type Colors, spacing, typography, useColors } from '../../constants/theme';
+  type AppTheme,
+  borderRadius,
+  spacing,
+  typography,
+  useAppTheme,
+} from '../../constants/theme';
 import { useUpdateProfile } from '../../hooks/useProfile';
 
 type NameEditSheetProps = {
@@ -19,20 +17,15 @@ type NameEditSheetProps = {
   onSaved: (name: string) => void;
 };
 
-export default function NameEditSheet({
-  visible,
-  currentName,
-  onClose,
-  onSaved,
-}: NameEditSheetProps) {
-  const colors = useColors();
-  const styles = useMemo(() => createStyles(colors), [colors]);
+export function NameEditSheet({ visible, currentName, onClose, onSaved }: NameEditSheetProps) {
+  const theme = useAppTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
 
   const { mutateAsync: updateProfile, isPending } = useUpdateProfile();
-  const [name, setName] = React.useState(currentName);
-  const [error, setError] = React.useState<string | null>(null);
+  const [name, setName] = useState(currentName);
+  const [error, setError] = useState<string | null>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (visible) {
       setName(currentName);
       setError(null);
@@ -58,139 +51,92 @@ export default function NameEditSheet({
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <View style={styles.backdrop}>
-        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
-        <View style={styles.sheet}>
-          <View style={styles.handle} />
-          <Text style={styles.title}>Edit name</Text>
-          <TextInput
-            style={[styles.input, error ? styles.inputError : null]}
-            value={name}
-            onChangeText={(value) => {
-              setName(value);
-              if (error) setError(null);
-            }}
-            placeholder="Your name"
-            placeholderTextColor={colors.onSurfaceVariant}
-            autoCapitalize="words"
-            autoCorrect={false}
-            editable={!isPending}
-            selectionColor={colors.primary}
-            returnKeyType="done"
-            onSubmitEditing={handleSave}
-          />
-          {error ? <Text style={styles.error}>{error}</Text> : null}
+    <Portal>
+      <Modal visible={visible} onDismiss={onClose} contentContainerStyle={styles.modalContent}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={styles.keyboardView}
+        >
+          <Surface elevation={3} style={styles.sheet}>
+            <Text variant="titleLarge" style={styles.title}>
+              Edit your name
+            </Text>
 
-          <View style={styles.actions}>
-            <Pressable
-              style={[styles.button, styles.cancelButton]}
-              onPress={onClose}
-              disabled={isPending}
-            >
-              <Text style={styles.cancelText}>Cancel</Text>
-            </Pressable>
-            <Pressable
-              style={[styles.button, styles.saveButton]}
-              onPress={handleSave}
-              disabled={isPending}
-            >
-              {isPending ? (
-                <ActivityIndicator size="small" color={colors.onAccent} />
-              ) : (
-                <View style={styles.saveInner}>
-                  <Ionicons name="checkmark" size={16} color={colors.onAccent} />
-                  <Text style={styles.saveText}>Save</Text>
-                </View>
-              )}
-            </Pressable>
-          </View>
-        </View>
-      </View>
-    </Modal>
+            <TextInput
+              mode="outlined"
+              label="Your name"
+              value={name}
+              onChangeText={(value) => {
+                setName(value);
+                if (error) setError(null);
+              }}
+              autoFocus
+              error={Boolean(error)}
+              autoCapitalize="words"
+              autoCorrect={false}
+              editable={!isPending}
+              returnKeyType="done"
+              onSubmitEditing={handleSave}
+            />
+            <HelperText type="error" visible={Boolean(error)}>
+              {error}
+            </HelperText>
+
+            <View style={styles.actions}>
+              <Button mode="outlined" onPress={onClose} disabled={isPending} style={styles.button}>
+                Cancel
+              </Button>
+              <Button
+                mode="contained"
+                buttonColor={theme.colors.primary}
+                loading={isPending}
+                disabled={isPending}
+                onPress={handleSave}
+                style={styles.button}
+              >
+                Save
+              </Button>
+            </View>
+          </Surface>
+        </KeyboardAvoidingView>
+      </Modal>
+    </Portal>
   );
 }
 
-const createStyles = (colors: Colors) =>
+export default NameEditSheet;
+
+const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
-    backdrop: {
-      flex: 1,
-      justifyContent: 'flex-end',
-      backgroundColor: 'rgba(0, 0, 0, 0.45)',
+    modalContent: {
+      paddingHorizontal: spacing.lg,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    keyboardView: {
+      width: '100%',
+      maxWidth: 420,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     sheet: {
-      backgroundColor: colors.surfaceContainer,
-      paddingHorizontal: spacing.lg,
-      paddingTop: spacing.md,
-      paddingBottom: spacing.xl,
-      borderTopLeftRadius: borderRadius.xl,
-      borderTopRightRadius: borderRadius.xl,
-    },
-    handle: {
-      width: 42,
-      height: 4,
-      borderRadius: 999,
-      backgroundColor: colors.outlineVariant,
-      alignSelf: 'center',
-      marginBottom: spacing.lg,
+      width: '100%',
+      maxWidth: 420,
+      backgroundColor: theme.colors.surfaceContainerHigh,
+      borderRadius: borderRadius.xl,
+      padding: spacing.lg,
     },
     title: {
-      color: colors.onSurface,
-      fontSize: typography.fontSize.xl,
+      color: theme.colors.onSurface,
       fontWeight: typography.fontWeight.semiBold,
       marginBottom: spacing.md,
-    },
-    input: {
-      backgroundColor: colors.surfaceContainerHigh,
-      borderWidth: 1,
-      borderColor: colors.outlineVariant,
-      borderRadius: borderRadius.md,
-      color: colors.onSurface,
-      fontSize: typography.fontSize.md,
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.md,
-    },
-    inputError: {
-      borderColor: colors.error,
-    },
-    error: {
-      color: colors.error,
-      fontSize: typography.fontSize.sm,
-      marginTop: spacing.sm,
     },
     actions: {
       flexDirection: 'row',
       gap: spacing.sm,
-      marginTop: spacing.lg,
+      marginTop: spacing.md,
     },
     button: {
       flex: 1,
-      minHeight: 48,
-      borderRadius: borderRadius.md,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    cancelButton: {
-      backgroundColor: colors.surfaceContainerHigh,
-      borderWidth: 1,
-      borderColor: colors.outlineVariant,
-    },
-    cancelText: {
-      color: colors.onSurface,
-      fontSize: typography.fontSize.md,
-      fontWeight: typography.fontWeight.medium,
-    },
-    saveButton: {
-      backgroundColor: colors.primary,
-    },
-    saveInner: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 6,
-    },
-    saveText: {
-      color: colors.onAccent,
-      fontSize: typography.fontSize.md,
-      fontWeight: typography.fontWeight.semiBold,
     },
   });

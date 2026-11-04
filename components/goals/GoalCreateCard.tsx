@@ -1,23 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
-import React, { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { Button, IconButton, Modal, Portal, Surface, Switch, Text } from 'react-native-paper';
 import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
-import Animated, {
-  Easing,
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated';
-import { borderRadius, type Colors, spacing, typography, useColors } from '../../constants/theme';
+  type AppTheme,
+  borderRadius,
+  spacing,
+  typography,
+  useAppTheme,
+} from '../../constants/theme';
 import { useCreateGoal, useUpdateGoal } from '../../hooks/useGoals';
 import type { Goal } from '../../types';
 import { toLocalDateString } from '../../utils/date';
@@ -34,22 +25,18 @@ type Props = {
 };
 
 export function GoalCreateCard({ visible, goal, onClose }: Props) {
-  const colors = useColors();
-  const styles = useMemo(() => createStyles(colors), [colors]);
+  const theme = useAppTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
 
   const createGoal = useCreateGoal();
   const updateGoal = useUpdateGoal();
   const isSaving = createGoal.isPending || updateGoal.isPending;
 
-  const [name, setName] = React.useState('');
-  const [amount, setAmount] = React.useState('');
-  const [icon, setIcon] = React.useState('briefcase-outline');
-  const [targetDateEnabled, setTargetDateEnabled] = React.useState(false);
-  const [targetDate, setTargetDate] = React.useState(new Date());
-
-  const scale = useSharedValue(0.7);
-  const translateY = useSharedValue(40);
-  const opacity = useSharedValue(0);
+  const [name, setName] = useState('');
+  const [amount, setAmount] = useState('');
+  const [icon, setIcon] = useState('briefcase-outline');
+  const [targetDateEnabled, setTargetDateEnabled] = useState(false);
+  const [targetDate, setTargetDate] = useState(new Date());
 
   useEffect(() => {
     if (visible) {
@@ -58,26 +45,8 @@ export function GoalCreateCard({ visible, goal, onClose }: Props) {
       setIcon(goal?.icon ?? 'briefcase-outline');
       setTargetDateEnabled(!!goal?.target_date);
       setTargetDate(goal?.target_date ? new Date(goal.target_date) : new Date());
-      scale.value = withTiming(1, {
-        duration: 220,
-        easing: Easing.out(Easing.cubic),
-      });
-      translateY.value = withTiming(0, {
-        duration: 220,
-        easing: Easing.out(Easing.cubic),
-      });
-      opacity.value = withTiming(1, { duration: 150 });
-    } else {
-      scale.value = 0.7;
-      translateY.value = 40;
-      opacity.value = 0;
     }
-  }, [visible, goal, scale, translateY, opacity]);
-
-  const cardStyle = useAnimatedStyle(() => ({
-    opacity: opacity.value,
-    transform: [{ scale: scale.value }, { translateY: translateY.value }],
-  }));
+  }, [visible, goal]);
 
   const valid = name.trim().length >= 2 && Number(amount) > 0;
 
@@ -100,149 +69,154 @@ export function GoalCreateCard({ visible, goal, onClose }: Props) {
   const isEditing = !!goal;
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <KeyboardAvoidingView
-        style={styles.root}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <Pressable style={styles.scrim} onPress={onClose} />
-
-        <Animated.View style={[styles.card, cardStyle]}>
-          <View style={styles.header}>
-            <View style={styles.headerIcon}>
-              <Ionicons
-                name={isEditing ? 'create-outline' : 'sparkles'}
-                size={18}
-                color={colors.primary}
+    <Portal>
+      <Modal visible={visible} onDismiss={onClose} contentContainerStyle={styles.modalContent}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={styles.keyboardView}
+        >
+          <Surface elevation={3} style={styles.card}>
+            <View style={styles.header}>
+              <View style={styles.headerIcon}>
+                <Ionicons
+                  name={isEditing ? 'create-outline' : 'sparkles'}
+                  size={18}
+                  color={theme.colors.primary}
+                />
+              </View>
+              <View style={styles.headerText}>
+                <Text variant="titleMedium" style={styles.title}>
+                  {isEditing ? 'Edit goal' : 'New goal'}
+                </Text>
+                <Text variant="bodySmall" style={styles.subtitle}>
+                  {isEditing
+                    ? 'Refine the details of your goal.'
+                    : 'Shape a quiet goal that keeps your progress visible.'}
+                </Text>
+              </View>
+              <IconButton
+                icon="close"
+                size={20}
+                iconColor={theme.colors.onSurfaceVariant}
+                containerColor={theme.colors.surfaceContainer}
+                onPress={onClose}
+                style={styles.closeButton}
+                accessibilityLabel="Close"
               />
             </View>
-            <View style={styles.headerText}>
-              <Text style={styles.title}>{isEditing ? 'Edit goal' : 'New goal'}</Text>
-              <Text style={styles.subtitle}>
-                {isEditing
-                  ? 'Refine the details of your goal.'
-                  : 'Shape a quiet goal that keeps your progress visible.'}
-              </Text>
-            </View>
-            <Pressable onPress={onClose} style={styles.closeButton} hitSlop={8}>
-              <Ionicons name="close" size={20} color={colors.onSurfaceVariant} />
-            </Pressable>
-          </View>
 
-          <ScrollView
-            contentContainerStyle={styles.form}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-          >
-            <Input
-              label="Goal name"
-              placeholder="Emergency fund"
-              value={name}
-              onChangeText={setName}
-            />
-            <AmountInput value={amount} onChangeValue={setAmount} integerOnly />
-
-            <GoalIconPickerRow value={icon} onChange={setIcon} />
-
-            <Pressable style={styles.dateToggle} onPress={() => setTargetDateEnabled((v) => !v)}>
-              <Text style={styles.sectionLabel}>Target date</Text>
-              <Ionicons
-                name={targetDateEnabled ? 'toggle' : 'toggle-outline'}
-                size={26}
-                color={targetDateEnabled ? colors.primary : colors.onSurfaceVariant}
+            <ScrollView
+              contentContainerStyle={styles.form}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+            >
+              <Input
+                label="Goal name"
+                placeholder="Emergency fund"
+                value={name}
+                onChangeText={setName}
               />
-            </Pressable>
-            {targetDateEnabled ? (
-              <DatePicker
-                value={targetDate}
-                onChange={setTargetDate}
-                allowFutureDates
-                inlineYearScroller
-              />
-            ) : null}
-          </ScrollView>
+              <AmountInput value={amount} onChangeValue={setAmount} integerOnly />
 
-          <Pressable
-            onPress={onSave}
-            disabled={!valid || isSaving}
-            style={[styles.saveButton, (!valid || isSaving) && styles.saveDisabled]}
-          >
-            {isSaving ? (
-              <ActivityIndicator color={colors.onAccent} />
-            ) : (
-              <Text style={styles.saveText}>{isEditing ? 'Update goal' : 'Create goal'}</Text>
-            )}
-          </Pressable>
-        </Animated.View>
-      </KeyboardAvoidingView>
-    </Modal>
+              <GoalIconPickerRow value={icon} onChange={setIcon} />
+
+              <View style={styles.dateToggle}>
+                <Text variant="bodyMedium" style={styles.sectionLabel}>
+                  Target date
+                </Text>
+                <Switch
+                  value={targetDateEnabled}
+                  onValueChange={setTargetDateEnabled}
+                  color={theme.colors.primary}
+                />
+              </View>
+              {targetDateEnabled ? (
+                <DatePicker
+                  value={targetDate}
+                  onChange={setTargetDate}
+                  allowFutureDates
+                  inlineYearScroller
+                />
+              ) : null}
+            </ScrollView>
+
+            <Button
+              mode="contained"
+              onPress={onSave}
+              loading={isSaving}
+              disabled={!valid || isSaving}
+              style={styles.saveButton}
+              contentStyle={styles.saveButtonContent}
+              labelStyle={styles.saveButtonLabel}
+            >
+              {isEditing ? 'Update goal' : 'Create goal'}
+            </Button>
+          </Surface>
+        </KeyboardAvoidingView>
+      </Modal>
+    </Portal>
   );
 }
 
-const createStyles = (colors: Colors) =>
+const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
-    root: {
-      flex: 1,
+    modalContent: {
+      paddingHorizontal: spacing.lg,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    keyboardView: {
+      width: '100%',
+      maxWidth: 420,
       alignItems: 'center',
       justifyContent: 'center',
-      paddingHorizontal: spacing.lg,
-    },
-    scrim: {
-      ...StyleSheet.absoluteFillObject,
-      backgroundColor: 'rgba(4, 6, 12, 0.82)',
     },
     card: {
       width: '100%',
       maxWidth: 420,
       maxHeight: '88%',
-      backgroundColor: colors.surfaceContainerHigh,
+      backgroundColor: theme.colors.surfaceContainerHigh,
       borderRadius: borderRadius.xl,
-      borderWidth: 1,
-      borderColor: 'rgba(255,255,255,0.1)',
       padding: spacing.lg,
       gap: spacing.md,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 16 },
-      shadowOpacity: 0.5,
-      shadowRadius: 24,
-      elevation: 16,
+      overflow: 'hidden',
     },
-    header: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
     headerIcon: {
       width: 36,
       height: 36,
       borderRadius: borderRadius.full,
-      backgroundColor: `${colors.primary}1F`,
+      backgroundColor: theme.colors.primaryContainer,
       alignItems: 'center',
       justifyContent: 'center',
-      marginTop: 2,
     },
-    headerText: { flex: 1 },
+    headerText: {
+      flex: 1,
+    },
     title: {
-      color: colors.onSurface,
-      fontSize: typography.fontSize.xl,
+      color: theme.colors.onSurface,
       fontWeight: typography.fontWeight.bold,
     },
     subtitle: {
-      color: colors.onSurfaceVariant,
-      fontSize: typography.fontSize.xs,
+      color: theme.colors.onSurfaceVariant,
       marginTop: 2,
       lineHeight: 16,
     },
     closeButton: {
-      width: 32,
-      height: 32,
-      borderRadius: borderRadius.full,
-      backgroundColor: colors.surfaceContainer,
-      alignItems: 'center',
-      justifyContent: 'center',
+      margin: 0,
     },
-    form: { gap: spacing.sm, paddingBottom: spacing.sm },
+    form: {
+      gap: spacing.sm,
+      paddingBottom: spacing.sm,
+    },
     sectionLabel: {
       fontSize: typography.fontSize.sm,
       fontWeight: typography.fontWeight.medium,
-      color: colors.onSurfaceVariant,
-      marginBottom: spacing.xs,
+      color: theme.colors.onSurfaceVariant,
     },
     dateToggle: {
       flexDirection: 'row',
@@ -251,15 +225,12 @@ const createStyles = (colors: Colors) =>
       paddingVertical: spacing.sm,
     },
     saveButton: {
-      minHeight: 52,
       borderRadius: borderRadius.lg,
-      backgroundColor: colors.primary,
-      alignItems: 'center',
-      justifyContent: 'center',
     },
-    saveDisabled: { opacity: 0.45 },
-    saveText: {
-      color: colors.onAccent,
+    saveButtonContent: {
+      minHeight: 48,
+    },
+    saveButtonLabel: {
       fontSize: typography.fontSize.md,
       fontWeight: typography.fontWeight.semiBold,
     },

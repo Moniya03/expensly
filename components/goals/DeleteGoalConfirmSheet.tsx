@@ -1,6 +1,13 @@
 import { useMemo } from 'react';
-import { ActivityIndicator, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
-import { borderRadius, type Colors, spacing, typography, useColors } from '../../constants/theme';
+import { StyleSheet, View } from 'react-native';
+import { Button, Modal, Portal, Surface, Text } from 'react-native-paper';
+import {
+  type AppTheme,
+  borderRadius,
+  spacing,
+  typography,
+  useAppTheme,
+} from '../../constants/theme';
 import type { Goal } from '../../types';
 
 type Props = {
@@ -18,71 +25,65 @@ export function DeleteGoalConfirmSheet({
   onDelete,
   onClose,
 }: Props) {
-  const colors = useColors();
-  const styles = useMemo(() => createStyles(colors), [colors]);
+  const theme = useAppTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
 
   if (!goal) return null;
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <Pressable style={styles.overlay} onPress={onClose}>
-        <Pressable style={styles.sheet} onPress={(event) => event.stopPropagation()}>
+    <Portal>
+      <Modal visible={visible} onDismiss={onClose} contentContainerStyle={styles.modalContent}>
+        <Surface elevation={3} style={styles.sheet}>
           <View style={styles.handle} />
-          <Text style={styles.title}>Delete goal?</Text>
-          <Text style={styles.subtitle}>
+          <Text variant="headlineSmall" style={styles.title}>
+            Delete goal?
+          </Text>
+          <Text variant="bodyMedium" style={styles.subtitle}>
             This will permanently remove “{goal.name}” and its saved progress.
           </Text>
 
           <View style={styles.actions}>
-            <Pressable
+            <Button
+              mode="contained"
+              buttonColor={theme.colors.error}
+              textColor={theme.colors.onError}
+              loading={isDeleting}
+              disabled={isDeleting}
               onPress={onDelete}
-              disabled={isDeleting}
-              style={({ pressed }) => [
-                styles.dangerButton,
-                pressed && styles.pressed,
-                isDeleting && styles.disabled,
-              ]}
+              style={styles.actionButton}
             >
-              {isDeleting ? (
-                <ActivityIndicator color={colors.onAccent} />
-              ) : (
-                <Text style={styles.dangerText}>Delete</Text>
-              )}
-            </Pressable>
-            <Pressable
+              Delete
+            </Button>
+            <Button
+              mode="outlined"
+              disabled={isDeleting}
               onPress={onClose}
-              disabled={isDeleting}
-              style={({ pressed }) => [
-                styles.cancelButton,
-                pressed && styles.pressed,
-                isDeleting && styles.disabled,
-              ]}
+              style={styles.actionButton}
             >
-              <Text style={styles.cancelText}>Cancel</Text>
-            </Pressable>
+              Cancel
+            </Button>
           </View>
-        </Pressable>
-      </Pressable>
-    </Modal>
+        </Surface>
+      </Modal>
+    </Portal>
   );
 }
 
-const createStyles = (colors: Colors) =>
+const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
-    overlay: {
-      flex: 1,
+    modalContent: {
       justifyContent: 'flex-end',
-      backgroundColor: 'rgba(0, 0, 0, 0.72)',
+      margin: 0,
     },
     sheet: {
-      backgroundColor: colors.surfaceContainerHigh,
+      backgroundColor: theme.colors.surfaceContainerHigh,
       borderTopLeftRadius: borderRadius.xl,
       borderTopRightRadius: borderRadius.xl,
       borderWidth: 1,
-      borderColor: 'rgba(255,255,255,0.08)',
+      borderColor: theme.colors.outlineVariant,
       paddingHorizontal: spacing.md,
       paddingTop: spacing.sm,
-      paddingBottom: spacing.lg,
+      paddingBottom: spacing.xl,
       gap: spacing.md,
     },
     handle: {
@@ -90,45 +91,21 @@ const createStyles = (colors: Colors) =>
       width: 44,
       height: 5,
       borderRadius: 999,
-      backgroundColor: colors.outlineVariant,
+      backgroundColor: theme.colors.outlineVariant,
     },
     title: {
-      color: colors.onSurface,
-      fontSize: typography.fontSize.xl,
+      color: theme.colors.onSurface,
       fontWeight: typography.fontWeight.bold,
     },
     subtitle: {
-      color: colors.onSurfaceVariant,
-      fontSize: typography.fontSize.sm,
+      color: theme.colors.onSurfaceVariant,
       lineHeight: 20,
     },
-    actions: { gap: spacing.sm },
-    dangerButton: {
-      minHeight: 52,
+    actions: {
+      gap: spacing.sm,
+      marginTop: spacing.xs,
+    },
+    actionButton: {
       borderRadius: borderRadius.lg,
-      backgroundColor: colors.error,
-      alignItems: 'center',
-      justifyContent: 'center',
     },
-    dangerText: {
-      color: colors.onAccent,
-      fontSize: typography.fontSize.md,
-      fontWeight: typography.fontWeight.semiBold,
-    },
-    cancelButton: {
-      minHeight: 48,
-      borderRadius: borderRadius.lg,
-      borderWidth: 1,
-      borderColor: colors.outlineVariant,
-      backgroundColor: colors.surfaceContainer,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    cancelText: {
-      color: colors.onSurface,
-      fontSize: typography.fontSize.md,
-      fontWeight: typography.fontWeight.medium,
-    },
-    pressed: { opacity: 0.8 },
-    disabled: { opacity: 0.5 },
   });

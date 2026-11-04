@@ -1,69 +1,79 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useMemo } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { borderRadius, type Colors, spacing, typography, useColors } from '../../constants/theme';
+import { StyleSheet, View } from 'react-native';
+import { Button, Text } from 'react-native-paper';
+import {
+  type AppTheme,
+  borderRadius,
+  spacing,
+  typography,
+  useAppTheme,
+} from '../../constants/theme';
 
 export function GoalEmptyState({ onCreate }: { onCreate: () => void }) {
-  const colors = useColors();
-  const styles = useMemo(() => createStyles(colors), [colors]);
+  const theme = useAppTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
 
   return (
     <View style={styles.container}>
       <View style={styles.iconShell}>
-        <Ionicons name="sparkles-outline" size={32} color={colors.primary} />
+        <Ionicons name="sparkles-outline" size={32} color={theme.colors.primary} />
       </View>
-      <Text style={styles.title}>Build the next milestone</Text>
-      <Text style={styles.subtitle}>
+      <Text variant="titleLarge" style={styles.title}>
+        Build the next milestone
+      </Text>
+      <Text variant="bodyMedium" style={styles.subtitle}>
         Add a savings goal and keep the momentum calm and visible.
       </Text>
-      <Pressable style={styles.cta} onPress={onCreate}>
-        <Text style={styles.ctaText}>Create goal</Text>
-      </Pressable>
+      <Button
+        mode="contained"
+        onPress={onCreate}
+        buttonColor={theme.colors.primary}
+        textColor={theme.colors.onPrimary}
+        style={styles.cta}
+        contentStyle={styles.ctaContent}
+      >
+        Create goal
+      </Button>
     </View>
   );
 }
 
-const createStyles = (colors: Colors) =>
+const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     container: {
       alignItems: 'center',
       justifyContent: 'center',
       padding: spacing.xl,
       gap: spacing.md,
-      backgroundColor: colors.surfaceContainer,
+      backgroundColor: theme.colors.surfaceContainer,
       borderRadius: borderRadius.xl,
       borderWidth: 1,
-      borderColor: colors.outlineVariant,
+      borderColor: theme.colors.outlineVariant,
     },
     iconShell: {
       width: 64,
       height: 64,
       borderRadius: borderRadius.full,
-      backgroundColor: colors.surfaceContainerHigh,
+      backgroundColor: theme.colors.surfaceContainerHigh,
       alignItems: 'center',
       justifyContent: 'center',
     },
     title: {
-      color: colors.onSurface,
-      fontSize: typography.fontSize.xl,
+      color: theme.colors.onSurface,
       fontWeight: typography.fontWeight.bold,
       textAlign: 'center',
     },
     subtitle: {
-      color: colors.onSurfaceVariant,
-      fontSize: typography.fontSize.sm,
+      color: theme.colors.onSurfaceVariant,
       lineHeight: typography.fontSize.sm * 1.5,
       textAlign: 'center',
     },
     cta: {
       marginTop: spacing.xs,
-      paddingHorizontal: spacing.lg,
-      paddingVertical: spacing.md,
       borderRadius: borderRadius.full,
-      backgroundColor: colors.primary,
     },
-    ctaText: {
-      color: colors.onAccent,
-      fontWeight: typography.fontWeight.semiBold,
+    ctaContent: {
+      paddingHorizontal: spacing.sm,
     },
   });

@@ -1,13 +1,19 @@
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { ScrollView, StyleSheet } from 'react-native';
+import { Button, Surface } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AmountInput } from '../../components/ui/AmountInput';
 import { CategoryPicker } from '../../components/ui/CategoryPicker';
 import { DatePicker } from '../../components/ui/DatePicker';
 import { Input } from '../../components/ui/Input';
-import { borderRadius, type Colors, spacing, typography, useColors } from '../../constants/theme';
+import {
+  type AppTheme,
+  borderRadius,
+  spacing,
+  typography,
+  useAppTheme,
+} from '../../constants/theme';
 import { useCreateTransaction } from '../../hooks/useTransactions';
 import type { Category } from '../../types';
 import { toLocalDateString } from '../../utils/date';
@@ -18,8 +24,8 @@ function normalizeCategory(category: Category): Category {
 }
 
 export default function AddExpenseScreen() {
-  const colors = useColors();
-  const styles = useMemo(() => createStyles(colors), [colors]);
+  const theme = useAppTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const router = useRouter();
   const { mutate: createTransaction, isPending } = useCreateTransaction();
 
@@ -46,12 +52,12 @@ export default function AddExpenseScreen() {
   };
 
   const handleSave = () => {
-    if (!validate()) return;
+    if (!validate() || !category) return;
 
     createTransaction(
       {
         amount: parseInt(amount, 10),
-        category: normalizeCategory(category!),
+        category: normalizeCategory(category),
         description: description || merchant || 'Manual expense',
         merchant: merchant || null,
         transaction_date: toLocalDateString(date),
@@ -67,61 +73,57 @@ export default function AddExpenseScreen() {
     );
   };
 
-  const isValid = amount && parseFloat(amount) > 0 && category;
+  const isValid = Boolean(amount && parseFloat(amount) > 0 && category);
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
-        <AmountInput value={amount} onChangeValue={setAmount} error={errors.amount} />
-        <CategoryPicker
-          selectedCategory={category}
-          onSelectCategory={setCategory}
-          error={errors.category}
-        />
-        <Input
-          label="Description"
-          placeholder="What was this for?"
-          value={description}
-          onChangeText={setDescription}
-          multiline
-        />
-        <Input
-          label="Merchant"
-          placeholder="Where did you spend?"
-          value={merchant}
-          onChangeText={setMerchant}
-        />
-        <DatePicker value={date} onChange={setDate} />
+    <Surface style={{ flex: 1, backgroundColor: theme.colors.surface }}>
+      <SafeAreaView style={styles.container} edges={['bottom']}>
+        <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
+          <AmountInput value={amount} onChangeValue={setAmount} error={errors.amount} />
+          <CategoryPicker
+            selectedCategory={category}
+            onSelectCategory={setCategory}
+            error={errors.category}
+          />
+          <Input
+            label="Description"
+            placeholder="What was this for?"
+            value={description}
+            onChangeText={setDescription}
+            multiline
+          />
+          <Input
+            label="Merchant"
+            placeholder="Where did you spend?"
+            value={merchant}
+            onChangeText={setMerchant}
+          />
+          <DatePicker value={date} onChange={setDate} />
 
-        {/* Save Button */}
-        <TouchableOpacity onPress={handleSave} disabled={isPending || !isValid} activeOpacity={0.8}>
-          <LinearGradient
-            colors={
-              isValid
-                ? [colors.primary, colors.secondary]
-                : [colors.outlineVariant, colors.outlineVariant]
-            }
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
+          {/* Save Button */}
+          <Button
+            mode="contained"
+            loading={isPending}
+            disabled={isPending || !isValid}
+            onPress={handleSave}
+            buttonColor={theme.colors.primary}
+            textColor={theme.colors.onPrimary}
             style={styles.saveButton}
+            contentStyle={styles.saveButtonContent}
+            labelStyle={styles.saveButtonLabel}
           >
-            {isPending ? (
-              <ActivityIndicator color="#FFFFFF" />
-            ) : (
-              <Text style={styles.saveButtonText}>{isPending ? 'Saving...' : 'Save Expense'}</Text>
-            )}
-          </LinearGradient>
-        </TouchableOpacity>
-      </ScrollView>
-    </SafeAreaView>
+            Save Expense
+          </Button>
+        </ScrollView>
+      </SafeAreaView>
+    </Surface>
   );
 }
 
-const createStyles = (colors: Colors) =>
+const createStyles = (_theme: AppTheme) =>
   StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: colors.surface,
     },
     scrollView: {
       flex: 1,
@@ -131,13 +133,13 @@ const createStyles = (colors: Colors) =>
       paddingBottom: spacing.xxl,
     },
     saveButton: {
-      paddingVertical: spacing.md,
-      borderRadius: borderRadius.md,
-      alignItems: 'center',
       marginTop: spacing.lg,
+      borderRadius: borderRadius.md,
     },
-    saveButtonText: {
-      color: '#FFFFFF',
+    saveButtonContent: {
+      height: 48,
+    },
+    saveButtonLabel: {
       fontSize: typography.fontSize.md,
       fontWeight: typography.fontWeight.semiBold,
     },

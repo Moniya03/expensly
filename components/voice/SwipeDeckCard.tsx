@@ -1,6 +1,13 @@
 import React, { useImperativeHandle, useMemo } from 'react';
-import { StyleSheet, Text, useWindowDimensions, View, type StyleProp, type ViewStyle } from 'react-native';
+import {
+  type StyleProp,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+  type ViewStyle,
+} from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { Text } from 'react-native-paper';
 import Animated, {
   Easing,
   Extrapolation,
@@ -10,7 +17,13 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { borderRadius, type Colors, spacing, typography, useColors } from '../../constants/theme';
+import {
+  type AppTheme,
+  borderRadius,
+  spacing,
+  typography,
+  useAppTheme,
+} from '../../constants/theme';
 
 const SWIPE_THRESHOLD = 60;
 const VELOCITY_THRESHOLD = 800;
@@ -19,8 +32,19 @@ const RETRACT_DURATION = 220;
 const SPRING_BACK_DURATION = 250;
 const MAX_VERTICAL = 20;
 const ROTATE_DIVISOR = 20;
-const ACCEPT_OVERLAY = 'rgba(52,199,89,0.25)';
-const REJECT_OVERLAY = 'rgba(255,71,87,0.25)';
+
+function hexToRgba(color: string, alpha: number): string {
+  if (color.startsWith('#')) {
+    const raw = color.slice(1);
+    if (raw.length === 6) {
+      const r = Number.parseInt(raw.slice(0, 2), 16);
+      const g = Number.parseInt(raw.slice(2, 4), 16);
+      const b = Number.parseInt(raw.slice(4, 6), 16);
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+  }
+  return color;
+}
 
 export type SwipeDeckCardHandle = {
   /** Animate the card back to center (used when user cancels the reject-confirm). */
@@ -37,8 +61,8 @@ type SwipeDeckCardProps = {
 
 export const SwipeDeckCard = React.forwardRef<SwipeDeckCardHandle, SwipeDeckCardProps>(
   ({ children, onSwipedRight, onSwipedLeft, disabled, style }, ref) => {
-    const colors = useColors();
-    const styles = useMemo(() => createStyles(colors), [colors]);
+    const theme = useAppTheme();
+    const styles = useMemo(() => createStyles(theme), [theme]);
     const { width: screenW } = useWindowDimensions();
     const flyTarget = screenW + 100;
 
@@ -200,7 +224,9 @@ export const SwipeDeckCard = React.forwardRef<SwipeDeckCardHandle, SwipeDeckCard
             style={[StyleSheet.absoluteFill, styles.acceptOverlay, acceptOverlayStyle]}
           >
             <View style={styles.pillTopRight}>
-              <Text style={styles.pillAcceptText}>Accept</Text>
+              <Text variant="labelLarge" style={styles.pillAcceptText}>
+                Accept
+              </Text>
             </View>
           </Animated.View>
 
@@ -209,7 +235,9 @@ export const SwipeDeckCard = React.forwardRef<SwipeDeckCardHandle, SwipeDeckCard
             style={[StyleSheet.absoluteFill, styles.rejectOverlay, rejectOverlayStyle]}
           >
             <View style={styles.pillTopLeft}>
-              <Text style={styles.pillRejectText}>Reject</Text>
+              <Text variant="labelLarge" style={styles.pillRejectText}>
+                Reject
+              </Text>
             </View>
           </Animated.View>
         </Animated.View>
@@ -220,21 +248,23 @@ export const SwipeDeckCard = React.forwardRef<SwipeDeckCardHandle, SwipeDeckCard
 
 SwipeDeckCard.displayName = 'SwipeDeckCard';
 
-const createStyles = (_colors: Colors) =>
+const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     card: {
-      // Frame styling (bg/border/shadow) is the parent's responsibility.
+      backgroundColor: theme.colors.surfaceContainer,
+      borderColor: theme.colors.outlineVariant,
+      borderRadius: borderRadius.xl,
     },
     body: {
       // Lets taps reach the underlying editable fields.
     },
     acceptOverlay: {
-      backgroundColor: ACCEPT_OVERLAY,
-      borderRadius: borderRadius.lg,
+      backgroundColor: hexToRgba(theme.colors.primaryContainer, 0.45),
+      borderRadius: borderRadius.xl,
     },
     rejectOverlay: {
-      backgroundColor: REJECT_OVERLAY,
-      borderRadius: borderRadius.lg,
+      backgroundColor: hexToRgba(theme.colors.errorContainer, 0.45),
+      borderRadius: borderRadius.xl,
     },
     pillTopRight: {
       position: 'absolute',
@@ -244,8 +274,8 @@ const createStyles = (_colors: Colors) =>
       paddingVertical: spacing.xs,
       borderRadius: borderRadius.full,
       borderWidth: 2,
-      borderColor: 'rgba(52,199,89,0.9)',
-      backgroundColor: 'rgba(52,199,89,0.18)',
+      borderColor: theme.colors.primary,
+      backgroundColor: theme.colors.primaryContainer,
       transform: [{ rotate: '12deg' }],
     },
     pillTopLeft: {
@@ -256,18 +286,18 @@ const createStyles = (_colors: Colors) =>
       paddingVertical: spacing.xs,
       borderRadius: borderRadius.full,
       borderWidth: 2,
-      borderColor: 'rgba(255,71,87,0.9)',
-      backgroundColor: 'rgba(255,71,87,0.18)',
+      borderColor: theme.colors.error,
+      backgroundColor: theme.colors.errorContainer,
       transform: [{ rotate: '-12deg' }],
     },
     pillAcceptText: {
-      color: '#0E5A2A',
+      color: theme.colors.onPrimaryContainer,
       fontSize: typography.fontSize.md,
       fontWeight: typography.fontWeight.bold,
       letterSpacing: 1,
     },
     pillRejectText: {
-      color: '#7A1418',
+      color: theme.colors.onErrorContainer,
       fontSize: typography.fontSize.md,
       fontWeight: typography.fontWeight.bold,
       letterSpacing: 1,

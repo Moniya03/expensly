@@ -1,12 +1,16 @@
-import { useMemo, useState } from 'react';
-import { StyleSheet, Text, TextInput, View } from 'react-native';
-import { borderRadius, type Colors, spacing, typography, useColors } from '../../constants/theme';
+import { useMemo } from 'react';
+import { type StyleProp, StyleSheet, View, type ViewStyle } from 'react-native';
+import { HelperText, TextInput } from 'react-native-paper';
+import { type AppTheme, useAppTheme } from '../../constants/md3-theme';
+import { spacing } from '../../constants/theme';
 
-interface AmountInputProps {
+export interface AmountInputProps {
   value: string;
   onChangeValue: (value: string) => void;
   error?: string;
   integerOnly?: boolean;
+  label?: string;
+  containerStyle?: StyleProp<ViewStyle>;
 }
 
 export function AmountInput({
@@ -14,11 +18,11 @@ export function AmountInput({
   onChangeValue,
   error,
   integerOnly = false,
+  label = 'Amount',
+  containerStyle,
 }: AmountInputProps) {
-  const colors = useColors();
-  const styles = useMemo(() => createStyles(colors), [colors]);
-
-  const [isFocused, setIsFocused] = useState(false);
+  const theme = useAppTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
 
   const handleChange = (text: string) => {
     if (integerOnly) {
@@ -33,72 +37,39 @@ export function AmountInput({
     onChangeValue(cleaned);
   };
 
-  const getBorderColor = () => {
-    if (error) return colors.error;
-    if (isFocused) return colors.primary;
-    return colors.outlineVariant;
-  };
-
   return (
-    <View style={styles.container}>
-      <Text style={styles.label}>Amount</Text>
-      <View style={[styles.inputContainer, { borderColor: getBorderColor() }]}>
-        <Text style={styles.currency}>₹</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="0"
-          placeholderTextColor={colors.onSurfaceVariant}
-          value={value}
-          onChangeText={handleChange}
-          keyboardType={integerOnly ? 'number-pad' : 'decimal-pad'}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
-          selectionColor={colors.primary}
-          maxLength={10}
-        />
-      </View>
-      {error && <Text style={styles.error}>{error}</Text>}
+    <View style={[styles.container, containerStyle]}>
+      <TextInput
+        mode="outlined"
+        label={label}
+        placeholder="0"
+        value={value}
+        onChangeText={handleChange}
+        keyboardType={integerOnly ? 'number-pad' : 'decimal-pad'}
+        left={<TextInput.Affix text="₹" />}
+        error={Boolean(error)}
+        outlineColor={theme.colors.outlineVariant}
+        activeOutlineColor={theme.colors.primary}
+        textColor={theme.colors.onSurface}
+        placeholderTextColor={theme.colors.onSurfaceVariant}
+        style={styles.input}
+        maxLength={10}
+      />
+      {Boolean(error) && (
+        <HelperText type="error" visible={!!error}>
+          {error}
+        </HelperText>
+      )}
     </View>
   );
 }
 
-const createStyles = (colors: Colors) =>
+const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     container: {
       marginBottom: spacing.md,
     },
-    label: {
-      fontSize: typography.fontSize.sm,
-      fontWeight: typography.fontWeight.medium,
-      color: colors.onSurfaceVariant,
-      marginBottom: spacing.xs,
-    },
-    inputContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      backgroundColor: colors.surfaceContainer,
-      borderWidth: 1,
-      borderRadius: borderRadius.md,
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.md,
-    },
-    currency: {
-      fontSize: typography.fontSize.xxl,
-      fontWeight: typography.fontWeight.semiBold,
-      color: colors.secondary,
-      marginRight: spacing.sm,
-    },
     input: {
-      flex: 1,
-      fontSize: typography.fontSize.xxl,
-      fontWeight: typography.fontWeight.semiBold,
-      color: colors.onSurface,
-      fontFamily: typography.fontFamily.regular,
-      padding: 0,
-    },
-    error: {
-      fontSize: typography.fontSize.xs,
-      color: colors.error,
-      marginTop: spacing.xs,
+      backgroundColor: theme.colors.surfaceContainer,
     },
   });

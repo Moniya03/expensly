@@ -2,18 +2,18 @@ import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
+import { Image, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import {
-  ActivityIndicator,
-  Image,
-  Pressable,
-  ScrollView,
-  StyleSheet,
+  Button,
+  HelperText,
+  IconButton,
+  SegmentedButtons,
+  Surface,
   Text,
   TextInput,
-  View,
-} from 'react-native';
+} from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { borderRadius, type Colors, spacing, typography, useColors } from '../constants/theme';
+import { type AppTheme, borderRadius, spacing, typography, useAppTheme } from '../constants/theme';
 import { submitBugReport, submitFeedback, uploadBugAttachment } from '../services/support';
 
 type Mode = 'bug' | 'feedback';
@@ -23,8 +23,8 @@ const RATING_LABELS = ['Terrible', 'Okay', 'Good', 'Great', 'Loved it'];
 export default function SupportScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ mode?: string }>();
-  const colors = useColors();
-  const styles = useMemo(() => createStyles(colors), [colors]);
+  const theme = useAppTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
 
   const [mode, setMode] = useState<Mode>(params.mode === 'feedback' ? 'feedback' : 'bug');
   const [description, setDescription] = useState('');
@@ -91,169 +91,191 @@ export default function SupportScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Pressable style={styles.backButton} onPress={() => router.back()}>
-          <Ionicons name="chevron-back" size={22} color={colors.onSurface} />
-        </Pressable>
-        <Text style={styles.title}>Help & feedback</Text>
-      </View>
+    <Surface style={styles.root}>
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <IconButton
+            icon="arrow-left"
+            iconColor={theme.colors.onSurface}
+            containerColor={theme.colors.surfaceContainer}
+            size={20}
+            onPress={() => router.back()}
+            style={styles.backButton}
+          />
+          <Text variant="titleLarge" style={styles.title}>
+            Help & feedback
+          </Text>
+        </View>
 
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        {submitted ? (
-          <View style={styles.successWrap}>
-            <View style={styles.successIcon}>
-              <Ionicons name="checkmark" size={32} color={colors.onAccent} />
-            </View>
-            <Text style={styles.successTitle}>
-              {mode === 'bug' ? 'Report sent, thanks!' : 'Thanks for the feedback!'}
-            </Text>
-            <Text style={styles.successBody}>
-              {mode === 'bug'
-                ? 'Our team will look into it. You can keep using the app in the meantime.'
-                : 'Your input helps shape Expensly for the better.'}
-            </Text>
-            <Pressable style={styles.doneButton} onPress={() => router.back()}>
-              <Text style={styles.doneButtonText}>Done</Text>
-            </Pressable>
-          </View>
-        ) : (
-          <>
-            <View style={styles.segment}>
-              <Pressable
-                style={[styles.segmentButton, mode === 'bug' && styles.segmentActive]}
-                onPress={() => switchMode('bug')}
-              >
-                <Text style={[styles.segmentText, mode === 'bug' && styles.segmentTextActive]}>
-                  Report a bug
-                </Text>
-              </Pressable>
-              <Pressable
-                style={[styles.segmentButton, mode === 'feedback' && styles.segmentActive]}
-                onPress={() => switchMode('feedback')}
-              >
-                <Text style={[styles.segmentText, mode === 'feedback' && styles.segmentTextActive]}>
-                  Feedback
-                </Text>
-              </Pressable>
-            </View>
-
-            {mode === 'bug' ? (
-              <View style={styles.card}>
-                <Text style={styles.label}>What went wrong?</Text>
-                <TextInput
-                  style={styles.input}
-                  value={description}
-                  onChangeText={setDescription}
-                  placeholder="Describe the issue…"
-                  placeholderTextColor={colors.onSurfaceVariant}
-                  selectionColor={colors.primary}
-                  multiline
-                  textAlignVertical="top"
-                />
-
-                <Text style={styles.label}>Add proof (optional)</Text>
-                <Pressable style={styles.attachButton} onPress={pickAttachment}>
-                  {attachment ? (
-                    <View style={styles.attachPreview}>
-                      {attachment.uri.match(/\.(png|jpe?g|webp|gif)$/i) ? (
-                        <Image source={{ uri: attachment.uri }} style={styles.attachImage} />
-                      ) : (
-                        <View style={styles.videoIcon}>
-                          <Ionicons name="videocam" size={22} color={colors.onAccent} />
-                        </View>
-                      )}
-                      <Text style={styles.attachFileName}>Attached</Text>
-                      <Pressable onPress={() => setAttachment(null)} hitSlop={8}>
-                        <Ionicons name="close-circle" size={20} color={colors.error} />
-                      </Pressable>
-                    </View>
-                  ) : (
-                    <>
-                      <Ionicons name="image-outline" size={20} color={colors.primary} />
-                      <Text style={styles.attachText}>Photo or video</Text>
-                    </>
-                  )}
-                </Pressable>
+        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+          {submitted ? (
+            <View style={styles.successWrap}>
+              <View style={styles.successIcon}>
+                <Ionicons name="checkmark" size={32} color={theme.colors.onPrimaryContainer} />
               </View>
-            ) : (
-              <View style={styles.card}>
-                <Text style={styles.label}>How do you like Expensly?</Text>
-                <View style={styles.starsRow}>
-                  {[1, 2, 3, 4, 5].map((value) => (
-                    <Pressable key={value} onPress={() => setRating(value)} hitSlop={6}>
-                      <Ionicons
-                        name={value <= rating ? 'star' : 'star-outline'}
-                        size={34}
-                        color={value <= rating ? '#F5A623' : colors.outlineVariant}
-                      />
-                    </Pressable>
-                  ))}
-                </View>
-                <Text style={styles.ratingLabel}>{RATING_LABELS[rating - 1]}</Text>
+              <Text variant="headlineSmall" style={styles.successTitle}>
+                {mode === 'bug' ? 'Report sent, thanks!' : 'Thanks for the feedback!'}
+              </Text>
+              <Text variant="bodyMedium" style={styles.successBody}>
+                {mode === 'bug'
+                  ? 'Our team will look into it. You can keep using the app in the meantime.'
+                  : 'Your input helps shape Expensly for the better.'}
+              </Text>
+              <Button
+                mode="contained"
+                onPress={() => router.back()}
+                style={styles.doneButton}
+                contentStyle={styles.buttonContent}
+                labelStyle={styles.buttonLabel}
+              >
+                Done
+              </Button>
+            </View>
+          ) : (
+            <>
+              <SegmentedButtons
+                value={mode}
+                onValueChange={(val) => switchMode(val as Mode)}
+                buttons={[
+                  { value: 'bug', label: 'Report a bug' },
+                  { value: 'feedback', label: 'Feedback' },
+                ]}
+                style={styles.segment}
+              />
 
-                <Text style={styles.label}>
-                  {rating === 5 ? 'What did you love?' : 'How can we improve?'}
-                </Text>
-                <TextInput
-                  style={styles.input}
-                  value={message}
-                  onChangeText={setMessage}
-                  placeholder={rating === 5 ? 'Optional…' : 'Optional suggestions…'}
-                  placeholderTextColor={colors.onSurfaceVariant}
-                  selectionColor={colors.primary}
-                  multiline
-                  textAlignVertical="top"
-                />
-              </View>
-            )}
+              {mode === 'bug' ? (
+                <Surface elevation={1} style={styles.card}>
+                  <Text variant="labelLarge" style={styles.label}>
+                    What went wrong?
+                  </Text>
+                  <TextInput
+                    mode="outlined"
+                    value={description}
+                    onChangeText={setDescription}
+                    placeholder="Describe the issue…"
+                    placeholderTextColor={theme.colors.onSurfaceVariant}
+                    textColor={theme.colors.onSurface}
+                    outlineColor={theme.colors.outlineVariant}
+                    activeOutlineColor={theme.colors.primary}
+                    multiline
+                    numberOfLines={4}
+                    style={styles.input}
+                  />
 
-            {error ? <Text style={styles.errorText}>{error}</Text> : null}
-
-            <Pressable
-              style={[styles.submitButton, isSubmitting && { opacity: 0.6 }]}
-              onPress={handleSubmit}
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? (
-                <ActivityIndicator size="small" color={colors.onAccent} />
+                  <Text variant="labelLarge" style={styles.label}>
+                    Add proof (optional)
+                  </Text>
+                  <Pressable style={styles.attachButton} onPress={pickAttachment}>
+                    {attachment ? (
+                      <View style={styles.attachPreview}>
+                        {attachment.uri.match(/\.(png|jpe?g|webp|gif)$/i) ? (
+                          <Image source={{ uri: attachment.uri }} style={styles.attachImage} />
+                        ) : (
+                          <View style={styles.videoIcon}>
+                            <Ionicons name="videocam" size={22} color={theme.colors.onPrimary} />
+                          </View>
+                        )}
+                        <Text variant="bodyMedium" style={styles.attachFileName}>
+                          Attached
+                        </Text>
+                        <Pressable onPress={() => setAttachment(null)} hitSlop={8}>
+                          <Ionicons name="close-circle" size={20} color={theme.colors.error} />
+                        </Pressable>
+                      </View>
+                    ) : (
+                      <>
+                        <Ionicons name="image-outline" size={20} color={theme.colors.primary} />
+                        <Text variant="bodyMedium" style={styles.attachText}>
+                          Photo or video
+                        </Text>
+                      </>
+                    )}
+                  </Pressable>
+                </Surface>
               ) : (
-                <Text style={styles.submitText}>
-                  {mode === 'bug' ? 'Send report' : 'Send feedback'}
-                </Text>
+                <Surface elevation={1} style={styles.card}>
+                  <Text variant="labelLarge" style={styles.label}>
+                    How do you like Expensly?
+                  </Text>
+                  <View style={styles.starsRow}>
+                    {[1, 2, 3, 4, 5].map((value) => (
+                      <Pressable key={value} onPress={() => setRating(value)} hitSlop={6}>
+                        <Ionicons
+                          name={value <= rating ? 'star' : 'star-outline'}
+                          size={34}
+                          color={value <= rating ? '#F5A623' : theme.colors.outlineVariant}
+                        />
+                      </Pressable>
+                    ))}
+                  </View>
+                  <Text variant="bodyMedium" style={styles.ratingLabel}>
+                    {RATING_LABELS[rating - 1]}
+                  </Text>
+
+                  <Text variant="labelLarge" style={styles.label}>
+                    {rating === 5 ? 'What did you love?' : 'How can we improve?'}
+                  </Text>
+                  <TextInput
+                    mode="outlined"
+                    value={message}
+                    onChangeText={setMessage}
+                    placeholder={rating === 5 ? 'Optional…' : 'Optional suggestions…'}
+                    placeholderTextColor={theme.colors.onSurfaceVariant}
+                    textColor={theme.colors.onSurface}
+                    outlineColor={theme.colors.outlineVariant}
+                    activeOutlineColor={theme.colors.primary}
+                    multiline
+                    numberOfLines={4}
+                    style={styles.input}
+                  />
+                </Surface>
               )}
-            </Pressable>
-          </>
-        )}
-      </ScrollView>
-    </SafeAreaView>
+
+              {error ? (
+                <HelperText type="error" visible={Boolean(error)} style={styles.errorText}>
+                  {error}
+                </HelperText>
+              ) : null}
+
+              <Button
+                mode="contained"
+                loading={isSubmitting}
+                disabled={isSubmitting}
+                onPress={handleSubmit}
+                style={styles.submitButton}
+                contentStyle={styles.buttonContent}
+                labelStyle={styles.buttonLabel}
+              >
+                {mode === 'bug' ? 'Send report' : 'Send feedback'}
+              </Button>
+            </>
+          )}
+        </ScrollView>
+      </SafeAreaView>
+    </Surface>
   );
 }
 
-const createStyles = (colors: Colors) =>
+const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
+    root: {
+      flex: 1,
+      backgroundColor: theme.colors.surface,
+    },
     container: {
       flex: 1,
-      backgroundColor: colors.surface,
     },
     header: {
       flexDirection: 'row',
       alignItems: 'center',
       paddingHorizontal: spacing.md,
-      paddingVertical: spacing.md,
+      paddingVertical: spacing.sm,
     },
     backButton: {
-      width: 36,
-      height: 36,
-      borderRadius: 18,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: colors.surfaceContainer,
-      marginRight: spacing.sm,
+      marginRight: spacing.xs,
     },
     title: {
-      color: colors.onSurface,
-      fontSize: typography.fontSize.xl,
+      color: theme.colors.onSurface,
       fontWeight: typography.fontWeight.bold,
     },
     content: {
@@ -261,54 +283,23 @@ const createStyles = (colors: Colors) =>
       paddingBottom: spacing.xl,
     },
     segment: {
-      flexDirection: 'row',
-      backgroundColor: colors.surfaceContainer,
-      borderRadius: borderRadius.md,
-      padding: 4,
       marginBottom: spacing.lg,
     },
-    segmentButton: {
-      flex: 1,
-      minHeight: 42,
-      borderRadius: borderRadius.sm,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    segmentActive: {
-      backgroundColor: colors.surfaceContainerHigh,
-    },
-    segmentText: {
-      color: colors.onSurfaceVariant,
-      fontSize: typography.fontSize.sm,
-      fontWeight: typography.fontWeight.medium,
-    },
-    segmentTextActive: {
-      color: colors.onSurface,
-      fontWeight: typography.fontWeight.semiBold,
-    },
     card: {
-      backgroundColor: colors.surfaceContainer,
+      backgroundColor: theme.colors.surfaceContainer,
       borderRadius: borderRadius.lg,
       borderWidth: 1,
-      borderColor: colors.outlineVariant,
+      borderColor: theme.colors.outlineVariant,
       padding: spacing.lg,
     },
     label: {
-      color: colors.onSurfaceVariant,
-      fontSize: typography.fontSize.sm,
-      fontWeight: typography.fontWeight.medium,
+      color: theme.colors.onSurfaceVariant,
       marginBottom: spacing.sm,
       marginTop: spacing.md,
     },
     input: {
+      backgroundColor: theme.colors.surfaceContainerHigh,
       minHeight: 110,
-      backgroundColor: colors.surfaceContainerHigh,
-      borderWidth: 1,
-      borderColor: colors.outlineVariant,
-      borderRadius: borderRadius.md,
-      padding: spacing.md,
-      color: colors.onSurface,
-      fontSize: typography.fontSize.md,
     },
     attachButton: {
       flexDirection: 'row',
@@ -318,13 +309,12 @@ const createStyles = (colors: Colors) =>
       minHeight: 52,
       borderRadius: borderRadius.md,
       borderWidth: 1,
-      borderColor: colors.outlineVariant,
+      borderColor: theme.colors.outlineVariant,
       borderStyle: 'dashed',
-      backgroundColor: colors.surfaceContainerHigh,
+      backgroundColor: theme.colors.surfaceContainerHigh,
     },
     attachText: {
-      color: colors.primary,
-      fontSize: typography.fontSize.md,
+      color: theme.colors.primary,
       fontWeight: typography.fontWeight.medium,
     },
     attachPreview: {
@@ -341,13 +331,12 @@ const createStyles = (colors: Colors) =>
       width: 40,
       height: 40,
       borderRadius: borderRadius.sm,
-      backgroundColor: colors.primary,
+      backgroundColor: theme.colors.primary,
       alignItems: 'center',
       justifyContent: 'center',
     },
     attachFileName: {
-      color: colors.onSurface,
-      fontSize: typography.fontSize.sm,
+      color: theme.colors.onSurface,
       fontWeight: typography.fontWeight.medium,
     },
     starsRow: {
@@ -357,26 +346,22 @@ const createStyles = (colors: Colors) =>
       marginTop: spacing.sm,
     },
     ratingLabel: {
-      color: colors.onSurfaceVariant,
-      fontSize: typography.fontSize.sm,
+      color: theme.colors.onSurfaceVariant,
       textAlign: 'center',
       marginTop: spacing.sm,
     },
     errorText: {
-      color: colors.error,
-      fontSize: typography.fontSize.sm,
-      marginTop: spacing.md,
+      marginTop: spacing.sm,
+      paddingHorizontal: 0,
     },
     submitButton: {
-      minHeight: 52,
       borderRadius: borderRadius.md,
-      backgroundColor: colors.primary,
-      alignItems: 'center',
-      justifyContent: 'center',
       marginTop: spacing.lg,
     },
-    submitText: {
-      color: colors.onAccent,
+    buttonContent: {
+      minHeight: 50,
+    },
+    buttonLabel: {
       fontSize: typography.fontSize.md,
       fontWeight: typography.fontWeight.semiBold,
     },
@@ -388,20 +373,18 @@ const createStyles = (colors: Colors) =>
       width: 64,
       height: 64,
       borderRadius: 32,
-      backgroundColor: colors.secondary,
+      backgroundColor: theme.colors.primaryContainer,
       alignItems: 'center',
       justifyContent: 'center',
       marginBottom: spacing.lg,
     },
     successTitle: {
-      color: colors.onSurface,
-      fontSize: typography.fontSize.xl,
+      color: theme.colors.onSurface,
       fontWeight: typography.fontWeight.bold,
       textAlign: 'center',
     },
     successBody: {
-      color: colors.onSurfaceVariant,
-      fontSize: typography.fontSize.md,
+      color: theme.colors.onSurfaceVariant,
       textAlign: 'center',
       lineHeight: 22,
       marginTop: spacing.sm,
@@ -409,15 +392,6 @@ const createStyles = (colors: Colors) =>
     },
     doneButton: {
       alignSelf: 'stretch',
-      minHeight: 52,
       borderRadius: borderRadius.md,
-      backgroundColor: colors.primary,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    doneButtonText: {
-      color: colors.onAccent,
-      fontSize: typography.fontSize.md,
-      fontWeight: typography.fontWeight.semiBold,
     },
   });

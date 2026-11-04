@@ -1,14 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useMemo } from 'react';
-import {
-  ActivityIndicator,
-  Dimensions,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { Dimensions, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Text } from 'react-native-paper';
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -20,14 +14,20 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { FloatingParticles } from '../../components/ui/FloatingParticles';
 import { GlassmorphicCard } from '../../components/ui/GlassmorphicCard';
 import { GradientText } from '../../components/ui/GradientText';
-import { borderRadius, type Colors, spacing, typography, useColors } from '../../constants/theme';
+import {
+  type AppTheme,
+  borderRadius,
+  spacing,
+  typography,
+  useAppTheme,
+} from '../../constants/theme';
 import { useGoogleAuth } from '../../hooks/useGoogleAuth';
 
 const { width } = Dimensions.get('window');
 
 export default function WelcomeScreen() {
-  const colors = useColors();
-  const styles = useMemo(() => createStyles(colors), [colors]);
+  const theme = useAppTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const { signInWithGoogle, isLoading, error } = useGoogleAuth();
 
   // Pulsing animation for rings
@@ -78,12 +78,12 @@ export default function WelcomeScreen() {
         <Animated.View style={[styles.ring, styles.ringInner, innerRingStyle]} />
 
         <LinearGradient
-          colors={[colors.primary, colors.secondary]}
+          colors={[theme.colors.primary, theme.colors.secondary]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.coreButton}
         >
-          <Ionicons name="mic" size={42} color={colors.onSurface} />
+          <Ionicons name="mic" size={42} color={theme.colors.onSurface} />
         </LinearGradient>
       </View>
 
@@ -113,7 +113,7 @@ export default function WelcomeScreen() {
           disabled={isLoading}
         >
           {isLoading ? (
-            <ActivityIndicator size="small" color="#000000" />
+            <ActivityIndicator animating size="small" color="#000000" />
           ) : (
             <>
               <Ionicons name="logo-google" size={24} color="#000000" />
@@ -125,7 +125,7 @@ export default function WelcomeScreen() {
         {/* Error Message */}
         {error && (
           <View style={styles.errorContainer}>
-            <Ionicons name="alert-circle" size={16} color={colors.error} />
+            <Ionicons name="alert-circle" size={16} color={theme.colors.error} />
             <Text style={styles.errorText}>{error}</Text>
           </View>
         )}
@@ -143,11 +143,11 @@ export default function WelcomeScreen() {
   );
 }
 
-const createStyles = (colors: Colors) =>
+const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: colors.surface,
+      backgroundColor: theme.colors.surface,
       alignItems: 'center',
       justifyContent: 'space-between',
       paddingVertical: spacing.lg,
@@ -158,7 +158,7 @@ const createStyles = (colors: Colors) =>
       width: width * 1.5,
       height: width * 1.5,
       borderRadius: width * 0.75,
-      backgroundColor: `${colors.primary}0D`,
+      backgroundColor: `${theme.colors.primary}0D`,
       transform: [{ scale: 1.2 }],
     },
     heroSection: {
@@ -177,25 +177,25 @@ const createStyles = (colors: Colors) =>
       width: 240,
       height: 240,
       borderRadius: 120,
-      backgroundColor: `${colors.primary}0D`,
+      backgroundColor: `${theme.colors.primary}0D`,
       borderWidth: 1,
-      borderColor: `${colors.primary}1A`,
+      borderColor: `${theme.colors.primary}1A`,
     },
     ringMiddle: {
       width: 180,
       height: 180,
       borderRadius: 90,
-      backgroundColor: `${colors.primary}1A`,
+      backgroundColor: `${theme.colors.primary}1A`,
       borderWidth: 1,
-      borderColor: `${colors.primary}33`,
+      borderColor: `${theme.colors.primary}33`,
     },
     ringInner: {
       width: 120,
       height: 120,
       borderRadius: 60,
-      backgroundColor: `${colors.primary}33`,
+      backgroundColor: `${theme.colors.primary}33`,
       borderWidth: 1,
-      borderColor: `${colors.primary}4D`,
+      borderColor: `${theme.colors.primary}4D`,
     },
     coreButton: {
       width: 96,
@@ -203,7 +203,7 @@ const createStyles = (colors: Colors) =>
       borderRadius: 48,
       justifyContent: 'center',
       alignItems: 'center',
-      shadowColor: colors.primary,
+      shadowColor: theme.colors.primary,
       shadowOffset: { width: 0, height: 8 },
       shadowOpacity: 0.5,
       shadowRadius: 16,
@@ -220,7 +220,7 @@ const createStyles = (colors: Colors) =>
       borderRadius: 20,
     },
     badgeText: {
-      color: colors.primary,
+      color: theme.colors.primary,
       fontSize: typography.fontSize.sm,
       fontWeight: typography.fontWeight.semiBold,
       textTransform: 'lowercase',
@@ -229,7 +229,7 @@ const createStyles = (colors: Colors) =>
     title: {
       fontSize: typography.fontSize.xxxl + 4,
       fontWeight: typography.fontWeight.bold,
-      color: colors.onSurface,
+      color: theme.colors.onSurface,
       marginBottom: spacing.md,
       letterSpacing: -0.5,
     },
@@ -239,13 +239,13 @@ const createStyles = (colors: Colors) =>
     taglineWhite: {
       fontSize: typography.fontSize.xxl,
       fontWeight: typography.fontWeight.regular,
-      color: colors.onSurface,
+      color: theme.colors.onSurface,
       opacity: 0.9,
     },
     taglineHighlight: {
       fontSize: typography.fontSize.xxl,
       fontWeight: typography.fontWeight.semiBold,
-      color: colors.secondary,
+      color: theme.colors.secondary,
       marginTop: 4,
     },
     actionSection: {
@@ -258,50 +258,25 @@ const createStyles = (colors: Colors) =>
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: colors.onSurface,
+      backgroundColor: '#FFFFFF',
       width: '100%',
+      minHeight: 52,
       paddingVertical: spacing.md,
-      borderRadius: borderRadius.md,
+      borderRadius: 26,
       shadowColor: '#000',
-      shadowOffset: { width: 0, height: 4 },
+      shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.1,
-      shadowRadius: 12,
-      elevation: 4,
+      shadowRadius: 8,
+      elevation: 3,
       marginBottom: spacing.xl,
     },
     googleButtonDisabled: {
       opacity: 0.6,
       shadowOpacity: 0.05,
-      elevation: 2,
-    },
-    signOutButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      width: '100%',
-      paddingVertical: spacing.sm,
-      borderRadius: borderRadius.md,
-      borderWidth: 1,
-      borderColor: `${colors.error}80`,
-      marginBottom: spacing.md,
-    },
-    signOutButtonDisabled: {
-      opacity: 0.6,
-    },
-    signOutButtonText: {
-      color: colors.error,
-      fontSize: typography.fontSize.md,
-      fontWeight: typography.fontWeight.semiBold,
-      marginLeft: spacing.xs,
-    },
-    helperText: {
-      color: colors.onSurfaceVariant,
-      fontSize: typography.fontSize.sm,
-      marginBottom: spacing.lg,
-      alignSelf: 'flex-start',
+      elevation: 1,
     },
     googleButtonText: {
-      color: colors.surface,
+      color: '#000000',
       fontSize: typography.fontSize.lg,
       fontWeight: typography.fontWeight.semiBold,
       marginLeft: 12,
@@ -309,16 +284,16 @@ const createStyles = (colors: Colors) =>
     errorContainer: {
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: `${colors.error}15`,
+      backgroundColor: `${theme.colors.error}15`,
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.sm,
       borderRadius: borderRadius.sm,
       marginBottom: spacing.lg,
       borderWidth: 1,
-      borderColor: `${colors.error}30`,
+      borderColor: `${theme.colors.error}30`,
     },
     errorText: {
-      color: colors.error,
+      color: theme.colors.error,
       fontSize: typography.fontSize.sm,
       marginLeft: spacing.xs,
       flex: 1,
@@ -327,16 +302,17 @@ const createStyles = (colors: Colors) =>
       alignItems: 'center',
     },
     footerText: {
-      color: '#6b7280',
+      color: theme.colors.onSurfaceVariant,
       fontSize: 13,
       marginBottom: spacing.sm,
     },
     footerLink: {
-      color: '#9ca3af',
+      color: theme.colors.onSurfaceVariant,
       textDecorationLine: 'underline',
+      fontWeight: typography.fontWeight.medium,
     },
     copyrightText: {
-      color: '#4b5563',
+      color: theme.colors.outline,
       fontSize: typography.fontSize.xs,
     },
   });

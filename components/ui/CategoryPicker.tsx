@@ -1,75 +1,77 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import type React from 'react';
 import { useMemo } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { Chip, HelperText, Text } from 'react-native-paper';
 import { categoryList } from '../../constants/categories';
-import { borderRadius, type Colors, spacing, typography, useColors } from '../../constants/theme';
+import { type AppTheme, spacing, typography, useAppTheme } from '../../constants/theme';
 import type { Category } from '../../types';
 
-interface CategoryPickerProps {
+export interface CategoryPickerProps {
   selectedCategory: Category | null;
   onSelectCategory: (category: Category) => void;
   error?: string;
 }
 
 export function CategoryPicker({ selectedCategory, onSelectCategory, error }: CategoryPickerProps) {
-  const colors = useColors();
-  const styles = useMemo(() => createStyles(colors), [colors]);
+  const theme = useAppTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
 
   return (
     <View style={styles.container}>
       <Text style={styles.label}>Category</Text>
-      <View style={styles.grid}>
-        {categoryList.map((category) => (
-          <TouchableOpacity
-            key={category.id}
-            style={[
-              styles.categoryButton,
-              selectedCategory === category.id && styles.categoryButtonSelected,
-              {
-                borderColor:
-                  selectedCategory === category.id ? category.color : colors.outlineVariant,
-              },
-            ]}
-            onPress={() => onSelectCategory(category.id)}
-            activeOpacity={0.7}
-          >
-            <View
+      <View style={styles.chipsContainer}>
+        {categoryList.map((category) => {
+          const isSelected = selectedCategory === category.id;
+
+          return (
+            <Chip
+              key={category.id}
+              mode={isSelected ? 'flat' : 'outlined'}
+              selected={isSelected}
+              showSelectedCheck={false}
+              onPress={() => onSelectCategory(category.id)}
+              accessibilityLabel={category.label}
+              icon={({ size }) => (
+                <MaterialCommunityIcons
+                  name={
+                    category.iconName as React.ComponentProps<typeof MaterialCommunityIcons>['name']
+                  }
+                  size={size}
+                  color={isSelected ? category.color : theme.colors.onSurfaceVariant}
+                />
+              )}
               style={[
-                styles.iconContainer,
-                {
-                  backgroundColor: category.iconBackgroundColor ?? `${category.iconColor}18`,
-                },
+                styles.chip,
+                isSelected
+                  ? {
+                      backgroundColor: theme.colors.secondaryContainer,
+                      borderColor: category.color,
+                    }
+                  : styles.chipUnselected,
               ]}
-            >
-              <MaterialCommunityIcons
-                name={
-                  category.iconName as React.ComponentProps<typeof MaterialCommunityIcons>['name']
-                }
-                size={22}
-                color={category.iconColor}
-              />
-            </View>
-            <Text
-              numberOfLines={1}
-              adjustsFontSizeToFit
-              minimumFontScale={0.8}
-              style={[
-                styles.categoryLabel,
-                selectedCategory === category.id && { color: category.color },
+              textStyle={[
+                styles.chipText,
+                isSelected
+                  ? { color: category.color, fontWeight: '600' }
+                  : { color: theme.colors.onSurfaceVariant },
               ]}
             >
               {category.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
+            </Chip>
+          );
+        })}
       </View>
-      {error && <Text style={styles.error}>{error}</Text>}
+      {Boolean(error) && (
+        <HelperText type="error" visible={!!error}>
+          {error}
+        </HelperText>
+      )}
     </View>
   );
 }
 
-const createStyles = (colors: Colors) =>
+const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     container: {
       marginBottom: spacing.md,
@@ -77,46 +79,22 @@ const createStyles = (colors: Colors) =>
     label: {
       fontSize: typography.fontSize.sm,
       fontWeight: typography.fontWeight.medium,
-      color: colors.onSurfaceVariant,
+      color: theme.colors.onSurfaceVariant,
       marginBottom: spacing.sm,
     },
-    grid: {
+    chipsContainer: {
       flexDirection: 'row',
       flexWrap: 'wrap',
       gap: spacing.sm,
     },
-    categoryButton: {
-      flexBasis: '21%',
-      flexGrow: 1,
-      minHeight: 78,
-      backgroundColor: colors.surfaceContainer,
-      borderRadius: borderRadius.md,
+    chip: {
       borderWidth: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      paddingVertical: spacing.sm,
-      paddingHorizontal: spacing.xs,
     },
-    categoryButtonSelected: {
-      backgroundColor: colors.surfaceContainerHigh,
+    chipUnselected: {
+      backgroundColor: theme.colors.surfaceContainer,
+      borderColor: theme.colors.outlineVariant,
     },
-    iconContainer: {
-      width: 34,
-      height: 34,
-      borderRadius: borderRadius.full,
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginBottom: spacing.xs,
-    },
-    categoryLabel: {
-      fontSize: typography.fontSize.xs,
-      fontWeight: typography.fontWeight.medium,
-      color: colors.onSurfaceVariant,
-      textAlign: 'center',
-    },
-    error: {
-      fontSize: typography.fontSize.xs,
-      color: colors.error,
-      marginTop: spacing.xs,
+    chipText: {
+      fontSize: typography.fontSize.sm,
     },
   });

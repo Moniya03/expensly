@@ -4,7 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Text, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { ThemeProvider, useColors, useThemeMode } from '../constants/theme';
+import { MD3ThemeProvider, useColors, useThemeMode } from '../constants/theme';
 import { configureGoogleSignIn } from '../hooks/useGoogleAuth';
 import { useAuthStore } from '../stores/authStore';
 import { consumeOnboardingReplay, shouldReplayOnboarding } from '../utils/devOnboardingReplay';
@@ -146,9 +146,9 @@ function RootLayoutNav() {
 export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
+      <MD3ThemeProvider>
         <ThemedApp />
-      </ThemeProvider>
+      </MD3ThemeProvider>
     </QueryClientProvider>
   );
 }

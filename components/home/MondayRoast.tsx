@@ -1,15 +1,35 @@
 import { useMemo } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import { borderRadius, type Colors, spacing, typography, useColors } from '../../constants/theme';
+import { StyleSheet, View } from 'react-native';
+import { Surface, Text } from 'react-native-paper';
+import {
+  type AppTheme,
+  borderRadius,
+  spacing,
+  typography,
+  useAppTheme,
+} from '../../constants/theme';
 
 interface MondayRoastProps {
   roastText: string;
   isVisible: boolean;
 }
 
+function hexToRgba(color: string, alpha: number): string {
+  if (color.startsWith('#')) {
+    const raw = color.slice(1);
+    if (raw.length === 6) {
+      const r = Number.parseInt(raw.slice(0, 2), 16);
+      const g = Number.parseInt(raw.slice(2, 4), 16);
+      const b = Number.parseInt(raw.slice(4, 6), 16);
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+  }
+  return color;
+}
+
 export default function MondayRoast({ roastText, isVisible }: MondayRoastProps) {
-  const colors = useColors();
-  const styles = useMemo(() => createStyles(colors), [colors]);
+  const theme = useAppTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
 
   if (!isVisible) {
     return null;
@@ -25,16 +45,20 @@ export default function MondayRoast({ roastText, isVisible }: MondayRoastProps) 
 
       <View style={styles.bubbleWrap}>
         <View style={styles.bubbleTail} />
-        <View style={styles.bubble}>
-          <Text style={styles.eyebrow}>AI ROAST</Text>
-          <Text style={styles.roastText}>{roastText}</Text>
-        </View>
+        <Surface elevation={1} style={styles.bubble}>
+          <Text variant="labelSmall" style={styles.eyebrow}>
+            AI ROAST
+          </Text>
+          <Text variant="bodyMedium" style={styles.roastText}>
+            {roastText}
+          </Text>
+        </Surface>
       </View>
     </View>
   );
 }
 
-const createStyles = (colors: Colors) =>
+const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     container: {
       flexDirection: 'row',
@@ -49,11 +73,11 @@ const createStyles = (colors: Colors) =>
       width: 42,
       height: 42,
       borderRadius: borderRadius.full,
-      backgroundColor: 'rgba(26, 107, 255, 0.14)',
+      backgroundColor: hexToRgba(theme.colors.primary, 0.14),
       alignItems: 'center',
       justifyContent: 'center',
       borderWidth: 1,
-      borderColor: 'rgba(26, 107, 255, 0.22)',
+      borderColor: hexToRgba(theme.colors.primary, 0.22),
     },
     badgeText: {
       fontSize: 22,
@@ -69,36 +93,30 @@ const createStyles = (colors: Colors) =>
       top: 18,
       width: 12,
       height: 12,
-      backgroundColor: colors.surfaceContainerHigh,
+      backgroundColor: theme.colors.surfaceContainerHigh,
       borderLeftWidth: 1,
       borderBottomWidth: 1,
-      borderColor: colors.outlineVariant,
+      borderColor: theme.colors.outlineVariant,
       transform: [{ rotate: '45deg' }],
+      zIndex: 2,
     },
     bubble: {
-      backgroundColor: colors.surfaceContainerHigh,
+      backgroundColor: theme.colors.surfaceContainerHigh,
       borderWidth: 1,
-      borderColor: colors.outlineVariant,
+      borderColor: theme.colors.outlineVariant,
       borderRadius: borderRadius.xl,
       paddingVertical: spacing.md,
       paddingHorizontal: spacing.md,
       gap: spacing.xs,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 6 },
-      shadowOpacity: 0.16,
-      shadowRadius: 12,
-      elevation: 2,
     },
     eyebrow: {
-      fontSize: 10,
       fontWeight: typography.fontWeight.bold,
-      color: '#8B9CC7',
+      color: theme.colors.primary,
       letterSpacing: 1,
     },
     roastText: {
-      fontSize: typography.fontSize.sm,
       fontWeight: typography.fontWeight.medium,
-      color: colors.onSurface,
+      color: theme.colors.onSurface,
       lineHeight: typography.lineHeight.relaxed * typography.fontSize.sm,
     },
   });

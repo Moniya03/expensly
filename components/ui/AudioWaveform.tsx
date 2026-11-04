@@ -9,7 +9,7 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
-import { borderRadius, useColors } from '../../constants/theme';
+import { borderRadius, useAppTheme } from '../../constants/theme';
 
 interface AudioWaveformProps {
   isActive: boolean;
@@ -27,6 +27,7 @@ const AnimatedBar: React.FC<{
   index: number;
 }> = ({ isActive, delay, index }) => {
   const height = useSharedValue(BAR_MIN_HEIGHT);
+  const theme = useAppTheme();
 
   useEffect(() => {
     if (isActive) {
@@ -49,23 +50,21 @@ const AnimatedBar: React.FC<{
       }, delay);
 
       return () => clearTimeout(timer);
-    } else {
-      // Shrink to minimum height when not active
-      height.value = withTiming(BAR_MIN_HEIGHT, {
-        duration: 300,
-        easing: Easing.out(Easing.ease),
-      });
     }
-  }, [isActive, delay]);
 
-  const colors = useColors();
+    // Shrink to minimum height when not active
+    height.value = withTiming(BAR_MIN_HEIGHT, {
+      duration: 300,
+      easing: Easing.out(Easing.ease),
+    });
+  }, [isActive, delay, height]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     height: height.value,
   }));
 
   // Alternate colors to create gradient effect across bars
-  const barColor = index % 2 === 0 ? colors.primary : colors.secondary;
+  const barColor = index % 2 === 0 ? theme.colors.primary : theme.colors.secondary;
 
   return <Animated.View style={[styles.bar, { backgroundColor: barColor }, animatedStyle]} />;
 };

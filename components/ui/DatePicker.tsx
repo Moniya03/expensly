@@ -13,13 +13,20 @@ import {
   UIManager,
   View,
 } from 'react-native';
-import { borderRadius, type Colors, spacing, typography, useColors } from '../../constants/theme';
+import { Button } from 'react-native-paper';
+import {
+  type AppTheme,
+  borderRadius,
+  spacing,
+  typography,
+  useAppTheme,
+} from '../../constants/theme';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
-interface DatePickerProps {
+export interface DatePickerProps {
   value: Date;
   onChange: (date: Date) => void;
   error?: string;
@@ -34,8 +41,8 @@ export function DatePicker({
   allowFutureDates = false,
   inlineYearScroller = false,
 }: DatePickerProps) {
-  const colors = useColors();
-  const styles = useMemo(() => createStyles(colors), [colors]);
+  const theme = useAppTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
 
   const [showCalendar, setShowCalendar] = useState(false);
   const [showYearScroller, setShowYearScroller] = useState(false);
@@ -231,65 +238,75 @@ export function DatePicker({
     );
   };
 
+  const isTodaySelected = isToday(value);
+  const isYesterdaySelected = isYesterday(value);
+  const isCustomSelected = !isTodaySelected && !isYesterdaySelected;
+
   return (
     <View style={styles.container}>
       <Text style={styles.label}>Date</Text>
 
       {/* Quick option buttons */}
       <View style={styles.buttonRow}>
-        <TouchableOpacity
-          style={[
-            styles.button,
-            isToday(value) && styles.buttonSelected,
-            {
-              borderColor: isToday(value) ? colors.primary : colors.outlineVariant,
-            },
-          ]}
+        <Button
+          mode={isTodaySelected ? 'contained-tonal' : 'outlined'}
+          compact
           onPress={handleToday}
-          activeOpacity={0.7}
-        >
-          <Text style={[styles.buttonText, isToday(value) && { color: colors.primary }]}>
-            Today
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
           style={[
             styles.button,
-            isYesterday(value) && styles.buttonSelected,
             {
-              borderColor: isYesterday(value) ? colors.primary : colors.outlineVariant,
+              borderColor: isTodaySelected ? theme.colors.primary : theme.colors.outlineVariant,
             },
           ]}
+          buttonColor={
+            isTodaySelected ? theme.colors.surfaceContainerHigh : theme.colors.surfaceContainer
+          }
+          textColor={isTodaySelected ? theme.colors.primary : theme.colors.onSurfaceVariant}
+          contentStyle={styles.buttonContent}
+          labelStyle={styles.buttonLabel}
+        >
+          Today
+        </Button>
+
+        <Button
+          mode={isYesterdaySelected ? 'contained-tonal' : 'outlined'}
+          compact
           onPress={handleYesterday}
-          activeOpacity={0.7}
-        >
-          <Text style={[styles.buttonText, isYesterday(value) && { color: colors.primary }]}>
-            Yesterday
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
           style={[
             styles.button,
-            !isToday(value) && !isYesterday(value) && styles.buttonSelected,
             {
-              borderColor:
-                !isToday(value) && !isYesterday(value) ? colors.primary : colors.outlineVariant,
+              borderColor: isYesterdaySelected ? theme.colors.primary : theme.colors.outlineVariant,
             },
           ]}
-          onPress={handlePickDate}
-          activeOpacity={0.7}
+          buttonColor={
+            isYesterdaySelected ? theme.colors.surfaceContainerHigh : theme.colors.surfaceContainer
+          }
+          textColor={isYesterdaySelected ? theme.colors.primary : theme.colors.onSurfaceVariant}
+          contentStyle={styles.buttonContent}
+          labelStyle={styles.buttonLabel}
         >
-          <Text
-            style={[
-              styles.buttonText,
-              !isToday(value) && !isYesterday(value) && { color: colors.primary },
-            ]}
-          >
-            Pick Date
-          </Text>
-        </TouchableOpacity>
+          Yesterday
+        </Button>
+
+        <Button
+          mode={isCustomSelected ? 'contained-tonal' : 'outlined'}
+          compact
+          onPress={handlePickDate}
+          style={[
+            styles.button,
+            {
+              borderColor: isCustomSelected ? theme.colors.primary : theme.colors.outlineVariant,
+            },
+          ]}
+          buttonColor={
+            isCustomSelected ? theme.colors.surfaceContainerHigh : theme.colors.surfaceContainer
+          }
+          textColor={isCustomSelected ? theme.colors.primary : theme.colors.onSurfaceVariant}
+          contentStyle={styles.buttonContent}
+          labelStyle={styles.buttonLabel}
+        >
+          Pick Date
+        </Button>
       </View>
 
       {/* Selected date display */}
@@ -420,20 +437,25 @@ export function DatePicker({
 
             {/* Action buttons */}
             <View style={styles.actionButtons}>
-              <TouchableOpacity
+              <Button
+                mode="outlined"
                 style={[styles.actionButton, styles.cancelButton]}
+                textColor={theme.colors.onSurfaceVariant}
+                labelStyle={styles.actionButtonLabel}
                 onPress={handleCloseCalendar}
-                activeOpacity={0.7}
               >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
+                Cancel
+              </Button>
+              <Button
+                mode="contained"
                 style={[styles.actionButton, styles.confirmButton]}
+                buttonColor={theme.colors.primary}
+                textColor={theme.colors.onPrimary}
+                labelStyle={styles.actionButtonLabel}
                 onPress={handleConfirmDate}
-                activeOpacity={0.7}
               >
-                <Text style={styles.confirmButtonText}>Done</Text>
-              </TouchableOpacity>
+                Done
+              </Button>
             </View>
           </Pressable>
         </Pressable>
@@ -442,7 +464,7 @@ export function DatePicker({
   );
 }
 
-const createStyles = (colors: Colors) =>
+const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     container: {
       marginBottom: spacing.md,
@@ -450,7 +472,7 @@ const createStyles = (colors: Colors) =>
     label: {
       fontSize: typography.fontSize.sm,
       fontWeight: typography.fontWeight.medium,
-      color: colors.onSurfaceVariant,
+      color: theme.colors.onSurfaceVariant,
       marginBottom: spacing.sm,
     },
     buttonRow: {
@@ -459,50 +481,48 @@ const createStyles = (colors: Colors) =>
     },
     button: {
       flex: 1,
-      backgroundColor: colors.surfaceContainer,
       borderRadius: borderRadius.md,
       borderWidth: 1,
-      paddingVertical: spacing.md,
-      justifyContent: 'center',
-      alignItems: 'center',
     },
-    buttonSelected: {
-      backgroundColor: colors.surfaceContainerHigh,
+    buttonContent: {
+      height: 42,
+      paddingHorizontal: spacing.xs,
     },
-    buttonText: {
+    buttonLabel: {
       fontSize: typography.fontSize.sm,
       fontWeight: typography.fontWeight.medium,
-      color: colors.onSurfaceVariant,
+      marginHorizontal: 0,
+      marginVertical: 0,
     },
     selectedDate: {
       fontSize: typography.fontSize.md,
       fontWeight: typography.fontWeight.medium,
-      color: colors.onSurface,
+      color: theme.colors.onSurface,
       marginTop: spacing.md,
       textAlign: 'center',
     },
     error: {
       fontSize: typography.fontSize.xs,
-      color: colors.error,
+      color: theme.colors.error,
       marginTop: spacing.xs,
     },
 
     // Modal styles
     modalOverlay: {
       flex: 1,
-      backgroundColor: 'rgba(0, 0, 0, 0.75)',
+      backgroundColor: theme.colors.backdrop,
       justifyContent: 'center',
       alignItems: 'center',
       padding: spacing.lg,
     },
     modalContent: {
-      backgroundColor: colors.surfaceContainerHigh,
+      backgroundColor: theme.colors.surfaceContainerHigh,
       borderRadius: borderRadius.lg,
       padding: spacing.lg,
       width: '100%',
       maxWidth: 400,
       borderWidth: 1,
-      borderColor: colors.outlineVariant,
+      borderColor: theme.colors.outlineVariant,
     },
 
     // Calendar header
@@ -517,18 +537,18 @@ const createStyles = (colors: Colors) =>
       height: 40,
       justifyContent: 'center',
       alignItems: 'center',
-      backgroundColor: colors.surfaceContainer,
+      backgroundColor: theme.colors.surfaceContainer,
       borderRadius: borderRadius.sm,
     },
     navButtonText: {
       fontSize: typography.fontSize.xxl,
       fontWeight: typography.fontWeight.bold,
-      color: colors.onSurface,
+      color: theme.colors.onSurface,
     },
     monthYear: {
       fontSize: typography.fontSize.lg,
       fontWeight: typography.fontWeight.semiBold,
-      color: colors.onSurface,
+      color: theme.colors.onSurface,
     },
     monthYearButton: {
       alignItems: 'center',
@@ -538,7 +558,7 @@ const createStyles = (colors: Colors) =>
     },
     monthYearHint: {
       fontSize: typography.fontSize.xs,
-      color: colors.onSurfaceVariant,
+      color: theme.colors.onSurfaceVariant,
     },
 
     // Weekday headers
@@ -554,7 +574,7 @@ const createStyles = (colors: Colors) =>
     weekDayText: {
       fontSize: typography.fontSize.xs,
       fontWeight: typography.fontWeight.medium,
-      color: colors.onSurfaceVariant,
+      color: theme.colors.onSurfaceVariant,
     },
 
     // Calendar grid
@@ -575,16 +595,16 @@ const createStyles = (colors: Colors) =>
       paddingVertical: spacing.xs,
     },
     yearItem: {
-      backgroundColor: colors.surfaceContainer,
+      backgroundColor: theme.colors.surfaceContainer,
       borderRadius: borderRadius.md,
       borderWidth: 1,
-      borderColor: colors.outlineVariant,
+      borderColor: theme.colors.outlineVariant,
       paddingVertical: spacing.md,
       paddingHorizontal: spacing.md,
     },
     yearItemSelected: {
-      backgroundColor: colors.surfaceContainerHigh,
-      borderColor: colors.primary,
+      backgroundColor: theme.colors.surfaceContainerHigh,
+      borderColor: theme.colors.primary,
     },
     yearItemDisabled: {
       opacity: 0.35,
@@ -592,14 +612,14 @@ const createStyles = (colors: Colors) =>
     yearItemText: {
       fontSize: typography.fontSize.md,
       fontWeight: typography.fontWeight.medium,
-      color: colors.onSurface,
+      color: theme.colors.onSurface,
       textAlign: 'center',
     },
     yearItemTextSelected: {
-      color: colors.primary,
+      color: theme.colors.primary,
     },
     yearItemTextDisabled: {
-      color: colors.onSurfaceVariant,
+      color: theme.colors.onSurfaceVariant,
     },
     dayCell: {
       width: `${100 / 7}%`,
@@ -609,7 +629,7 @@ const createStyles = (colors: Colors) =>
       padding: spacing.xs,
     },
     dayCellSelected: {
-      backgroundColor: colors.primary,
+      backgroundColor: theme.colors.primary,
       borderRadius: borderRadius.sm,
     },
     dayCellDisabled: {
@@ -618,14 +638,14 @@ const createStyles = (colors: Colors) =>
     dayText: {
       fontSize: typography.fontSize.sm,
       fontWeight: typography.fontWeight.medium,
-      color: colors.onSurface,
+      color: theme.colors.onSurface,
     },
     dayTextSelected: {
-      color: colors.onAccent,
+      color: theme.colors.onPrimary,
       fontWeight: typography.fontWeight.bold,
     },
     dayTextDisabled: {
-      color: colors.onSurfaceVariant,
+      color: theme.colors.onSurfaceVariant,
     },
 
     // Action buttons
@@ -635,27 +655,19 @@ const createStyles = (colors: Colors) =>
     },
     actionButton: {
       flex: 1,
-      paddingVertical: spacing.md,
       borderRadius: borderRadius.md,
-      justifyContent: 'center',
-      alignItems: 'center',
     },
     cancelButton: {
-      backgroundColor: colors.surfaceContainer,
+      backgroundColor: theme.colors.surfaceContainer,
       borderWidth: 1,
-      borderColor: colors.outlineVariant,
-    },
-    cancelButtonText: {
-      fontSize: typography.fontSize.md,
-      fontWeight: typography.fontWeight.medium,
-      color: colors.onSurfaceVariant,
+      borderColor: theme.colors.outlineVariant,
     },
     confirmButton: {
-      backgroundColor: colors.primary,
+      backgroundColor: theme.colors.primary,
     },
-    confirmButtonText: {
+    actionButtonLabel: {
       fontSize: typography.fontSize.md,
       fontWeight: typography.fontWeight.semiBold,
-      color: '#FFFFFF',
+      marginVertical: spacing.xs,
     },
   });

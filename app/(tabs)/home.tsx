@@ -1,10 +1,17 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useMemo } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Button, Surface, Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { HeroBudgetCard, RecentTransactions } from '../../components/home';
 import { FloatingParticles } from '../../components/ui/FloatingParticles';
-import { borderRadius, type Colors, spacing, typography, useColors } from '../../constants/theme';
+import {
+  type AppTheme,
+  borderRadius,
+  spacing,
+  typography,
+  useAppTheme,
+} from '../../constants/theme';
 import { useMonthlyTransactions, useRecentTransactions } from '../../hooks/useTransactions';
 import { useAuthStore } from '../../stores/authStore';
 import { getGreetingWithEmoji, parseLocalDate } from '../../utils/date';
@@ -12,8 +19,8 @@ import { getGreetingWithEmoji, parseLocalDate } from '../../utils/date';
 const HOME_DIAGNOSTIC_MODE = false;
 
 export default function HomeScreen() {
-  const colors = useColors();
-  const styles = useMemo(() => createStyles(colors), [colors]);
+  const theme = useAppTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const router = useRouter();
   const { profile, session } = useAuthStore();
   const { data: recentTransactions = [], isLoading: transactionsLoading } =
@@ -75,104 +82,142 @@ export default function HomeScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#1A6BFF" />
-        </View>
-      </SafeAreaView>
+      <Surface style={styles.screenSurface}>
+        <SafeAreaView style={styles.container}>
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={theme.colors.primary} />
+          </View>
+        </SafeAreaView>
+      </Surface>
     );
   }
 
   if (HOME_DIAGNOSTIC_MODE) {
     return (
+      <Surface style={styles.screenSurface}>
+        <SafeAreaView style={styles.container} edges={['top']}>
+          <ScrollView
+            style={styles.scrollView}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={styles.greetingWrap}>
+              <Text variant="headlineSmall" style={styles.greetingText}>
+                {greeting.greeting} {greeting.emoji}, {displayName}!
+              </Text>
+            </View>
+
+            <Surface style={styles.diagnosticCard}>
+              <Text style={styles.diagnosticEyebrow}>SAFE MODE</Text>
+              <Text variant="titleLarge" style={styles.diagnosticTitle}>
+                Home loaded without animated UI
+              </Text>
+              <Text variant="bodyMedium" style={styles.diagnosticBody}>
+                Google sign-in and data fetch completed.
+              </Text>
+              <View style={styles.diagnosticStats}>
+                <Text variant="bodyMedium" style={styles.diagnosticStat}>
+                  Recent items: {recentTransactions.length}
+                </Text>
+                <Text variant="bodyMedium" style={styles.diagnosticStat}>
+                  Month items: {monthlyTransactions.length}
+                </Text>
+                <Text variant="bodyMedium" style={styles.diagnosticStat}>
+                  Spent: ₹{spent}
+                </Text>
+                <Text variant="bodyMedium" style={styles.diagnosticStat}>
+                  Budget: ₹{budget}
+                </Text>
+              </View>
+              <Text variant="bodySmall" style={styles.diagnosticHint}>
+                Next step: re-enable RecentTransactions, then HeroBudgetCard, then
+                FloatingParticles.
+              </Text>
+            </Surface>
+          </ScrollView>
+        </SafeAreaView>
+      </Surface>
+    );
+  }
+
+  return (
+    <Surface style={styles.screenSurface}>
       <SafeAreaView style={styles.container} edges={['top']}>
+        <View style={styles.atmosphere} pointerEvents="none">
+          <FloatingParticles count={6} />
+        </View>
+
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.greetingWrap}>
-            <Text style={styles.greetingText}>
+            <Text variant="headlineSmall" style={styles.greetingText}>
               {greeting.greeting} {greeting.emoji}, {displayName}!
             </Text>
           </View>
 
-          <View style={styles.diagnosticCard}>
-            <Text style={styles.diagnosticEyebrow}>SAFE MODE</Text>
-            <Text style={styles.diagnosticTitle}>Home loaded without animated UI</Text>
-            <Text style={styles.diagnosticBody}>Google sign-in and data fetch completed.</Text>
-            <View style={styles.diagnosticStats}>
-              <Text style={styles.diagnosticStat}>Recent items: {recentTransactions.length}</Text>
-              <Text style={styles.diagnosticStat}>Month items: {monthlyTransactions.length}</Text>
-              <Text style={styles.diagnosticStat}>Spent: ₹{spent}</Text>
-              <Text style={styles.diagnosticStat}>Budget: ₹{budget}</Text>
-            </View>
-            <Text style={styles.diagnosticHint}>
-              Next step: re-enable RecentTransactions, then HeroBudgetCard, then FloatingParticles.
-            </Text>
+          <View style={styles.heroWrap}>
+            <HeroBudgetCard
+              spent={spent}
+              budget={budget}
+              remaining={remaining}
+              todaySpent={todaySpent}
+              weekSpent={weekSpent}
+              onPress={() => router.push('/insights/month' as never)}
+            />
+          </View>
+
+          <View style={styles.recentWrap}>
+            <RecentTransactions
+              transactions={recentTransactions}
+              onSeeAll={() => router.push('/(tabs)/history' as never)}
+            />
           </View>
         </ScrollView>
-      </SafeAreaView>
-    );
-  }
 
-  return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.atmosphere} pointerEvents="none">
-        <FloatingParticles count={6} />
-      </View>
-
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.greetingWrap}>
-          <Text style={styles.greetingText}>
-            {greeting.greeting} {greeting.emoji}, {displayName}!
-          </Text>
-        </View>
-
-        <View style={styles.heroWrap}>
-          <HeroBudgetCard
-            spent={spent}
-            budget={budget}
-            remaining={remaining}
-            todaySpent={todaySpent}
-            weekSpent={weekSpent}
-            onPress={() => router.push('/insights/month' as never)}
-          />
-        </View>
-
-        <View style={styles.recentWrap}>
-          <RecentTransactions transactions={recentTransactions} />
-        </View>
-      </ScrollView>
-
-      {isBudgetTipVisible ? (
-        <View style={styles.tipOverlay} pointerEvents="box-none">
-          <View style={styles.tipCard}>
-            <View style={styles.tipTitleRow}>
-              <View style={styles.tipDot} />
-              <Text style={styles.tipTitle}>Profile tab</Text>
-            </View>
-            <Text style={styles.tipBody}>Set your monthly budget there when you’re ready.</Text>
-            <Pressable style={styles.tipButton} onPress={() => setIsBudgetTipVisible(false)}>
-              <Text style={styles.tipButtonText}>Got it</Text>
-            </Pressable>
-            <View style={styles.tipPointer} />
+        {isBudgetTipVisible ? (
+          <View style={styles.tipOverlay} pointerEvents="box-none">
+            <Surface elevation={3} style={styles.tipCard}>
+              <View style={styles.tipTitleRow}>
+                <View style={styles.tipDot} />
+                <Text variant="titleSmall" style={styles.tipTitle}>
+                  Profile tab
+                </Text>
+              </View>
+              <Text variant="bodySmall" style={styles.tipBody}>
+                Set your monthly budget there when you’re ready.
+              </Text>
+              <Button
+                mode="text"
+                compact
+                textColor={theme.colors.primary}
+                style={styles.tipButton}
+                contentStyle={styles.tipButtonContent}
+                labelStyle={styles.tipButtonText}
+                onPress={() => setIsBudgetTipVisible(false)}
+              >
+                Got it
+              </Button>
+              <View style={styles.tipPointer} />
+            </Surface>
           </View>
-        </View>
-      ) : null}
-    </SafeAreaView>
+        ) : null}
+      </SafeAreaView>
+    </Surface>
   );
 }
 
-const createStyles = (colors: Colors) =>
+const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
+    screenSurface: {
+      flex: 1,
+      backgroundColor: theme.colors.surface,
+    },
     container: {
       flex: 1,
-      backgroundColor: colors.surface,
+      backgroundColor: theme.colors.surface,
     },
     atmosphere: {
       ...StyleSheet.absoluteFillObject,
@@ -196,8 +241,7 @@ const createStyles = (colors: Colors) =>
       marginBottom: -6,
     },
     greetingText: {
-      color: colors.onSurface,
-      fontSize: typography.fontSize.xl,
+      color: theme.colors.onSurface,
       fontWeight: typography.fontWeight.semiBold,
       letterSpacing: -0.3,
     },
@@ -208,25 +252,24 @@ const createStyles = (colors: Colors) =>
       marginTop: 8,
       borderRadius: borderRadius.xl,
       borderWidth: 1,
-      borderColor: 'rgba(120, 160, 255, 0.18)',
-      backgroundColor: 'rgba(15, 22, 40, 0.94)',
+      borderColor: theme.colors.outlineVariant,
+      backgroundColor: theme.colors.surfaceContainerHigh,
       paddingHorizontal: spacing.lg,
       paddingVertical: spacing.lg,
       gap: 10,
     },
     diagnosticEyebrow: {
-      color: 'rgba(120,170,255,0.7)',
+      color: theme.colors.primary,
       fontSize: 11,
       fontWeight: typography.fontWeight.bold,
       letterSpacing: 1,
     },
     diagnosticTitle: {
-      color: colors.onSurface,
-      fontSize: typography.fontSize.xl,
+      color: theme.colors.onSurface,
       fontWeight: typography.fontWeight.bold,
     },
     diagnosticBody: {
-      color: 'rgba(219, 228, 255, 0.82)',
+      color: theme.colors.onSurfaceVariant,
       fontSize: typography.fontSize.sm,
     },
     diagnosticStats: {
@@ -234,12 +277,12 @@ const createStyles = (colors: Colors) =>
       marginTop: 4,
     },
     diagnosticStat: {
-      color: '#DDE8FF',
+      color: theme.colors.onSurface,
       fontSize: typography.fontSize.sm,
       fontWeight: typography.fontWeight.medium,
     },
     diagnosticHint: {
-      color: '#4D9FFF',
+      color: theme.colors.primary,
       fontSize: typography.fontSize.xs,
       lineHeight: typography.lineHeight.relaxed * typography.fontSize.xs,
       marginTop: 4,
@@ -255,18 +298,14 @@ const createStyles = (colors: Colors) =>
     },
     tipCard: {
       maxWidth: 230,
-      backgroundColor: 'rgba(15, 22, 40, 0.94)',
+      backgroundColor: theme.colors.surfaceContainerHigh,
       borderWidth: 1,
-      borderColor: 'rgba(120, 160, 255, 0.20)',
+      borderColor: theme.colors.outlineVariant,
       borderRadius: borderRadius.xl,
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.sm,
       gap: 4,
       position: 'relative',
-      shadowColor: colors.primary,
-      shadowOpacity: 0.18,
-      shadowRadius: 16,
-      shadowOffset: { width: 0, height: 8 },
     },
     tipTitleRow: {
       flexDirection: 'row',
@@ -277,28 +316,26 @@ const createStyles = (colors: Colors) =>
       width: 7,
       height: 7,
       borderRadius: 999,
-      backgroundColor: colors.primary,
+      backgroundColor: theme.colors.primary,
     },
     tipTitle: {
-      color: colors.onSurface,
-      fontSize: typography.fontSize.sm,
+      color: theme.colors.onSurface,
       fontWeight: typography.fontWeight.semiBold,
     },
     tipBody: {
-      color: 'rgba(219, 228, 255, 0.82)',
+      color: theme.colors.onSurfaceVariant,
       fontSize: typography.fontSize.xs,
       lineHeight: typography.lineHeight.relaxed * typography.fontSize.xs,
     },
     tipButton: {
       alignSelf: 'flex-start',
       marginTop: 4,
-      paddingHorizontal: 10,
-      paddingVertical: 4,
-      borderRadius: 999,
-      backgroundColor: 'rgba(26,107,255,0.12)',
+    },
+    tipButtonContent: {
+      paddingHorizontal: 0,
+      marginHorizontal: 0,
     },
     tipButtonText: {
-      color: '#DDE8FF',
       fontSize: typography.fontSize.xs,
       fontWeight: typography.fontWeight.semiBold,
     },
@@ -313,6 +350,6 @@ const createStyles = (colors: Colors) =>
       borderTopWidth: 12,
       borderLeftColor: 'transparent',
       borderRightColor: 'transparent',
-      borderTopColor: 'rgba(15, 22, 40, 0.94)',
+      borderTopColor: theme.colors.surfaceContainerHigh,
     },
   });

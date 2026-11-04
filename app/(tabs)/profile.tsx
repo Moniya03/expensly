@@ -2,19 +2,26 @@ import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
+import { Image, Pressable, StyleSheet, View } from 'react-native';
 import {
   ActivityIndicator,
-  Image,
-  Pressable,
-  StyleSheet,
+  Button,
+  IconButton,
+  Snackbar,
+  Surface,
   Text,
   TextInput,
-  View,
-} from 'react-native';
+} from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import NameEditSheet from '../../components/profile/NameEditSheet';
-import { borderRadius, type Colors, spacing, typography, useColors } from '../../constants/theme';
+import {
+  type AppTheme,
+  borderRadius,
+  spacing,
+  typography,
+  useAppTheme,
+} from '../../constants/theme';
 import { getHistoricalBudgetForMonth, useBudgets } from '../../hooks/useBudget';
 import { useUpdateProfile } from '../../hooks/useProfile';
 import { useAllTransactions } from '../../hooks/useTransactions';
@@ -28,29 +35,23 @@ const appVersion = (require('../../package.json') as { version?: string }).versi
 export default function ProfileScreen() {
   const { profile, session } = useAuthStore();
   const router = useRouter();
-  const colors = useColors();
-  const styles = useMemo(() => createStyles(colors), [colors]);
+  const theme = useAppTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const { mutateAsync: updateProfile } = useUpdateProfile();
   const { data: transactions = [] } = useAllTransactions();
   const { data: budgets = [] } = useBudgets();
 
-  const [nameSheetVisible, setNameSheetVisible] = React.useState(false);
-  const [budgetEditing, setBudgetEditing] = React.useState(false);
-  const [budgetDraft, setBudgetDraft] = React.useState(
+  const [nameSheetVisible, setNameSheetVisible] = useState(false);
+  const [budgetEditing, setBudgetEditing] = useState(false);
+  const [budgetDraft, setBudgetDraft] = useState(
     profile?.monthly_budget ? String(profile.monthly_budget) : '',
   );
-  const [avatarUploading, setAvatarUploading] = React.useState(false);
-  const [feedback, setFeedback] = React.useState<string | null>(null);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [feedback, setFeedback] = useState<string | null>(null);
 
   React.useEffect(() => {
     setBudgetDraft(profile?.monthly_budget ? String(profile.monthly_budget) : '');
   }, [profile?.monthly_budget]);
-
-  React.useEffect(() => {
-    if (!feedback) return;
-    const timer = setTimeout(() => setFeedback(null), 2200);
-    return () => clearTimeout(timer);
-  }, [feedback]);
 
   const displayName = profile?.name || 'User';
   const email = session?.user?.email;
@@ -59,7 +60,7 @@ export default function ProfileScreen() {
   // "Saved till now": sum of (budget - spent) for each month from the month
   // the user first logged an expense (or created their account if they have
   // no transactions yet) up to the current month.
-  const savedTillNow = React.useMemo(() => {
+  const savedTillNow = useMemo(() => {
     const now = new Date();
 
     // Start from the month of the first logged expense, else account creation.
@@ -169,10 +170,17 @@ export default function ProfileScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
         <View style={styles.titleRow}>
-          <Text style={styles.screenTitle}>Profile</Text>
-          <Pressable style={styles.gearButton} onPress={() => router.push('/settings')}>
-            <Ionicons name="settings-outline" size={22} color={colors.onSurface} />
-          </Pressable>
+          <Text variant="headlineMedium" style={styles.screenTitle}>
+            Profile
+          </Text>
+          <IconButton
+            icon="cog-outline"
+            size={22}
+            containerColor={theme.colors.surfaceContainer}
+            iconColor={theme.colors.onSurface}
+            onPress={() => router.push('/settings')}
+            style={styles.gearButton}
+          />
         </View>
 
         <LinearGradient
@@ -186,25 +194,33 @@ export default function ProfileScreen() {
               disabled={avatarUploading}
             >
               {avatarUploading ? (
-                <ActivityIndicator size="small" color={colors.onAccent} />
+                <ActivityIndicator size="small" color="#FFFFFF" />
               ) : profile?.avatar_url ? (
                 <Image source={{ uri: profile.avatar_url }} style={styles.avatarImage} />
               ) : (
-                <Ionicons name="person" size={30} color={colors.onAccent} />
+                <Ionicons name="person" size={30} color="#FFFFFF" />
               )}
               <View style={styles.avatarBadge}>
-                <Ionicons name="camera" size={12} color={colors.onAccent} />
+                <Ionicons name="camera" size={12} color="#FFFFFF" />
               </View>
             </Pressable>
 
             <View style={styles.heroTextWrap}>
               <Pressable onPress={() => setNameSheetVisible(true)}>
                 <View style={styles.nameRow}>
-                  <Text style={styles.name}>{displayName}</Text>
+                  <Text variant="titleMedium" style={styles.name}>
+                    {displayName}
+                  </Text>
                   <Ionicons name="pencil" size={14} color="#cfe0ff" />
                 </View>
-                {email ? <Text style={styles.email}>{email}</Text> : null}
-                <Text style={styles.heroHint}>Tap to edit profile</Text>
+                {email ? (
+                  <Text variant="bodyMedium" style={styles.email}>
+                    {email}
+                  </Text>
+                ) : null}
+                <Text variant="labelSmall" style={styles.heroHint}>
+                  Tap to edit profile
+                </Text>
               </Pressable>
             </View>
           </View>
@@ -212,24 +228,33 @@ export default function ProfileScreen() {
           <View style={styles.heroDivider} />
 
           <View>
-            <Text style={styles.savingsLabel}>Saved till now</Text>
-            <Text style={[styles.savingsValue, savedTillNow < 0 && { color: '#ff9d98' }]}>
+            <Text variant="labelSmall" style={styles.savingsLabel}>
+              Saved till now
+            </Text>
+            <Text
+              variant="headlineMedium"
+              style={[styles.savingsValue, savedTillNow < 0 && { color: '#ff9d98' }]}
+            >
               {formatRupees(Math.abs(savedTillNow), { showSymbol: true })}
             </Text>
-            <Text style={styles.savingsSub}>
+            <Text variant="labelSmall" style={styles.savingsSub}>
               {savedTillNow < 0 ? 'Overspent vs your monthly budgets' : 'vs your monthly budgets'}
             </Text>
           </View>
         </LinearGradient>
 
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Monthly budget</Text>
-          <View style={styles.budgetCard}>
+          <Text variant="labelSmall" style={styles.sectionLabel}>
+            Monthly budget
+          </Text>
+          <Surface elevation={1} style={styles.budgetCard}>
             <View style={styles.rowBetween}>
               <View>
-                <Text style={styles.cardTitle}>Spending limit</Text>
+                <Text variant="bodyMedium" style={styles.cardTitle}>
+                  Spending limit
+                </Text>
                 {!budgetEditing ? (
-                  <Text style={styles.cardValue}>
+                  <Text variant="titleMedium" style={styles.cardValue}>
                     {profile?.monthly_budget
                       ? formatRupees(profile.monthly_budget)
                       : 'No budget set'}
@@ -238,51 +263,69 @@ export default function ProfileScreen() {
               </View>
 
               {!budgetEditing ? (
-                <Pressable style={styles.editPill} onPress={() => setBudgetEditing(true)}>
-                  <Text style={styles.editPillText}>Edit</Text>
-                </Pressable>
+                <Button
+                  mode="outlined"
+                  compact
+                  textColor={theme.colors.onSurface}
+                  onPress={() => setBudgetEditing(true)}
+                  style={styles.editButton}
+                >
+                  Edit
+                </Button>
               ) : null}
             </View>
 
             {budgetEditing ? (
               <View style={styles.budgetEditWrap}>
                 <TextInput
-                  style={styles.budgetInput}
+                  mode="outlined"
+                  keyboardType="number-pad"
                   value={budgetDraft}
                   onChangeText={(value) => setBudgetDraft(value.replace(/[^0-9]/g, ''))}
-                  keyboardType="number-pad"
                   placeholder="Enter amount"
-                  placeholderTextColor={colors.onSurfaceVariant}
-                  selectionColor={colors.primary}
+                  left={<TextInput.Affix text="₹" />}
+                  textColor={theme.colors.onSurface}
+                  outlineColor={theme.colors.outlineVariant}
+                  activeOutlineColor={theme.colors.primary}
+                  style={styles.budgetInput}
                 />
                 <View style={styles.actionsRow}>
-                  <Pressable
-                    style={[styles.actionButton, styles.secondaryButton]}
+                  <Button
+                    mode="outlined"
+                    style={styles.actionButton}
+                    textColor={theme.colors.onSurface}
                     onPress={() => {
                       setBudgetDraft(profile?.monthly_budget ? String(profile.monthly_budget) : '');
                       setBudgetEditing(false);
                     }}
                   >
-                    <Text style={styles.secondaryButtonText}>Cancel</Text>
-                  </Pressable>
-                  <Pressable
-                    style={[styles.actionButton, styles.primaryButton]}
+                    Cancel
+                  </Button>
+                  <Button
+                    mode="contained"
+                    style={styles.actionButton}
+                    buttonColor={theme.colors.primary}
+                    textColor="#FFFFFF"
                     onPress={handleSaveBudget}
                   >
-                    <Text style={styles.primaryButtonText}>Save</Text>
-                  </Pressable>
+                    Save
+                  </Button>
                 </View>
               </View>
             ) : null}
-          </View>
+          </Surface>
         </View>
-
-        {feedback ? <Text style={styles.toast}>{feedback}</Text> : null}
 
         <View style={styles.footerWrap}>
-          <Text style={styles.version}>v{appVersion}</Text>
+          <Text variant="labelSmall" style={styles.version}>
+            v{appVersion}
+          </Text>
         </View>
       </View>
+
+      <Snackbar visible={Boolean(feedback)} onDismiss={() => setFeedback(null)} duration={2200}>
+        {feedback}
+      </Snackbar>
 
       <NameEditSheet
         visible={nameSheetVisible}
@@ -294,11 +337,11 @@ export default function ProfileScreen() {
   );
 }
 
-const createStyles = (colors: Colors) =>
+const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: colors.surface,
+      backgroundColor: theme.colors.surface,
     },
     content: {
       flex: 1,
@@ -306,8 +349,7 @@ const createStyles = (colors: Colors) =>
       paddingTop: spacing.md,
     },
     screenTitle: {
-      color: colors.onSurface,
-      fontSize: typography.fontSize.xxxl,
+      color: theme.colors.onSurface,
       fontWeight: typography.fontWeight.bold,
     },
     titleRow: {
@@ -317,14 +359,9 @@ const createStyles = (colors: Colors) =>
       marginBottom: spacing.lg,
     },
     gearButton: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: colors.surfaceContainer,
+      margin: 0,
       borderWidth: 1,
-      borderColor: colors.outlineVariant,
+      borderColor: theme.colors.outlineVariant,
     },
     heroCard: {
       borderRadius: borderRadius.xl,
@@ -358,7 +395,7 @@ const createStyles = (colors: Colors) =>
       borderRadius: 12,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: colors.primary,
+      backgroundColor: theme.colors.primary,
       borderWidth: 2,
       borderColor: '#123C86',
     },
@@ -372,18 +409,15 @@ const createStyles = (colors: Colors) =>
       gap: spacing.xs,
     },
     name: {
-      color: colors.onAccent,
-      fontSize: typography.fontSize.xl,
+      color: '#FFFFFF',
       fontWeight: typography.fontWeight.bold,
     },
     email: {
       color: '#cfe0ff',
-      fontSize: typography.fontSize.sm,
       marginTop: 2,
     },
     heroHint: {
       color: '#8fb1e8',
-      fontSize: typography.fontSize.xs,
       marginTop: 4,
     },
     heroDivider: {
@@ -393,37 +427,33 @@ const createStyles = (colors: Colors) =>
     },
     savingsLabel: {
       color: '#9db9e8',
-      fontSize: typography.fontSize.sm,
       textTransform: 'uppercase',
       letterSpacing: 0.8,
     },
     savingsValue: {
-      color: colors.onAccent,
-      fontSize: typography.fontSize.xxxl,
+      color: '#FFFFFF',
       fontWeight: typography.fontWeight.bold,
       marginTop: 2,
     },
     savingsSub: {
       color: '#8fb1e8',
-      fontSize: typography.fontSize.xs,
       marginTop: 2,
     },
     section: {
       marginTop: spacing.xl,
     },
     sectionLabel: {
-      color: colors.onSurfaceVariant,
-      fontSize: typography.fontSize.sm,
+      color: theme.colors.onSurfaceVariant,
       fontWeight: typography.fontWeight.medium,
       textTransform: 'uppercase',
       letterSpacing: 0.8,
       marginBottom: spacing.sm,
     },
     budgetCard: {
-      backgroundColor: colors.surfaceContainer,
+      backgroundColor: theme.colors.surfaceContainer,
       borderRadius: borderRadius.xl,
       borderWidth: 1,
-      borderColor: colors.outlineVariant,
+      borderColor: theme.colors.outlineVariant,
       padding: spacing.md,
     },
     rowBetween: {
@@ -432,40 +462,21 @@ const createStyles = (colors: Colors) =>
       justifyContent: 'space-between',
     },
     cardTitle: {
-      color: colors.onSurfaceVariant,
-      fontSize: typography.fontSize.sm,
+      color: theme.colors.onSurfaceVariant,
       marginBottom: 4,
     },
     cardValue: {
-      color: colors.onSurface,
-      fontSize: typography.fontSize.lg,
+      color: theme.colors.onSurface,
       fontWeight: typography.fontWeight.semiBold,
     },
-    editPill: {
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.xs,
-      borderRadius: 999,
-      backgroundColor: colors.surfaceContainerHigh,
-      borderWidth: 1,
-      borderColor: colors.outlineVariant,
-    },
-    editPillText: {
-      color: colors.onSurface,
-      fontSize: typography.fontSize.sm,
-      fontWeight: typography.fontWeight.medium,
+    editButton: {
+      borderColor: theme.colors.outlineVariant,
     },
     budgetEditWrap: {
       marginTop: spacing.md,
     },
     budgetInput: {
-      backgroundColor: colors.surfaceContainerHigh,
-      borderWidth: 1,
-      borderColor: colors.outlineVariant,
-      borderRadius: borderRadius.md,
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.md,
-      color: colors.onSurface,
-      fontSize: typography.fontSize.md,
+      backgroundColor: theme.colors.surfaceContainerHigh,
     },
     actionsRow: {
       flexDirection: 'row',
@@ -474,33 +485,6 @@ const createStyles = (colors: Colors) =>
     },
     actionButton: {
       flex: 1,
-      minHeight: 46,
-      borderRadius: borderRadius.md,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    primaryButton: {
-      backgroundColor: colors.primary,
-    },
-    primaryButtonText: {
-      color: colors.onAccent,
-      fontSize: typography.fontSize.md,
-      fontWeight: typography.fontWeight.semiBold,
-    },
-    secondaryButton: {
-      backgroundColor: colors.surfaceContainerHigh,
-      borderWidth: 1,
-      borderColor: colors.outlineVariant,
-    },
-    secondaryButtonText: {
-      color: colors.onSurface,
-      fontSize: typography.fontSize.md,
-      fontWeight: typography.fontWeight.medium,
-    },
-    toast: {
-      color: colors.secondary,
-      fontSize: typography.fontSize.sm,
-      marginTop: spacing.md,
     },
     footerWrap: {
       flex: 1,
@@ -509,8 +493,7 @@ const createStyles = (colors: Colors) =>
       paddingBottom: spacing.md,
     },
     version: {
-      color: colors.onSurfaceVariant,
-      fontSize: typography.fontSize.xs,
+      color: theme.colors.onSurfaceVariant,
       textAlign: 'center',
     },
   });
