@@ -1,8 +1,7 @@
-import { LinearGradient } from 'expo-linear-gradient';
-import React, { useMemo } from 'react';
-import { Animated, Easing, Pressable, StyleSheet, View } from 'react-native';
-import { Text } from 'react-native-paper';
-import Svg, { Circle, Defs, Path, Pattern, Rect } from 'react-native-svg';
+import { useMemo } from 'react';
+import { StyleSheet, View } from 'react-native';
+import { Divider, Surface, Text, TouchableRipple } from 'react-native-paper';
+import Svg, { Circle } from 'react-native-svg';
 import { type AppTheme, typography, useAppTheme } from '../../constants/theme';
 import { formatRupees } from '../../utils/currency';
 
@@ -15,8 +14,8 @@ interface HeroBudgetCardProps {
   onPress?: () => void;
 }
 
-const DONUT_SIZE = 116;
-const STROKE_WIDTH = 11;
+const DONUT_SIZE = 112;
+const STROKE_WIDTH = 10;
 const RADIUS = (DONUT_SIZE - STROKE_WIDTH) / 2;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
@@ -34,68 +33,34 @@ export default function HeroBudgetCard({
   const progress = budget > 0 ? Math.min(spent / budget, 1) : 0;
   const remainingPercent = budget > 0 ? Math.max((remaining / budget) * 100, 0) : 0;
   const dashOffset = CIRCUMFERENCE * (1 - progress);
-  const glowAnim = React.useRef(new Animated.Value(0)).current;
+  const isOverBudget = remaining < 0;
 
-  React.useEffect(() => {
-    const glow = Animated.loop(
-      Animated.sequence([
-        Animated.timing(glowAnim, {
-          toValue: 1,
-          duration: 4000,
-          easing: Easing.inOut(Easing.sin),
-          useNativeDriver: true,
-        }),
-        Animated.timing(glowAnim, {
-          toValue: 0,
-          duration: 4000,
-          easing: Easing.inOut(Easing.sin),
-          useNativeDriver: true,
-        }),
-      ]),
-    );
-    glow.start();
-    return () => {
-      glow.stop();
-    };
-  }, [glowAnim]);
+  const progressColor = isOverBudget ? theme.colors.error : theme.colors.primary;
 
-  const content = (
+  const cardContent = (
     <View style={styles.content}>
-      <Animated.View
-        pointerEvents="none"
-        style={[
-          styles.glowLayer,
-          {
-            opacity: glowAnim.interpolate({
-              inputRange: [0, 1],
-              outputRange: [0.06, 0.12],
-            }),
-          },
-        ]}
-      />
-      <Svg pointerEvents="none" style={styles.gridOverlay} width="100%" height="100%">
-        <Defs>
-          <Pattern id="grid" width={30} height={30} patternUnits="userSpaceOnUse">
-            <Path
-              d="M 30 0 L 0 0 0 30"
-              fill="none"
-              stroke="rgba(90,140,255,0.06)"
-              strokeWidth={1}
-            />
-          </Pattern>
-        </Defs>
-        <Rect x="0" y="0" width="100%" height="100%" fill="url(#grid)" />
-      </Svg>
       <View style={styles.topRow}>
         <View style={styles.leftColumn}>
-          <Text style={styles.eyebrow}>SPENT THIS MONTH</Text>
-          <Text style={styles.spentAmount}>{formatRupees(spent)}</Text>
+          <Text variant="labelSmall" style={styles.eyebrow}>
+            SPENT THIS MONTH
+          </Text>
+          <Text variant="headlineMedium" style={styles.spentAmount}>
+            {formatRupees(spent)}
+          </Text>
           <View style={styles.remainingRow}>
-            <View style={styles.greenDot} />
-            <Text style={styles.remainingText}>
+            <View style={[styles.statusDot, { backgroundColor: progressColor }]} />
+            <Text
+              variant="bodySmall"
+              style={[
+                styles.remainingText,
+                { color: isOverBudget ? theme.colors.error : theme.colors.onSurfaceVariant },
+              ]}
+            >
               {formatRupees(Math.abs(remaining))} {remaining >= 0 ? 'left' : 'over'}
             </Text>
-            <Text style={styles.ofText}>of {formatRupees(budget)}</Text>
+            <Text variant="bodySmall" style={styles.ofText}>
+              of {formatRupees(budget)}
+            </Text>
           </View>
         </View>
 
@@ -105,21 +70,7 @@ export default function HeroBudgetCard({
               cx={DONUT_SIZE / 2}
               cy={DONUT_SIZE / 2}
               r={RADIUS}
-              stroke="rgba(245,166,35,0.16)"
-              strokeWidth={STROKE_WIDTH + 8}
-              fill="none"
-              strokeLinecap="round"
-              strokeDasharray={`${CIRCUMFERENCE}`}
-              strokeDashoffset={dashOffset}
-              originX={DONUT_SIZE / 2}
-              originY={DONUT_SIZE / 2}
-              rotation={-90}
-            />
-            <Circle
-              cx={DONUT_SIZE / 2}
-              cy={DONUT_SIZE / 2}
-              r={RADIUS}
-              stroke="rgba(255,255,255,0.05)"
+              stroke={theme.colors.surfaceContainerHighest}
               strokeWidth={STROKE_WIDTH}
               fill="none"
             />
@@ -127,7 +78,7 @@ export default function HeroBudgetCard({
               cx={DONUT_SIZE / 2}
               cy={DONUT_SIZE / 2}
               r={RADIUS}
-              stroke="#F5A623"
+              stroke={progressColor}
               strokeWidth={STROKE_WIDTH}
               fill="none"
               strokeLinecap="round"
@@ -139,49 +90,43 @@ export default function HeroBudgetCard({
             />
           </Svg>
           <View style={styles.chartCenter}>
-            <Text style={styles.centerAmount}>{formatRupees(spent)}</Text>
-            <Text style={styles.centerLabel}>SPENT</Text>
+            <Text variant="titleMedium" style={styles.centerAmount}>
+              {formatRupees(spent)}
+            </Text>
+            <Text variant="labelSmall" style={styles.centerLabel}>
+              SPENT
+            </Text>
           </View>
         </View>
       </View>
 
+      <Divider style={styles.divider} />
+
       <View style={styles.bottomStats}>
         <Stat label="TODAY" value={formatRupees(todaySpent)} styles={styles} />
-        <Hairline styles={styles} />
+        <View style={styles.statSeparator} />
         <Stat label="THIS WEEK" value={formatRupees(weekSpent)} styles={styles} />
-        <Hairline styles={styles} />
+        <View style={styles.statSeparator} />
         <Stat
           label="SAVINGS %"
           value={`${remainingPercent.toFixed(0)}%`}
-          valueColor={theme.colors.tertiary}
+          valueColor={theme.colors.primary}
           styles={styles}
         />
       </View>
     </View>
   );
 
-  return onPress ? (
-    <Pressable onPress={onPress} style={styles.pressable}>
-      <LinearGradient
-        colors={['#123C86', '#0F2F63', '#0B223F', '#0A191D']}
-        start={{ x: 0.08, y: 0.02 }}
-        end={{ x: 0.94, y: 0.98 }}
-        style={styles.gradient}
-      >
-        {content}
-      </LinearGradient>
-    </Pressable>
-  ) : (
-    <View style={styles.pressable}>
-      <LinearGradient
-        colors={['#123C86', '#0F2F63', '#0B223F', '#0A191D']}
-        start={{ x: 0.08, y: 0.02 }}
-        end={{ x: 0.94, y: 0.98 }}
-        style={styles.gradient}
-      >
-        {content}
-      </LinearGradient>
-    </View>
+  return (
+    <Surface elevation={2} style={styles.surface}>
+      {onPress ? (
+        <TouchableRipple onPress={onPress} style={styles.ripple} borderless>
+          {cardContent}
+        </TouchableRipple>
+      ) : (
+        cardContent
+      )}
+    </Surface>
   );
 }
 
@@ -198,72 +143,56 @@ function Stat({
 }) {
   return (
     <View style={styles.stat}>
-      <Text style={styles.statLabel}>{label}</Text>
-      <Text style={[styles.statValue, valueColor ? { color: valueColor } : null]}>{value}</Text>
+      <Text variant="labelSmall" style={styles.statLabel}>
+        {label}
+      </Text>
+      <Text
+        variant="titleSmall"
+        style={[styles.statValue, valueColor ? { color: valueColor } : null]}
+      >
+        {value}
+      </Text>
     </View>
   );
 }
 
-function Hairline({ styles }: { styles: ReturnType<typeof createStyles> }) {
-  return <View style={styles.hairline} />;
-}
-
 const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
-    pressable: {
+    surface: {
       borderRadius: 24,
-      overflow: 'hidden',
+      backgroundColor: theme.colors.surfaceContainerHigh,
       borderWidth: 1,
-      borderColor: 'rgba(90,140,255,0.18)',
-      shadowColor: '#1A6BFF',
-      shadowOpacity: 0.12,
-      shadowRadius: 28,
-      shadowOffset: { width: 0, height: 14 },
+      borderColor: theme.colors.outlineVariant,
+      overflow: 'hidden',
     },
-    gradient: {
+    ripple: {
       borderRadius: 24,
     },
     content: {
-      position: 'relative',
-      borderRadius: 24,
       paddingHorizontal: 20,
-      paddingTop: 22,
-      paddingBottom: 20,
-      gap: 20,
-      backgroundColor: 'transparent',
-      overflow: 'hidden',
-      minHeight: 250,
+      paddingTop: 20,
+      paddingBottom: 18,
+      gap: 16,
     },
     topRow: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      gap: 18,
-    },
-    glowLayer: {
-      ...StyleSheet.absoluteFillObject,
-      backgroundColor: 'rgba(26,107,255,0.05)',
-    },
-    gridOverlay: {
-      ...StyleSheet.absoluteFillObject,
-      opacity: 0.8,
+      gap: 16,
     },
     leftColumn: {
       flex: 1,
-      gap: 10,
+      gap: 8,
     },
     eyebrow: {
-      fontSize: 11,
-      letterSpacing: 1.2,
-      color: theme.colors.secondary,
+      color: theme.colors.primary,
       fontWeight: typography.fontWeight.bold,
+      letterSpacing: 0.8,
     },
     spentAmount: {
-      fontSize: 30,
-      lineHeight: 34,
-      color: theme.colors.onPrimary,
+      color: theme.colors.onSurface,
       fontWeight: typography.fontWeight.bold,
-      letterSpacing: -0.4,
+      letterSpacing: -0.5,
     },
     remainingRow: {
       flexDirection: 'row',
@@ -271,31 +200,22 @@ const createStyles = (theme: AppTheme) =>
       flexWrap: 'wrap',
       gap: 6,
     },
-    greenDot: {
+    statusDot: {
       width: 6,
       height: 6,
       borderRadius: 3,
-      backgroundColor: theme.colors.tertiary,
     },
     remainingText: {
-      color: theme.colors.tertiary,
-      fontSize: 13,
       fontWeight: typography.fontWeight.semiBold,
     },
     ofText: {
-      color: theme.colors.onPrimaryContainer,
-      fontSize: 13,
+      color: theme.colors.onSurfaceVariant,
     },
     chartWrap: {
       width: DONUT_SIZE,
       height: DONUT_SIZE,
       alignItems: 'center',
       justifyContent: 'center',
-      shadowColor: '#1A6BFF',
-      shadowOpacity: 0.18,
-      shadowRadius: 16,
-      shadowOffset: { width: 0, height: 6 },
-      elevation: 7,
     },
     chartCenter: {
       position: 'absolute',
@@ -303,44 +223,42 @@ const createStyles = (theme: AppTheme) =>
       justifyContent: 'center',
     },
     centerAmount: {
-      color: theme.colors.tertiary,
-      fontSize: 18,
+      color: theme.colors.onSurface,
       fontWeight: typography.fontWeight.bold,
+      fontSize: 16,
     },
     centerLabel: {
-      marginTop: 2,
-      color: theme.colors.onPrimaryContainer,
-      fontSize: 11,
-      letterSpacing: 0.8,
-      fontWeight: typography.fontWeight.bold,
+      color: theme.colors.onSurfaceVariant,
+      fontSize: 10,
+      letterSpacing: 0.6,
+      fontWeight: typography.fontWeight.semiBold,
+    },
+    divider: {
+      backgroundColor: theme.colors.outlineVariant,
     },
     bottomStats: {
       flexDirection: 'row',
-      alignItems: 'stretch',
+      alignItems: 'center',
       justifyContent: 'space-between',
-      borderTopWidth: 1,
-      borderTopColor: 'rgba(120,170,255,0.12)',
-      paddingTop: 12,
     },
     stat: {
       flex: 1,
-      gap: 4,
+      gap: 2,
     },
     statLabel: {
-      color: theme.colors.secondary,
+      color: theme.colors.onSurfaceVariant,
+      fontWeight: typography.fontWeight.semiBold,
+      letterSpacing: 0.5,
       fontSize: 10,
-      letterSpacing: 0.9,
-      fontWeight: typography.fontWeight.bold,
     },
     statValue: {
-      color: theme.colors.onPrimary,
-      fontSize: 13,
+      color: theme.colors.onSurface,
       fontWeight: typography.fontWeight.semiBold,
     },
-    hairline: {
+    statSeparator: {
       width: 1,
-      alignSelf: 'stretch',
-      backgroundColor: 'rgba(120,170,255,0.12)',
-      marginHorizontal: 10,
+      height: 24,
+      backgroundColor: theme.colors.outlineVariant,
+      marginHorizontal: 8,
     },
   });

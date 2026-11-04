@@ -4,9 +4,9 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Image, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import {
+  Appbar,
   Button,
   HelperText,
-  IconButton,
   SegmentedButtons,
   Surface,
   Text,
@@ -93,19 +93,10 @@ export default function SupportScreen() {
   return (
     <Surface style={styles.root}>
       <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <IconButton
-            icon="arrow-left"
-            iconColor={theme.colors.onSurface}
-            containerColor={theme.colors.surfaceContainer}
-            size={20}
-            onPress={() => router.back()}
-            style={styles.backButton}
-          />
-          <Text variant="titleLarge" style={styles.title}>
-            Help & feedback
-          </Text>
-        </View>
+        <Appbar.Header style={{ backgroundColor: theme.colors.surface }}>
+          <Appbar.BackAction onPress={() => router.back()} />
+          <Appbar.Content title="Help & feedback" />
+        </Appbar.Header>
 
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           {submitted ? (
@@ -203,7 +194,9 @@ export default function SupportScreen() {
                         <Ionicons
                           name={value <= rating ? 'star' : 'star-outline'}
                           size={34}
-                          color={value <= rating ? '#F5A623' : theme.colors.outlineVariant}
+                          color={
+                            value <= rating ? theme.colors.primary : theme.colors.outlineVariant
+                          }
                         />
                       </Pressable>
                     ))}

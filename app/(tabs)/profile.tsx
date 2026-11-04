@@ -1,12 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
 import { Image, Pressable, StyleSheet, View } from 'react-native';
 import {
   ActivityIndicator,
   Button,
+  Divider,
   IconButton,
   Snackbar,
   Surface,
@@ -183,10 +183,7 @@ export default function ProfileScreen() {
           />
         </View>
 
-        <LinearGradient
-          colors={['#123C86', '#0F2F63', '#0B223F', '#0A191D']}
-          style={styles.heroCard}
-        >
+        <Surface elevation={2} style={styles.heroCard}>
           <View style={styles.heroTopRow}>
             <Pressable
               style={styles.avatarWrap}
@@ -194,14 +191,14 @@ export default function ProfileScreen() {
               disabled={avatarUploading}
             >
               {avatarUploading ? (
-                <ActivityIndicator size="small" color="#FFFFFF" />
+                <ActivityIndicator size="small" color={theme.colors.onPrimaryContainer} />
               ) : profile?.avatar_url ? (
                 <Image source={{ uri: profile.avatar_url }} style={styles.avatarImage} />
               ) : (
-                <Ionicons name="person" size={30} color="#FFFFFF" />
+                <Ionicons name="person" size={30} color={theme.colors.onPrimaryContainer} />
               )}
               <View style={styles.avatarBadge}>
-                <Ionicons name="camera" size={12} color="#FFFFFF" />
+                <Ionicons name="camera" size={12} color={theme.colors.onPrimary} />
               </View>
             </Pressable>
 
@@ -211,7 +208,7 @@ export default function ProfileScreen() {
                   <Text variant="titleMedium" style={styles.name}>
                     {displayName}
                   </Text>
-                  <Ionicons name="pencil" size={14} color="#cfe0ff" />
+                  <Ionicons name="pencil" size={14} color={theme.colors.primary} />
                 </View>
                 {email ? (
                   <Text variant="bodyMedium" style={styles.email}>
@@ -225,7 +222,7 @@ export default function ProfileScreen() {
             </View>
           </View>
 
-          <View style={styles.heroDivider} />
+          <Divider style={styles.heroDivider} />
 
           <View>
             <Text variant="labelSmall" style={styles.savingsLabel}>
@@ -233,7 +230,10 @@ export default function ProfileScreen() {
             </Text>
             <Text
               variant="headlineMedium"
-              style={[styles.savingsValue, savedTillNow < 0 && { color: '#ff9d98' }]}
+              style={[
+                styles.savingsValue,
+                { color: savedTillNow < 0 ? theme.colors.error : theme.colors.onSurface },
+              ]}
             >
               {formatRupees(Math.abs(savedTillNow), { showSymbol: true })}
             </Text>
@@ -241,7 +241,7 @@ export default function ProfileScreen() {
               {savedTillNow < 0 ? 'Overspent vs your monthly budgets' : 'vs your monthly budgets'}
             </Text>
           </View>
-        </LinearGradient>
+        </Surface>
 
         <View style={styles.section}>
           <Text variant="labelSmall" style={styles.sectionLabel}>
@@ -305,7 +305,7 @@ export default function ProfileScreen() {
                     mode="contained"
                     style={styles.actionButton}
                     buttonColor={theme.colors.primary}
-                    textColor="#FFFFFF"
+                    textColor={theme.colors.onPrimary}
                     onPress={handleSaveBudget}
                   >
                     Save
@@ -366,6 +366,9 @@ const createStyles = (theme: AppTheme) =>
     heroCard: {
       borderRadius: borderRadius.xl,
       padding: spacing.lg,
+      backgroundColor: theme.colors.surfaceContainerHigh,
+      borderWidth: 1,
+      borderColor: theme.colors.outlineVariant,
     },
     heroTopRow: {
       flexDirection: 'row',
@@ -377,9 +380,9 @@ const createStyles = (theme: AppTheme) =>
       borderRadius: 36,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: 'rgba(255,255,255,0.18)',
+      backgroundColor: theme.colors.primaryContainer,
       borderWidth: 2,
-      borderColor: 'rgba(255,255,255,0.35)',
+      borderColor: theme.colors.outlineVariant,
     },
     avatarImage: {
       width: 68,
@@ -397,7 +400,7 @@ const createStyles = (theme: AppTheme) =>
       justifyContent: 'center',
       backgroundColor: theme.colors.primary,
       borderWidth: 2,
-      borderColor: '#123C86',
+      borderColor: theme.colors.surfaceContainerHigh,
     },
     heroTextWrap: {
       flex: 1,
@@ -409,34 +412,32 @@ const createStyles = (theme: AppTheme) =>
       gap: spacing.xs,
     },
     name: {
-      color: '#FFFFFF',
+      color: theme.colors.onSurface,
       fontWeight: typography.fontWeight.bold,
     },
     email: {
-      color: '#cfe0ff',
+      color: theme.colors.onSurfaceVariant,
       marginTop: 2,
     },
     heroHint: {
-      color: '#8fb1e8',
+      color: theme.colors.primary,
       marginTop: 4,
     },
     heroDivider: {
-      height: 1,
-      backgroundColor: 'rgba(255,255,255,0.14)',
       marginVertical: spacing.md,
+      backgroundColor: theme.colors.outlineVariant,
     },
     savingsLabel: {
-      color: '#9db9e8',
+      color: theme.colors.onSurfaceVariant,
       textTransform: 'uppercase',
       letterSpacing: 0.8,
     },
     savingsValue: {
-      color: '#FFFFFF',
       fontWeight: typography.fontWeight.bold,
       marginTop: 2,
     },
     savingsSub: {
-      color: '#8fb1e8',
+      color: theme.colors.onSurfaceVariant,
       marginTop: 2,
     },
     section: {

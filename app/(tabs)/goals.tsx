@@ -1,7 +1,6 @@
-import { Ionicons } from '@expo/vector-icons';
 import React, { useMemo } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { ActivityIndicator, Surface, Text } from 'react-native-paper';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, FAB, Surface, Text } from 'react-native-paper';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -90,9 +89,13 @@ export default function GoalsScreen() {
             </Text>
           </View>
           <Animated.View style={pulseStyle}>
-            <Pressable style={styles.addButton} onPress={() => openCreate(null)} hitSlop={8}>
-              <Ionicons name="add" size={24} color="#FFFFFF" />
-            </Pressable>
+            <FAB
+              icon="plus"
+              size="small"
+              onPress={() => openCreate(null)}
+              style={styles.addButton}
+              color={theme.colors.onPrimary}
+            />
           </Animated.View>
         </View>
 
@@ -192,17 +195,8 @@ const createStyles = (theme: AppTheme) =>
       marginTop: 2,
     },
     addButton: {
-      width: 48,
-      height: 48,
-      borderRadius: borderRadius.full,
       backgroundColor: theme.colors.primary,
-      alignItems: 'center',
-      justifyContent: 'center',
-      shadowColor: theme.colors.primary,
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.4,
-      shadowRadius: 10,
-      elevation: 6,
+      borderRadius: borderRadius.full,
     },
     loading: { flex: 1, alignItems: 'center', justifyContent: 'center' },
     content: {

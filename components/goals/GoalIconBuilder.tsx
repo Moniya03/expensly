@@ -267,7 +267,7 @@ export function GoalIconBuilder({
                   >
                     <View style={[styles.swatchCircle, { backgroundColor: swatch }]}>
                       {swatch === color ? (
-                        <Ionicons name="checkmark" size={14} color="#fff" />
+                        <Ionicons name="checkmark" size={14} color={theme.colors.onPrimary} />
                       ) : null}
                     </View>
                   </Pressable>
@@ -290,7 +290,7 @@ export function GoalIconBuilder({
                   <Ionicons
                     name={iconName as keyof typeof Ionicons.glyphMap}
                     size={18}
-                    color="#fff"
+                    color={theme.colors.onPrimary}
                   />
                 </View>
                 <Text variant="titleSmall" style={styles.previewText}>

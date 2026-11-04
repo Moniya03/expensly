@@ -7,6 +7,7 @@ import Animated, {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
+import { useAppTheme } from '../../constants/theme';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -67,8 +68,9 @@ const Particle: React.FC<{ config: ParticleConfig }> = ({ config }) => {
 };
 
 export const FloatingParticles: React.FC<FloatingParticlesProps> = ({ count = MAX_PARTICLES }) => {
+  const theme = useAppTheme();
   const particles = useMemo<ParticleConfig[]>(() => {
-    const palette = ['#2E86FF', '#6FB4FF'];
+    const palette = [theme.colors.primary, theme.colors.tertiary];
     const actualCount = Math.min(count, MAX_PARTICLES);
 
     return Array.from({ length: actualCount }, (_, i) => ({
@@ -81,7 +83,7 @@ export const FloatingParticles: React.FC<FloatingParticlesProps> = ({ count = MA
       opacity: 0.35 + Math.random() * 0.3,
       range: 40 + Math.random() * 70,
     }));
-  }, [count]);
+  }, [count, theme.colors.primary, theme.colors.tertiary]);
 
   return (
     <View style={styles.container} pointerEvents="none">
@@ -102,7 +104,6 @@ const styles = StyleSheet.create({
   },
   particle: {
     position: 'absolute',
-    shadowColor: '#000000',
     shadowOpacity: 0.15,
     shadowRadius: 4,
   },

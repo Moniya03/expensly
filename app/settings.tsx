@@ -5,10 +5,10 @@ import { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import {
   ActivityIndicator,
+  Appbar,
   Button,
   Dialog,
   Divider,
-  IconButton,
   Portal,
   Snackbar,
   Surface,
@@ -172,19 +172,10 @@ export default function SettingsScreen() {
   return (
     <Surface style={[styles.root, { backgroundColor: theme.colors.surface }]}>
       <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <IconButton
-            icon="arrow-left"
-            iconColor={theme.colors.onSurface}
-            containerColor={theme.colors.surfaceContainer}
-            size={20}
-            onPress={() => router.back()}
-            style={styles.backButton}
-          />
-          <Text variant="titleLarge" style={[styles.title, { color: theme.colors.onSurface }]}>
-            Settings
-          </Text>
-        </View>
+        <Appbar.Header style={{ backgroundColor: theme.colors.surface }}>
+          <Appbar.BackAction onPress={() => router.back()} />
+          <Appbar.Content title="Settings" />
+        </Appbar.Header>
 
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           <Text

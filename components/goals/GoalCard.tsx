@@ -1,8 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useMemo, useRef } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
-import { Surface, Text } from 'react-native-paper';
+import { StyleSheet, View } from 'react-native';
+import { Surface, Text, TouchableRipple } from 'react-native-paper';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -68,113 +67,145 @@ export function GoalCard({ goal, onOpen }: { goal: Goal; onOpen?: (origin: GoalO
   };
 
   return (
-    <Pressable onPress={handlePress} style={({ pressed }) => [pressed && styles.pressed]}>
-      <Surface elevation={1} style={styles.surface}>
-        <View ref={ref} collapsable={false}>
-          <LinearGradient
-            colors={meta.tint}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.card}
-          >
-            <View style={styles.topRow}>
-              <Animated.View
-                style={[styles.iconWrap, { backgroundColor: `${meta.accent}1F` }, wiggleStyle]}
-              >
-                <Ionicons name={meta.icon} size={20} color={meta.accent} />
-              </Animated.View>
-              <View style={styles.meta}>
-                <Text style={styles.name} numberOfLines={1}>
-                  {goal.name}
-                </Text>
-                <Text style={styles.deadline}>{deadlineLabel(goal)}</Text>
-              </View>
-              <ProgressRing
-                size={56}
-                strokeWidth={5}
-                progress={progress}
-                color={meta.accent}
-                trackColor={`${meta.accent}22`}
-              >
-                <Text style={[styles.percent, { color: meta.accent }]}>{percent}%</Text>
-              </ProgressRing>
+    <Surface elevation={1} style={styles.surface}>
+      <TouchableRipple onPress={handlePress} style={styles.ripple} borderless>
+        <View ref={ref} collapsable={false} style={styles.card}>
+          <View style={styles.topRow}>
+            <Animated.View
+              style={[
+                styles.iconWrap,
+                { backgroundColor: theme.colors.secondaryContainer },
+                wiggleStyle,
+              ]}
+            >
+              <Ionicons
+                name={meta.icon}
+                size={22}
+                color={meta.accent || theme.colors.onSecondaryContainer}
+              />
+            </Animated.View>
+            <View style={styles.meta}>
+              <Text variant="titleMedium" style={styles.name} numberOfLines={1}>
+                {goal.name}
+              </Text>
+              <Text variant="bodySmall" style={styles.deadline}>
+                {deadlineLabel(goal)}
+              </Text>
             </View>
+            <ProgressRing
+              size={56}
+              strokeWidth={5}
+              progress={progress}
+              color={meta.accent || theme.colors.primary}
+              trackColor={theme.colors.surfaceContainerHighest}
+            >
+              <Text
+                variant="labelSmall"
+                style={[styles.percent, { color: meta.accent || theme.colors.primary }]}
+              >
+                {percent}%
+              </Text>
+            </ProgressRing>
+          </View>
 
-            <View style={styles.statsRow}>
-              <View style={styles.statBlock}>
-                <Text style={styles.statLabel}>Saved</Text>
-                <Text style={styles.statValue}>{formatRupees(goal.saved_amount)}</Text>
-              </View>
-              <View style={styles.statDivider} />
-              <View style={styles.statBlock}>
-                <Text style={styles.statLabel}>Target</Text>
-                <Text style={styles.statValue}>{formatRupees(goal.target_amount)}</Text>
-              </View>
-              <View style={styles.statDivider} />
-              <View style={styles.statBlock}>
-                <Text style={styles.statLabel}>Remaining</Text>
-                <Text style={styles.statValue}>{formatRupees(remaining)}</Text>
-              </View>
+          <View style={styles.statsRow}>
+            <View style={styles.statBlock}>
+              <Text variant="labelSmall" style={styles.statLabel}>
+                Saved
+              </Text>
+              <Text variant="titleSmall" style={styles.statValue}>
+                {formatRupees(goal.saved_amount)}
+              </Text>
             </View>
-          </LinearGradient>
+            <View style={styles.statDivider} />
+            <View style={styles.statBlock}>
+              <Text variant="labelSmall" style={styles.statLabel}>
+                Target
+              </Text>
+              <Text variant="titleSmall" style={styles.statValue}>
+                {formatRupees(goal.target_amount)}
+              </Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statBlock}>
+              <Text variant="labelSmall" style={styles.statLabel}>
+                Remaining
+              </Text>
+              <Text variant="titleSmall" style={styles.statValue}>
+                {formatRupees(remaining)}
+              </Text>
+            </View>
+          </View>
         </View>
-      </Surface>
-    </Pressable>
+      </TouchableRipple>
+    </Surface>
   );
 }
 
-const createStyles = (_theme: AppTheme) =>
+const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     surface: {
       borderRadius: borderRadius.xl,
+      backgroundColor: theme.colors.surfaceContainer,
+      borderWidth: 1,
+      borderColor: theme.colors.outlineVariant,
       overflow: 'hidden',
     },
-    pressed: { opacity: 0.92, transform: [{ scale: 0.985 }] },
-    card: {
+    ripple: {
       borderRadius: borderRadius.xl,
-      borderWidth: 1,
-      borderColor: 'rgba(255,255,255,0.08)',
+    },
+    card: {
       padding: spacing.md,
       gap: spacing.md,
     },
-    topRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+    topRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
     iconWrap: {
-      width: 42,
-      height: 42,
+      width: 44,
+      height: 44,
       borderRadius: borderRadius.full,
       alignItems: 'center',
       justifyContent: 'center',
     },
-    meta: { flex: 1 },
+    meta: {
+      flex: 1,
+    },
     name: {
-      color: '#FFFFFF',
-      fontSize: typography.fontSize.lg,
-      fontWeight: typography.fontWeight.semiBold,
+      color: theme.colors.onSurface,
+      fontWeight: typography.fontWeight.bold,
     },
     deadline: {
-      color: 'rgba(237, 243, 255, 0.55)',
-      fontSize: typography.fontSize.xs,
+      color: theme.colors.onSurfaceVariant,
       marginTop: 2,
     },
     percent: {
-      fontSize: typography.fontSize.xs,
       fontWeight: typography.fontWeight.bold,
     },
-    statsRow: { flexDirection: 'row', alignItems: 'center' },
-    statBlock: { flex: 1, gap: 2 },
+    statsRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: theme.colors.surfaceContainerHigh,
+      borderRadius: borderRadius.lg,
+      padding: spacing.sm,
+    },
+    statBlock: {
+      flex: 1,
+      gap: 2,
+      alignItems: 'center',
+    },
     statLabel: {
-      color: 'rgba(237, 243, 255, 0.55)',
-      fontSize: typography.fontSize.xs,
+      color: theme.colors.onSurfaceVariant,
     },
     statValue: {
-      color: '#FFFFFF',
-      fontSize: typography.fontSize.sm,
+      color: theme.colors.onSurface,
       fontWeight: typography.fontWeight.semiBold,
     },
     statDivider: {
       width: 1,
-      height: 24,
-      backgroundColor: 'rgba(255,255,255,0.1)',
-      marginHorizontal: spacing.sm,
+      height: 20,
+      backgroundColor: theme.colors.outlineVariant,
     },
   });

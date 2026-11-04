@@ -1,8 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useMemo } from 'react';
-import { Dimensions, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { ActivityIndicator, Text } from 'react-native-paper';
+import { Dimensions, StyleSheet, View } from 'react-native';
+import { Button, Text } from 'react-native-paper';
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -106,21 +106,22 @@ export default function WelcomeScreen() {
 
       {/* Action Section */}
       <View style={styles.actionSection}>
-        <TouchableOpacity
-          style={[styles.googleButton, isLoading && styles.googleButtonDisabled]}
-          activeOpacity={0.8}
+        <Button
+          mode="elevated"
           onPress={signInWithGoogle}
           disabled={isLoading}
-        >
-          {isLoading ? (
-            <ActivityIndicator animating size="small" color="#000000" />
-          ) : (
-            <>
-              <Ionicons name="logo-google" size={24} color="#000000" />
-              <Text style={styles.googleButtonText}>Continue with Google</Text>
-            </>
+          loading={isLoading}
+          icon={({ size }) => (
+            <Ionicons name="logo-google" size={size} color={theme.colors.primary} />
           )}
-        </TouchableOpacity>
+          style={styles.googleButton}
+          contentStyle={styles.googleButtonContent}
+          labelStyle={styles.googleButtonText}
+          textColor={theme.colors.onSurface}
+          buttonColor={theme.colors.surfaceContainerHighest}
+        >
+          Continue with Google
+        </Button>
 
         {/* Error Message */}
         {error && (
@@ -255,31 +256,16 @@ const createStyles = (theme: AppTheme) =>
       paddingBottom: spacing.lg,
     },
     googleButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: '#FFFFFF',
       width: '100%',
-      minHeight: 52,
-      paddingVertical: spacing.md,
-      borderRadius: 26,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 8,
-      elevation: 3,
+      borderRadius: 28,
       marginBottom: spacing.xl,
     },
-    googleButtonDisabled: {
-      opacity: 0.6,
-      shadowOpacity: 0.05,
-      elevation: 1,
+    googleButtonContent: {
+      height: 52,
     },
     googleButtonText: {
-      color: '#000000',
-      fontSize: typography.fontSize.lg,
+      fontSize: typography.fontSize.md,
       fontWeight: typography.fontWeight.semiBold,
-      marginLeft: 12,
     },
     errorContainer: {
       flexDirection: 'row',

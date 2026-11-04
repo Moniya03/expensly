@@ -1,111 +1,85 @@
-/**
- * Category definitions with icon and colors
- * Used for displaying transaction categories throughout the app
- */
-
 import type { Category } from '../types';
 
+/**
+ * Category configuration interface
+ */
 export interface CategoryConfig {
-  /** Category identifier */
   id: Category;
-  /** Display label */
   label: string;
-  /** MaterialCommunityIcons name for the category */
   iconName: string;
-  /** Icon tint color */
   iconColor: string;
-  /** Primary color for the category */
   color: string;
-  /** Background tint for circular icon container */
   iconBackgroundColor?: string;
 }
 
-const hexToRgba = (hex: string, alpha: number) => {
-  const normalized = hex.replace('#', '');
-  const fullHex =
-    normalized.length === 3
-      ? normalized
-          .split('')
-          .map((char) => char + char)
-          .join('')
-      : normalized;
-
-  const value = Number.parseInt(fullHex, 16);
-  const red = (value >> 16) & 255;
-  const green = (value >> 8) & 255;
-  const blue = value & 255;
-
-  return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
-};
-
 /**
  * Category configuration map
- * Each category has an icon, label, and color scheme
+ * Harmonized Material 3 category palettes
  */
 export const categories: Record<Category, CategoryConfig> = {
   food: {
     id: 'food',
     label: 'Food',
     iconName: 'silverware-fork-knife',
-    iconColor: '#A9ABB3',
-    color: '#FF9500',
-    iconBackgroundColor: hexToRgba('#A9ABB3', 0.18),
+    iconColor: '#F97316',
+    color: '#F97316',
+    iconBackgroundColor: 'rgba(249, 115, 22, 0.16)',
   },
   transport: {
     id: 'transport',
     label: 'Transport',
     iconName: 'car',
-    iconColor: '#FF3B30',
-    color: '#007AFF',
-    iconBackgroundColor: hexToRgba('#FF3B30', 0.18),
+    iconColor: '#3B82F6',
+    color: '#3B82F6',
+    iconBackgroundColor: 'rgba(59, 130, 246, 0.16)',
   },
   shopping: {
     id: 'shopping',
     label: 'Shopping',
     iconName: 'shopping',
-    iconColor: '#FFCC00',
-    color: '#FF2D55',
-    iconBackgroundColor: hexToRgba('#FFCC00', 0.18),
+    iconColor: '#EC4899',
+    color: '#EC4899',
+    iconBackgroundColor: 'rgba(236, 72, 153, 0.16)',
   },
   entertainment: {
     id: 'entertainment',
     label: 'Entertainment',
     iconName: 'headphones',
-    iconColor: '#1A6BFF',
-    color: '#FFCC00',
-    iconBackgroundColor: hexToRgba('#1A6BFF', 0.18),
+    iconColor: '#8B5CF6',
+    color: '#8B5CF6',
+    iconBackgroundColor: 'rgba(139, 92, 246, 0.16)',
   },
   bills: {
     id: 'bills',
     label: 'Bills',
     iconName: 'receipt',
-    iconColor: '#A9ABB3',
-    color: '#5856D6',
-    iconBackgroundColor: hexToRgba('#A9ABB3', 0.18),
+    iconColor: '#EAB308',
+    color: '#EAB308',
+    iconBackgroundColor: 'rgba(234, 179, 8, 0.16)',
   },
   health: {
     id: 'health',
     label: 'Health',
     iconName: 'hospital-building',
-    iconColor: '#A9ABB3',
-    color: '#34C759',
-    iconBackgroundColor: hexToRgba('#A9ABB3', 0.18),
+    iconColor: '#10B981',
+    color: '#10B981',
+    iconBackgroundColor: 'rgba(16, 185, 129, 0.16)',
   },
   education: {
     id: 'education',
     label: 'Education',
     iconName: 'book',
-    iconColor: '#1A6BFF',
-    color: '#00C7BE',
-    iconBackgroundColor: hexToRgba('#1A6BFF', 0.18),
+    iconColor: '#06B6D4',
+    color: '#06B6D4',
+    iconBackgroundColor: 'rgba(6, 182, 212, 0.16)',
   },
   other: {
     id: 'other',
     label: 'Other',
     iconName: 'package-variant',
-    iconColor: '#A9ABB3',
-    color: '#8E8E93',
-    iconBackgroundColor: hexToRgba('#AF52DE', 0.16),
+    iconColor: '#64748B',
+    color: '#64748B',
+    iconBackgroundColor: 'rgba(100, 116, 139, 0.16)',
   },
 };
 
@@ -117,13 +91,13 @@ export const getCategoryConfig = (category: Category): CategoryConfig => {
 };
 
 /**
- * Get all categories as an array
- */
-export const categoryList: CategoryConfig[] = Object.values(categories);
-
-/**
- * Get the color for a specific category
+ * Get category color by ID
  */
 export const getCategoryColor = (category: Category): string => {
-  return categories[category]?.color || categories.other.color;
+  return getCategoryConfig(category).color;
 };
+
+/**
+ * Get all categories as an array for pickers
+ */
+export const categoryList: CategoryConfig[] = Object.values(categories);

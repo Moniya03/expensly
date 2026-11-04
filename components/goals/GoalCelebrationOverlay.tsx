@@ -72,8 +72,8 @@ export function GoalCelebrationOverlay({ visible, goal, onDone }: Props) {
       theme.colors.secondary,
       theme.colors.tertiary,
       theme.colors.error,
-      '#B48CFF',
-      '#F5A623',
+      theme.colors.primaryContainer,
+      theme.colors.secondaryContainer,
     ];
     const count = 22;
     return Array.from({ length: count }, (_, index) => ({
@@ -451,7 +451,7 @@ const createStyles = (theme: AppTheme) =>
       borderColor: theme.colors.outlineVariant,
       padding: spacing.md,
       gap: spacing.md,
-      shadowColor: '#000',
+      shadowColor: theme.colors.shadow,
       shadowOpacity: 0.3,
       shadowRadius: 24,
       shadowOffset: { width: 0, height: 12 },
