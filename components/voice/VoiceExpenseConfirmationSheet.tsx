@@ -472,7 +472,7 @@ export function VoiceExpenseConfirmationSheet({
                   Reject this expense?
                 </Text>
                 <Text variant="bodyMedium" style={styles.confirmBody}>
-                  It won't be saved.
+                  {"It won't be saved."}
                 </Text>
                 <View style={styles.confirmActions}>
                   <Button
