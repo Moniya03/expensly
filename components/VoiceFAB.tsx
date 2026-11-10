@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Pressable, StyleSheet, View } from 'react-native';
 import { Text } from 'react-native-paper';
 import { type AppTheme, useAppTheme } from '../constants/theme';
@@ -194,17 +194,20 @@ export default function VoiceFAB() {
     }
   };
 
-  const handleSaveSingle = async (transaction: CreateTransactionInput) => {
-    await createTransaction(transaction);
-  };
+  const handleSaveSingle = useCallback(
+    async (transaction: CreateTransactionInput) => {
+      await createTransaction(transaction);
+    },
+    [createTransaction],
+  );
 
-  const handleCancel = async () => {
+  const handleCancel = useCallback(async () => {
     setShowSheet(false);
     setDrafts([]);
     setTranscription('');
     await cancelRecording();
     reset();
-  };
+  }, [cancelRecording, reset]);
 
   const getButtonBackgroundColor = () => {
     switch (state) {

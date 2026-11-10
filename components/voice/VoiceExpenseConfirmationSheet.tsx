@@ -125,19 +125,25 @@ export function VoiceExpenseConfirmationSheet({
   const [confirmingReject, setConfirmingReject] = useState(false);
 
   const cardRef = useRef<SwipeDeckCardHandle>(null);
-  const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const errorTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const prevVisibleRef = useRef(false);
 
-  // (Re)initialise when the sheet becomes visible with non-empty drafts.
+  // (Re)initialise ONLY when the sheet transitions to visible with non-empty drafts.
   useEffect(() => {
-    if (!visible) return;
+    const justOpened = visible && !prevVisibleRef.current;
+    prevVisibleRef.current = visible;
+
+    if (!justOpened) {
+      if (!visible && errorTimer.current) {
+        clearTimeout(errorTimer.current);
+        errorTimer.current = null;
+      }
+      return;
+    }
+
     if (drafts.length === 0) {
       onCancel();
       return;
-    }
-    if (advanceTimer.current) {
-      clearTimeout(advanceTimer.current);
-      advanceTimer.current = null;
     }
     if (errorTimer.current) {
       clearTimeout(errorTimer.current);
@@ -164,16 +170,13 @@ export function VoiceExpenseConfirmationSheet({
   // Cleanup pending timers on unmount.
   useEffect(() => {
     return () => {
-      if (advanceTimer.current) clearTimeout(advanceTimer.current);
       if (errorTimer.current) clearTimeout(errorTimer.current);
     };
   }, []);
 
   const topItem = items[currentIndex];
   const peekItem = items[currentIndex + 1];
-  const allDecided =
-    (items.length === 0 && acceptedCount + rejectedCount > 0) ||
-    (items.length > 0 && currentIndex >= items.length);
+  const allDecided = items.length > 0 && currentIndex >= items.length;
   const cardDisabled = isSaving || confirmingReject || editingField !== null;
 
   const updateTopItem = (patch: Partial<DraftItem>) => {
@@ -204,15 +207,12 @@ export function VoiceExpenseConfirmationSheet({
     setIsSaving(true);
     setSaveError(null);
     try {
-      await onSaveSingle(input);
+      const minAnimationPromise = new Promise((resolve) => setTimeout(resolve, FLY_OFF_MS));
+      await Promise.all([onSaveSingle(input), minAnimationPromise]);
       setAcceptedCount((c) => c + 1);
       setEditingField(null);
-      // Keep isSaving=true through the fly-off so the card stays disabled.
-      advanceTimer.current = setTimeout(() => {
-        advanceTimer.current = null;
-        setCurrentIndex((i) => i + 1);
-        setIsSaving(false);
-      }, FLY_OFF_MS);
+      setCurrentIndex((i) => i + 1);
+      setIsSaving(false);
       return true;
     } catch {
       setIsSaving(false);
@@ -233,7 +233,7 @@ export function VoiceExpenseConfirmationSheet({
   const handleConfirmReject = () => {
     setConfirmingReject(false);
     setRejectedCount((c) => c + 1);
-    setItems((prev) => prev.filter((_, i) => i !== currentIndex));
+    setCurrentIndex((i) => i + 1);
     setEditingField(null);
   };
 
@@ -617,6 +617,16 @@ function SummaryView({
   styles: ReturnType<typeof createStyles>;
   theme: AppTheme;
 }) {
+  // If only 1 expense was parsed and saved, smoothly auto-dismiss after a brief confirmation
+  useEffect(() => {
+    if (total === 1 && accepted === 1) {
+      const timer = setTimeout(() => {
+        onClose();
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [total, accepted, onClose]);
+
   return (
     <Surface elevation={3} style={[styles.summaryCard, { width: cardWidth }]}>
       <MaterialCommunityIcons name="check-decagram" size={56} color={theme.colors.primary} />
@@ -625,7 +635,7 @@ function SummaryView({
       </Text>
       {rejected > 0 ? (
         <Text variant="bodyMedium" style={styles.summarySubtitle}>
-          {rejected} expense${rejected === 1 ? '' : 's'} rejected
+          {`${rejected} expense${rejected === 1 ? '' : 's'} rejected`}
         </Text>
       ) : null}
       <Text variant="bodySmall" style={styles.summaryBody}>
